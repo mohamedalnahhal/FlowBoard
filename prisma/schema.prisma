@@ -113,6 +113,8 @@ model Board {
   checklists Checklist[]
   labels     Label[]
 
+  permissions Permission[]
+
   @@map("boards")
 }
 
@@ -125,6 +127,8 @@ model List {
 
   board Board  @relation(fields: [board_id], references: [id])
   tasks Task[]
+
+  permissions Permission[]
 
   @@map("lists")
 }
@@ -151,6 +155,8 @@ model Task {
   task_history     TaskHistory[]
   task_labels      TaskLabel[]
   task_comments    TaskComment[]
+
+  permissions      Permission[]
 
   @@map("tasks")
 }
@@ -277,15 +283,24 @@ model Permission {
   id          String         @id @default(uuid()) @db.Uuid
   action      String
   type        PermissionType
-  priority    Int
+  priority    Int            @default(0)
   description String?
   group_id    String         @db.Uuid
-  scope_type  String?
-  scope_id    String?        @db.Uuid
+
+  board_id    String?        @db.Uuid
+  list_id     String?        @db.Uuid
+  task_id     String?        @db.Uuid
+
   created_at  DateTime       @default(now())
   updated_at  DateTime       @updatedAt
 
-  group Group @relation(fields: [group_id], references: [id])
+  group Group  @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  board Board? @relation(fields: [board_id], references: [id], onDelete: Cascade)
+  list  List?  @relation(fields: [list_id],  references: [id], onDelete: Cascade)
+  task  Task?  @relation(fields: [task_id],  references: [id], onDelete: Cascade)
 
+  @@index([group_id, action, board_id])
+  @@index([group_id, action, list_id])
+  @@index([group_id, action, task_id])
   @@map("permissions")
 }
