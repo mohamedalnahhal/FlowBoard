@@ -51,43 +51,41 @@ async function resolvePermission(prisma, userId, action, scopeType, scopeId) {
     return { allowed: false, reason: 'User belongs to no permission groups' };
   }
 
-  // Single query: fetch both explicit (scope_id = target) and team-wide
-  // (scope_id IS NULL) permissions together.
-  // DB ordering: non-null scope_id rows first, then by priority DESC.
-  // This mirrors the spec: "ordered by scope_id not null and priority".
+  // Map scopeType to the FK column used in the Permission table.
+  // Schema uses separate nullable FKs (board_id / list_id / task_id)
+  // rather than a generic scope_type + scope_id pair.
+  const scopeCol = { board: 'board_id', list: 'list_id', task: 'task_id' }[scopeType];
+
   const permissions = await prisma.permission.findMany({
     where: {
-      group_id:   { in: groupIds },
+      group_id: { in: groupIds },
       action,
-      scope_type: scopeType,
       OR: [
-        { scope_id: scopeId },   // explicit scope
-        { scope_id: null },      // team-wide fallback
+        // Explicit scope — permission targets this exact resource
+        ...(scopeCol ? [{ [scopeCol]: scopeId }] : []),
+        // Team-wide fallback — all three scope FKs are null
+        { board_id: null, list_id: null, task_id: null },
       ],
     },
-    orderBy: [
-      // Prisma doesn't support `IS NOT NULL` ordering natively,
-      // so we sort in JS after fetch (small result set, safe).
-    ],
   });
 
   if (!permissions.length) {
     return { allowed: false, reason: 'No permission rule found' };
   }
 
-  // Tier 1: permissions with an explicit scope_id (overrides everything)
+  // Tier 1: explicit resource-scoped permissions (highest precedence)
   const explicit = permissions
-    .filter((p) => p.scope_id !== null)
+    .filter((p) => scopeCol && p[scopeCol] === scopeId)
     .sort((a, b) => b.priority - a.priority);
 
   if (explicit.length) {
     return resolveConflicts(explicit);
   }
 
-  // Tier 2: team-wide permissions (scope_id IS NULL), only reached if no
-  // explicit rule exists for this resource
+  // Tier 2: team-wide permissions (all scope FKs null), only reached when
+  // no explicit rule exists for this resource
   const teamWide = permissions
-    .filter((p) => p.scope_id === null)
+    .filter((p) => !p.board_id && !p.list_id && !p.task_id)
     .sort((a, b) => b.priority - a.priority);
 
   if (teamWide.length) {
@@ -182,4 +180,32 @@ async function resolveTeamFromScope(prisma, scopeType, scopeId) {
   }
 }
 
-module.exports = { resolvePermission, resolveUserGroups };
+/**
+ * Like resolvePermission but walks up the scope hierarchy when no explicit
+ * rule is found: task → list → board → team-wide.
+ */
+async function resolvePermissionWithInheritance(prisma, userId, action, scopeType, scopeId) {
+  const result = await resolvePermission(prisma, userId, action, scopeType, scopeId);
+  if (result.allowed || scopeType === 'board') return result;
+
+  // Walk up one level and retry
+  if (scopeType === 'task') {
+    const task = await prisma.task.findUnique({
+      where:  { id: scopeId },
+      select: { list_id: true },
+    });
+    if (task) return resolvePermissionWithInheritance(prisma, userId, action, 'list', task.list_id);
+  }
+
+  if (scopeType === 'list') {
+    const list = await prisma.list.findUnique({
+      where:  { id: scopeId },
+      select: { board_id: true },
+    });
+    if (list) return resolvePermission(prisma, userId, action, 'board', list.board_id);
+  }
+
+  return result;
+}
+
+module.exports = { resolvePermission, resolvePermissionWithInheritance, resolveUserGroups };
