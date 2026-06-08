@@ -11,7 +11,7 @@ export function SearchInput({ className = "", ...rest }: SearchInputProps) {
       <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-outline text-xl" />
       <input
         type="text"
-        className="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-md font-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+        className="w-full text-sm pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         {...rest}
       />
     </div>

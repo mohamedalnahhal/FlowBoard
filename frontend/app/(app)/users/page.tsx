@@ -4,6 +4,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
+import { SearchInput } from "@/components/ui/SearchInput";
 
 type Team = { id: string; name: string };
 type UserRow = {
@@ -24,7 +25,7 @@ const ROLE_LABELS: Record<number, string> = { 0: "Admin", 1: "Owner", 2: "Leader
 const ROLE_TONES: Record<number, string> = {
   0: "bg-tertiary-container/30 text-tertiary border border-tertiary/20",
   1: "bg-tertiary-container/30 text-tertiary border border-tertiary/20",
-  2: "bg-secondary-container text-on-secondary-fixed-variant border border-secondary-fixed-dim",
+  2: "bg-secondary-container text-on-secondary-container border border-on-secondary-container/30",
   3: "bg-surface-container-high text-on-surface-variant border border-outline-variant",
 };
 
@@ -64,7 +65,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/users">) {
 
   return (
     <>
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h1 className="font-display text-display text-on-surface">Users</h1>
@@ -77,43 +78,15 @@ export default async function UsersPage({ searchParams }: PageProps<"/users">) {
         <Button icon={<Icon name="person_add" className="text-[18px]" />}>Invite User</Button>
       </div>
 
-      <form
-        action="/users"
-        className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 bg-surface-container-lowest p-1 rounded-lg border border-outline-variant"
-      >
-        <div className="relative w-full sm:max-w-md flex-1">
-          <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px] pointer-events-none" />
-          <input
-            type="text"
-            name="q"
-            defaultValue={q}
-            placeholder="Search by name, email, or team..."
-            autoComplete="off"
-            className="w-full pl-10 pr-4 py-2.5 bg-transparent border-none focus:ring-0 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/60 outline-none"
-          />
-        </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto border-t sm:border-t-0 sm:border-l border-outline-variant pt-3 sm:pt-0 pl-0 sm:pl-3">
-          <div className="relative flex-1 sm:w-[160px]">
-            <select
-              name="role"
-              defaultValue={role}
-              className="w-full appearance-none bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer h-10"
-            >
-              <option value="all">All Roles</option>
-              <option value="0">Admin</option>
-              <option value="1">Owner</option>
-              <option value="2">Leader</option>
-              <option value="3">Member</option>
-            </select>
-            <Icon name="expand_more" className="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[20px]" />
-          </div>
-          <button
-            type="submit"
-            className="h-10 px-4 flex items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md"
-          >
-            Apply
-          </button>
-        </div>
+      <form className="flex flex-col sm:flex-row gap-3 mb-8" action="/users">
+        <SearchInput placeholder="Search by name, email, or team..." className="w-full max-w-screen-md" />
+        <button
+          type="button"
+          className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low transition-colors font-label-md text-label-md w-fit"
+        >
+          <Icon name="filter_list" className="text-[20px]" />
+          Filter
+        </button>
       </form>
 
       <Card className="overflow-hidden">
@@ -121,14 +94,14 @@ export default async function UsersPage({ searchParams }: PageProps<"/users">) {
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="bg-surface-container-low border-b border-outline-variant">
-                <th className="px-4 py-3 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">User Details</th>
-                <th className="px-4 py-3 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Role</th>
-                <th className="px-4 py-3 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Teams</th>
-                <th className="px-4 py-3 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Joined</th>
-                <th className="px-4 py-3 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold text-right">Actions</th>
+                <th className="px-4 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">User Details</th>
+                <th className="px-4 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Role</th>
+                <th className="px-4 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Teams</th>
+                <th className="px-4 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Joined</th>
+                <th className="px-4 py-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-outline-variant">
+            <tbody className="divide-y divide-outline-variant/60">
               {users.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center font-body-md text-body-md text-on-surface-variant">
@@ -178,7 +151,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/users">) {
             </tbody>
           </table>
         </div>
-        <div className="bg-surface border-t border-outline-variant px-4 py-3 flex items-center justify-between">
+        <div className="bg-surface border-t border-outline-variant/60 px-4 py-3 flex items-center justify-between">
           <span className="font-body-md text-[13px] text-on-surface-variant">
             {pagination.total === 0 ? "No entries" : `Showing ${start} to ${end} of ${pagination.total} entries`}
           </span>

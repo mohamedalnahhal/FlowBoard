@@ -4,6 +4,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { AvatarStack } from "@/components/ui/Avatar";
+import { SearchInput } from "@/components/ui/SearchInput";
 
 type Person = { id: string; display_name: string; username: string };
 type Team = {
@@ -44,16 +45,7 @@ export default async function TeamsPage({ searchParams }: PageProps<"/teams">) {
       </div>
 
       <form className="flex flex-col sm:flex-row gap-3 mb-8" action="/teams">
-        <div className="flex items-center bg-surface-container-lowest rounded-lg px-3 py-2 border border-outline-variant focus-within:ring-2 focus-within:ring-primary/20 flex-1 max-w-md">
-          <Icon name="search" className="text-on-surface-variant text-[20px] mr-2" />
-          <input
-            type="text"
-            name="q"
-            defaultValue={q?.toString() ?? ""}
-            placeholder="Filter teams..."
-            className="bg-transparent border-none focus:ring-0 p-0 font-body-md text-body-md text-on-surface w-full outline-none placeholder:text-on-surface-variant"
-          />
-        </div>
+        <SearchInput placeholder="Filter teams..." className="w-full max-w-screen-md" />
         <button
           type="button"
           className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low transition-colors font-label-md text-label-md w-fit"
@@ -89,7 +81,7 @@ export default async function TeamsPage({ searchParams }: PageProps<"/teams">) {
               </div>
 
               <p className="font-body-md text-body-md text-on-surface-variant min-h-[40px]">
-                Part of {team.workspace?.name ?? "—"} · {team.board_count} {team.board_count === 1 ? "board" : "boards"}
+                {team.description ?? "No description available"}
               </p>
 
               <div className="pt-3 border-t border-outline-variant flex justify-between items-center mt-auto">
@@ -100,7 +92,7 @@ export default async function TeamsPage({ searchParams }: PageProps<"/teams">) {
                 <AvatarStack people={team.members} max={3} />
               </div>
 
-              <button className="w-full mt-1 py-1.5 border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors">
+              <button className="w-full mt-1 py-2.5 border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors">
                 Manage Team
               </button>
             </Card>

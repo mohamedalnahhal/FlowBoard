@@ -8,13 +8,13 @@ type TopHeaderProps = {
 
 export function TopHeader({ teamName, unreadNotifications = 0 }: TopHeaderProps) {
   return (
-    <header className="bg-surface-bright flex justify-between items-center w-full h-16 px-8 sticky top-0 z-40 border-b border-outline-variant/30">
+    <header className="bg-surface-bright flex justify-between items-center gap-4 w-full h-16 px-8 sticky top-0 z-40 border-b border-outline-variant/30">
       <button className="md:hidden text-on-surface p-2 hover:bg-surface-container-high rounded-full">
         <Icon name="menu" />
       </button>
 
       <div className="flex-1 max-w-2xl hidden md:flex items-center">
-        <SearchInput placeholder="Search boards, tasks, teams..." className="w-full max-w-lg" />
+        <SearchInput placeholder="Search boards, tasks, teams..." className="w-full max-w-screen-lg" />
       </div>
 
       <div className="flex items-center gap-4">

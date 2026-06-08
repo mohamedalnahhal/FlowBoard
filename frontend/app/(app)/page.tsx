@@ -61,7 +61,7 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <div className="mb-8 py-6">
+      <div className="mb-6 py-4">
         <h1 className="font-display text-headline-lg text-on-surface mb-2">Good morning, {firstName}</h1>
         <p className="font-body-md text-on-surface-variant">{team?.name ?? workspace?.name ?? "Welcome to FlowBoard"}</p>
       </div>
