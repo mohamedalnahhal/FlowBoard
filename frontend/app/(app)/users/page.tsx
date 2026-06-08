@@ -186,14 +186,14 @@ export default async function UsersPage({ searchParams }: PageProps<"/users">) {
             <a
               href={buildHref({ q, role, page: page - 1 })}
               aria-disabled={page <= 1}
-              className={`px-3 py-1.5 border border-outline-variant rounded bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-sm ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
+              className={`px-2 py-1 text-sm border border-outline-variant rounded-md bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-sm ${page <= 1 ? "pointer-events-none opacity-50" : ""}`}
             >
               Previous
             </a>
             <a
               href={buildHref({ q, role, page: page + 1 })}
               aria-disabled={page >= pagination.total_pages}
-              className={`px-3 py-1.5 border border-outline-variant rounded bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-sm ${page >= pagination.total_pages ? "pointer-events-none opacity-50" : ""}`}
+              className={`px-2 py-1 text-sm border border-outline-variant rounded-md bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-sm ${page >= pagination.total_pages ? "pointer-events-none opacity-50" : ""}`}
             >
               Next
             </a>

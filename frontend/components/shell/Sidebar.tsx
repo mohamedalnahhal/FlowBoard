@@ -31,7 +31,7 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
     <li>
       <Link
         href={item.href}
-        className={`flex items-center gap-3 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors duration-150 border-l-4 -ml-1 pl-[8px] ${
+        className={`flex items-center gap-3 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors duration-150 ${
           isActive
             ? "bg-primary-fixed text-on-primary-fixed-variant font-semibold border-primary"
             : "text-on-surface-variant hover:bg-surface-container-low border-transparent"

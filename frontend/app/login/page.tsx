@@ -9,7 +9,7 @@ export default async function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface px-4">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-screen-sm">
         <div className="flex items-center justify-center gap-2 mb-8">
           <Icon name="flowsheet" className="text-primary text-[32px]" filled />
           <h1 className="font-display text-headline-lg text-primary">FlowBoard</h1>
