@@ -1,0 +1,348 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Permissions - Users | FlowBoard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#f7f9fb",
+                    "on-secondary-container": "#556477",
+                    "on-primary-fixed-variant": "#2f2ebe",
+                    "tertiary-fixed": "#e0e0ff",
+                    "on-surface-variant": "#464554",
+                    "surface-dim": "#d8dadc",
+                    "on-surface": "#191c1e",
+                    "surface-tint": "#494bd6",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed": "#d4e4fa",
+                    "on-error-container": "#93000a",
+                    "inverse-surface": "#2d3133",
+                    "inverse-primary": "#c0c1ff",
+                    "outline-variant": "#c7c4d7",
+                    "surface": "#f7f9fb",
+                    "on-error": "#ffffff",
+                    "on-background": "#191c1e",
+                    "tertiary": "#4651b9",
+                    "surface-container": "#eceef0",
+                    "on-primary-fixed": "#07006c",
+                    "surface-variant": "#e0e3e5",
+                    "inverse-on-surface": "#eff1f3",
+                    "surface-container-low": "#f2f4f6",
+                    "error": "#ba1a1a",
+                    "surface-container-highest": "#e0e3e5",
+                    "surface-container-high": "#e6e8ea",
+                    "outline": "#767586",
+                    "on-primary-container": "#fffbff",
+                    "tertiary-container": "#606ad4",
+                    "on-tertiary-fixed-variant": "#2f3aa3",
+                    "secondary-container": "#d2e1f7",
+                    "primary-container": "#6063ee",
+                    "tertiary-fixed-dim": "#bdc2ff",
+                    "on-secondary-fixed": "#0d1c2d",
+                    "primary-fixed-dim": "#c0c1ff",
+                    "background": "#f7f9fb",
+                    "primary": "#4648d4",
+                    "on-primary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "secondary-fixed-dim": "#b9c8de",
+                    "on-secondary": "#ffffff",
+                    "secondary": "#516072",
+                    "on-tertiary-container": "#fffbff",
+                    "on-secondary-fixed-variant": "#39485a",
+                    "primary-fixed": "#e1e0ff",
+                    "on-tertiary-fixed": "#000767"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max": "1440px",
+                    "base": "4px",
+                    "sm": "12px",
+                    "gutter": "24px",
+                    "sidebar-width": "260px",
+                    "xs": "8px",
+                    "md": "16px",
+                    "lg": "24px",
+                    "sidebar-collapsed": "80px",
+                    "xl": "32px"
+            },
+            "fontFamily": {
+                    "title-lg": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "display": ["Inter"],
+                    "label-md": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "display": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex overflow-hidden">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col h-full py-6 px-4 fixed left-0 top-0 w-sidebar-width border-r border-outline-variant bg-surface-container-lowest z-50">
+
+<div class="flex-1 overflow-y-auto space-y-1"><div class="mb-4 px-3">
+  <button class="w-full flex items-center justify-between gap-3 p-2 rounded-lg border border-outline-variant bg-surface-container-low hover:bg-surface-container-high transition-all group">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-primary rounded flex items-center justify-center text-on-primary">
+        <span class="material-symbols-outlined text-[20px]">grid_view</span>
+      </div>
+      <div class="text-left">
+        <p class="font-label-md text-label-md text-on-surface font-bold leading-tight">FlowBoard</p>
+        <p class="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Workspace</p>
+      </div>
+    </div>
+    <span class="material-symbols-outlined text-on-surface-variant group-hover:text-on-surface transition-colors">unfold_more</span>
+  </button>
+</div>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Boards</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-md text-label-md">Calendar</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span class="font-label-md text-label-md">Announcements</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="dynamic_form">dynamic_form</span>
+<span class="font-label-md text-label-md">Form Builder</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-label-md text-label-md">Teams</span>
+</a>
+<a class="flex items-center gap-3 bg-primary-fixed text-on-primary-fixed-variant font-semibold rounded-lg px-3 py-2 border-l-4 border-primary opacity-90 transition-opacity" href="#">
+<span class="material-symbols-outlined" data-icon="lock_person">lock_person</span>
+<span class="font-label-md text-label-md">Permissions</span>
+</a>
+
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="person_search">person_search</span>
+<span class="font-label-md text-label-md">Users</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+<div class="mt-auto pt-4 border-t border-outline-variant">
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-label-md text-label-md">Ahmed Khan</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col md:ml-[260px] h-screen overflow-hidden">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full h-16 px-8 bg-surface-bright z-40 shrink-0">
+<div class="flex items-center gap-4">
+<!-- Mobile Menu Toggle -->
+<button class="md:hidden text-on-surface hover:bg-surface-container-high rounded-full p-2 transition-all">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+<input class="pl-9 pr-4 py-1.5 bg-surface-container-lowest border border-outline-variant rounded-full font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 w-64 transition-all" placeholder="Search..." type="text">
+</div>
+<button class="text-on-surface-variant hover:bg-surface-container-high rounded-full p-2 transition-all">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high rounded-full p-2 transition-all">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+<button class="bg-primary text-on-primary hover:bg-primary/90 px-4 py-2 rounded-lg font-label-md text-label-md flex items-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="board">gboard</span>
+<span>New Board</span>
+</button>
+<img alt="User Profile" class="w-8 h-8 rounded-full border border-outline-variant ml-2" data-alt="A small, circular avatar portrait of a professional individual against a neutral background. The lighting is soft and flattering, typical of a modern corporate headshot." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDk3qR1hhtk7h7_L7ZMXcrKTA4kFOo9onvblY7lbGokk_MPpQoZ6H3-oBRrMF14QtkzsQrP8GThx9JuqRKcFC2ueitdj95jncqURAXD4yLkkFrQZqxrrTBaRl_knwULNUuu1iTajuBZM-L2tuioeWwVk67URj1zDy0ArwA6YkNEsb06q0pVDxWFLG7BJ1N_fW_IjOu1kpxbHIMy3MR2U3rtFiusAS418nhOCPVpv7613Gpp7MVQ6Nxk_G5yp8rlch7pPgOhg329EfC2">
+</div>
+</header>
+<!-- Page Content -->
+<main class="flex-1 overflow-y-auto bg-background p-4 md:p-8">
+<div class="max-w-container-max mx-auto space-y-6">
+<!-- Page Header & Tabs -->
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-background mb-4">Permissions Management</h2>
+<div class="flex border-b border-outline-variant">
+<a class="px-4 py-2 font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" href="#">Rules</a>
+<a class="px-4 py-2 font-label-md text-label-md text-primary font-bold border-b-2 border-primary pb-1" href="#">Users</a>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="bg-surface-container-lowest border border-outline-variant text-on-surface px-4 py-2 rounded-lg font-label-md text-label-md flex items-center gap-2 hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                            Filter
+                        </button>
+</div>
+</div>
+<!-- Users Table Card -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-bright">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+<input class="w-full pl-9 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search users by name, role, or department..." type="text">
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<th class="p-4 font-semibold">User</th>
+<th class="p-4 font-semibold">Role</th>
+<th class="p-4 font-semibold">Team</th>
+<th class="p-4 font-semibold">Status</th>
+<th class="p-4 font-semibold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- User Row 1 -->
+<tr class="hover:bg-surface-bright transition-colors group">
+<td class="p-4">
+<div class="flex items-center gap-3">
+<img alt="Sarah Jenkins" class="w-10 h-10 rounded-full border border-outline-variant" data-alt="A professional headshot of a smiling woman with dark hair." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTnUaJJFbbRM5643jY6oIdt71FczDR4NOHeXk4PYE-5x3C1iq48e-WYIfHy3pjYzlSjJ1Jx8vp67LVx83SnS_Dm8J4cA47sRz0fWeSGVvKTLeZXPMMRou3CgNuM27K3qHxCeLLVV5LT1zA5DN4U7g95tDWEbYdny1-Tus2x9_jtCwDj_VGMMCjilcIZg8cYZwbM1BdoJ9CEzFD6zLkjwqfA_B6Zh5SB5DWSpTeo0c8Jz_36HNfDrKhzFIOqB1sXNxdIkf8GpP0SEZZ">
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">Sarah Jenkins</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-xs">sarah.j@flowboard.inc</p>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">shield_person</span>
+                                            Admin
+                                        </span>
+</td>
+<td class="p-4 font-body-md text-body-md text-on-surface">Engineering</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="font-body-md text-body-md text-on-surface-variant">Active</span>
+</span>
+</td>
+<td class="p-4 text-right">
+<button class="text-secondary hover:text-primary p-2 rounded-md hover:bg-primary/5 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</td>
+</tr>
+<!-- User Row 2 -->
+<tr class="hover:bg-surface-bright transition-colors group">
+<td class="p-4">
+<div class="flex items-center gap-3">
+<img alt="Michael Chang" class="w-10 h-10 rounded-full border border-outline-variant" data-alt="A professional headshot of a man with glasses." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6kCGWvU4W8DW2kfw7jPPv_M1-etpGo4L-dgq0rX5dxXPPJhwAr_lN8chP2Be_4Y_1aEn8m27MTJwPA9uzSLB37gzzVAonAWzsbElY5BoCxn_mcVPg5E4GEbBc64T8UbLYZtKvA41l68xoYx5zwoWJ_E2Fm-hP0sbzIQjd_OgAizBWfXSufmxQm0KQ1eKYK8CF5LQErpVP8U-0qW-Z_wLCYgZ5piKExVmsNa8oUcPM_I4AmQFQJhiOX_M0XJa4DcEiESi8hdKOvgNG">
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">Michael Chang</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-xs">m.chang@flowboard.inc</p>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-highest text-on-surface font-label-sm text-label-sm">
+                                            Team Leader
+                                        </span>
+</td>
+<td class="p-4 font-body-md text-body-md text-on-surface">Design</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="font-body-md text-body-md text-on-surface-variant">Active</span>
+</span>
+</td>
+<td class="p-4 text-right">
+<button class="text-secondary hover:text-primary p-2 rounded-md hover:bg-primary/5 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</td>
+</tr>
+<!-- User Row 3 -->
+<tr class="hover:bg-surface-bright transition-colors group">
+<td class="p-4">
+<div class="flex items-center gap-3">
+<img alt="Elena Rodriguez" class="w-10 h-10 rounded-full border border-outline-variant" data-alt="A professional headshot of a woman looking confidently at the camera." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGlfoB8gk4kECG95r0JQJrCFMmPNym3JzpvONLvPhv3wawsAGZyliSWUoXKWK6-oYX5Gqleq8rjfezEjEQzTHXjq5A1RhNibnrv4PWGHyMtDkYVimsOCPZlT1SEcWwH7v4kHUUn0pllossqG5dDOX2mrrJq0fz6-XVaNlcG1Wk4178rrVaB2wjhP97-NtBk7EfLhy_hjZnXd0w12cqyquDCtzA7fe_C-QU-QCc2xL-Eo2Rs5WHrontjfMyVNYGlElqEIXjeA5Msbu0">
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">Elena Rodriguez</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-xs">elena.r@flowboard.inc</p>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-highest text-on-surface font-label-sm text-label-sm">
+                                            Member
+                                        </span>
+</td>
+<td class="p-4 font-body-md text-body-md text-on-surface">Marketing</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+<span class="font-body-md text-body-md text-on-surface-variant">Offline</span>
+</span>
+</td>
+<td class="p-4 text-right">
+<button class="text-secondary hover:text-primary p-2 rounded-md hover:bg-primary/5 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination (Simplified) -->
+<div class="p-4 border-t border-outline-variant bg-surface-bright flex items-center justify-between">
+<p class="font-body-md text-body-md text-on-surface-variant">Showing 1 to 3 of 42 users</p>
+<div class="flex gap-1">
+<button class="p-1 rounded text-on-surface-variant hover:bg-surface-container-highest disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="p-1 rounded text-on-surface-variant hover:bg-surface-container-highest">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

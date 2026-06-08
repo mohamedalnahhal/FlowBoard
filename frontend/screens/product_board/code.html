@@ -1,0 +1,500 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>FlowBoard - Product Roadmap</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#f7f9fb",
+                        "on-tertiary": "#ffffff",
+                        "secondary": "#516072",
+                        "surface": "#f7f9fb",
+                        "on-error": "#ffffff",
+                        "on-surface-variant": "#464554",
+                        "outline": "#767586",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#e1e0ff",
+                        "on-surface": "#191c1e",
+                        "on-tertiary-fixed": "#000767",
+                        "on-background": "#191c1e",
+                        "surface-tint": "#494bd6",
+                        "surface-variant": "#e0e3e5",
+                        "tertiary-fixed-dim": "#bdc2ff",
+                        "tertiary": "#4651b9",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "inverse-surface": "#2d3133",
+                        "secondary-fixed-dim": "#b9c8de",
+                        "error": "#ba1a1a",
+                        "primary": "#4648d4",
+                        "on-primary-container": "#fffbff",
+                        "surface-container-low": "#f2f4f6",
+                        "on-primary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e6e8ea",
+                        "surface-container": "#eceef0",
+                        "secondary-fixed": "#d4e4fa",
+                        "on-secondary-fixed": "#0d1c2d",
+                        "tertiary-fixed": "#e0e0ff",
+                        "inverse-on-surface": "#eff1f3",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#6063ee",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "outline-variant": "#c7c4d7",
+                        "on-secondary-container": "#556477",
+                        "tertiary-container": "#606ad4",
+                        "secondary-container": "#d2e1f7",
+                        "background": "#f7f9fb",
+                        "on-tertiary-fixed-variant": "#2f3aa3",
+                        "on-tertiary-container": "#fffbff",
+                        "on-secondary-fixed-variant": "#39485a",
+                        "surface-dim": "#d8dadc",
+                        "on-primary-fixed": "#07006c",
+                        "inverse-primary": "#c0c1ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "sidebar-collapsed": "80px",
+                        "sidebar-width": "260px",
+                        "container-max": "1440px",
+                        "sm": "12px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "xs": "8px",
+                        "lg": "24px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "display": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom scrollbar for Kanban board */
+        .kanban-scroll::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .kanban-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .kanban-scroll::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+        .kanban-scroll::-webkit-scrollbar-thumb:hover {
+            background-color: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden flex h-screen w-screen">
+<!-- SideNavBar -->
+<nav class="hidden md:flex fixed left-0 top-0 h-full w-[260px] border-r border-outline-variant bg-surface-container-lowest flex-col py-6 px-4 z-50 shadow-[2px_0_4px_rgba(0,0,0,0.02)]">
+<!-- Brand Header -->
+
+<!-- Navigation Links -->
+<div class="flex-1 overflow-y-auto"><div class="px-2 mb-4">
+  <button class="w-full flex items-center justify-between p-2 rounded-lg hover:bg-surface-container-low transition-colors duration-200 border border-outline-variant bg-surface-bright shadow-sm group">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded bg-primary flex items-center justify-center text-on-primary">
+        <span class="material-symbols-outlined text-lg">grid_view</span>
+      </div>
+      <div class="text-left">
+        <p class="font-label-md text-label-md text-on-surface font-semibold">FlowBoard</p>
+        <p class="text-[10px] text-on-surface-variant">Workspace</p>
+      </div>
+    </div>
+    <span class="material-symbols-outlined text-outline text-sm group-hover:text-on-surface transition-colors">unfold_more</span>
+  </button>
+</div>
+<div class="space-y-1">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-low px-3 py-2 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-outline">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<div class="flex flex-col gap-1">
+  <button class="flex items-center justify-between w-full px-3 py-2 rounded-lg hover:bg-surface-container-low transition-colors duration-200 group">
+    <div class="flex items-center gap-3">
+      <span class="material-symbols-outlined text-primary" data-weight="fill" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+      <span class="font-label-md text-label-md text-on-surface font-semibold">Boards</span>
+    </div>
+    <span class="material-symbols-outlined text-outline text-sm transition-transform duration-200">expand_more</span>
+  </button>
+  <div class="flex flex-col gap-1 ml-9">
+    <a href="#" class="flex items-center px-3 py-1.5 rounded-md bg-primary-container/10 text-primary font-medium transition-colors">
+      <span class="font-label-md text-label-md">Product Roadmap</span>
+    </a>
+    <a href="#" class="flex items-center px-3 py-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-low transition-colors">
+      <span class="font-label-md text-label-md">Website Redesign</span>
+    </a>
+    <a href="#" class="flex items-center px-3 py-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-low transition-colors">
+      <span class="font-label-md text-label-md">Marketing Campaign</span>
+    </a>
+  </div>
+</div>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-low px-3 py-2 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-outline">calendar_today</span>
+<span class="font-label-md text-label-md">Calendar</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-low px-3 py-2 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-outline">campaign</span>
+<span class="font-label-md text-label-md">Announcements</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-low px-3 py-2 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-outline">dynamic_form</span>
+<span class="font-label-md text-label-md">Form Builder</span>
+</a>
+<div class="my-4 border-t border-surface-variant"></div>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-low px-3 py-2 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-outline">groups</span>
+<span class="font-label-md text-label-md">Teams</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-low px-3 py-2 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-outline">lock_person</span>
+<span class="font-label-md text-label-md">Permissions</span>
+</a>
+
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-low px-3 py-2 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-outline">person_search</span>
+<span class="font-label-md text-label-md">Users</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-low px-3 py-2 rounded-lg transition-colors duration-200 mt-auto" href="#">
+<span class="material-symbols-outlined text-outline">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</div>
+<!-- Footer User Profile -->
+<div class="mt-auto pt-4 border-t border-surface-variant">
+<button class="w-full flex items-center justify-between p-2 rounded-lg hover:bg-surface-container-low transition-colors duration-200 border border-outline-variant bg-surface-bright shadow-sm">
+<div class="flex items-center gap-3">
+<img alt="Ahmed Khan" class="w-8 h-8 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAprmhhfgWmfbkCdq6CmAD5dl_mjOvu3NcsrQzgahQMYY4LGv8aNE4X4RnppbQyicEYq7F1UOoDUm3vr_Bm1cfd7AUbmdRROlisgPsD_PDmQwwQzPEQdnoUG3vB5USU_l2vTVLBY-4KS6AJEms7UEdW3kVRaWNsQC2pdmAroTIu-Czo07B5ptlAo1R7QhwGjgO9jl4Kn9nVtuiP9dkab9qJvaDUxGpIgDCnDzQPiDWXAF1oBv5dQlpG80KFFi9n9VLjTX0fMs5L_j8">
+<div class="text-left">
+<p class="font-label-sm text-label-sm text-on-surface font-semibold">Ahmed Khan</p>
+<p class="text-[10px] text-on-surface-variant">Team Leader</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline text-sm">expand_more</span>
+</button>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col h-full ml-0 md:ml-[260px] w-full max-w-[calc(100%-260px)] relative">
+<!-- TopNavBar -->
+<header class="bg-surface-bright flex justify-between items-center w-full h-16 px-8 docked full-width top-0 z-40 border-b border-surface-variant">
+<!-- Left: Menu (Mobile) & Search -->
+<div class="flex items-center gap-4 flex-1">
+<button class="md:hidden p-2 text-on-surface hover:bg-surface-container-high rounded-full transition-all hover:scale-95 duration-150">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="relative w-full max-w-md hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-lg">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow" placeholder="Search boards, tasks, teams..." type="text">
+</div>
+</div>
+<!-- Right: Actions & Profile -->
+<div class="flex items-center gap-4">
+<div class="flex items-center border border-outline-variant rounded-lg px-3 py-1.5 bg-surface-container-lowest cursor-pointer hover:bg-surface-container-low transition-colors">
+<span class="font-label-sm text-label-sm mr-2 text-on-surface">Product Team</span>
+<span class="material-symbols-outlined text-sm text-outline">expand_more</span>
+</div>
+<div class="flex items-center gap-2 border-l border-surface-variant pl-4">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all hover:scale-95 duration-150 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all hover:scale-95 duration-150">
+<span class="material-symbols-outlined">history</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Board Canvas -->
+<main class="flex-1 overflow-hidden flex flex-col bg-surface-bright relative w-full h-full">
+<!-- Board Header Area -->
+<div class="px-8 pt-6 pb-4 bg-surface-bright shrink-0 border-b border-surface-variant z-10 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+<!-- Title & Top Actions row -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+<div class="flex items-center gap-3">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Product Roadmap</h2>
+<button class="p-1 hover:bg-surface-container-high rounded-md transition-colors text-outline">
+<span class="material-symbols-outlined text-lg">expand_more</span>
+</button>
+</div>
+<div class="flex items-center gap-4">
+<!-- Avatars -->
+<div class="flex -space-x-2">
+<img alt="Member" class="w-8 h-8 rounded-full border-2 border-surface-bright z-30" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-b8_3y7PQxRWtAScD0acOXTDeurclSuBXJB7Y3lNe6BVbOEZodkETwu3_tnudB2n5qBKrj6oLyKxG5qM5kJHYz-EyQbOPNidTbrNJcHdf88lHJQJfLbNbySazBCOkZBMEQFKMbseAvO74XBo26mRB2BXo3O0ei-_85ekCMI1wlsY-XDcWhcop7MgkB5apNWDsw-WuX-boYcKsBpDk6d15vOvQsCltTfznzXr82yPDaQvElbUcDs9BhsZU8MZFw4fzYf3x51WRsYmH">
+<img alt="Member" class="w-8 h-8 rounded-full border-2 border-surface-bright z-20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPMXFSB6mjSqpS_tRAwArE1-J573pCgW2pNdtQUlRJWdhwaQGDyOcQ4oy9WgEdaEkGqWhQpSr0C2wYYvoxdmIhY12M9v4168OMGGxrng0rQhCPEdzBBcUGVE9hwJdEd05hkbv10ePk7QXhNQDJ24F-IkhRXlSFBi7l_W5Q1s7sYV1JsAtP7ITpLghfBHoSXy1GZtJKol4Y-17VnBdVIW5SP3nsmzRAH24SFm_mU1TsqkikA6spEul2x8SH4BzAgu-xhOU0dYQveJMv">
+<img alt="Member" class="w-8 h-8 rounded-full border-2 border-surface-bright z-10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0qbXtxj4i45LlJD4BamhhfY8MfVN9tiqsDuvZNT2J_Mb3g0mA3ui1BoOmx69wNKFANfcuLwIDQsPhw-E2o4O7bMAMpLPiKpzSTdKnpyHlBjSvfMNKsMLT39rirgZJqrvZcGUTBt4K5ncbAF5n3B9ZjUHoqbtgLFMNtf8YOGxNO7Wy-7zgPSeE4f9soHMfXFia5qrXofe8uTT-kx-vFKijLp9Qx01YpSFMuYbPP0s-HTq6r3qVFRREHakd79-OtBk5uxDvIo5P8gIk">
+<div class="w-8 h-8 rounded-full border-2 border-surface-bright bg-surface-container-high flex items-center justify-center text-xs font-medium text-secondary z-0">
+                                +5
+                            </div>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-2 px-3 py-1.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-secondary hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+<span class="font-label-md text-label-md">Filter</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-1.5 bg-primary text-on-primary rounded-lg hover:bg-primary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined text-sm">add</span>
+<span class="font-label-md text-label-md">Add List</span>
+</button>
+</div>
+</div>
+</div>
+<!-- View Switchers Row -->
+<div class="flex items-center gap-6 overflow-x-auto pb-1 no-scrollbar">
+<button class="flex items-center gap-2 px-3 py-1.5 bg-primary-fixed text-on-primary-fixed-variant rounded-lg font-label-md text-label-md transition-colors">
+<span class="material-symbols-outlined text-sm" data-weight="fill" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                        Board
+                    </button>
+<button class="flex items-center gap-2 px-3 py-1.5 text-secondary hover:bg-surface-container-low rounded-lg font-label-md text-label-md transition-colors">
+<span class="material-symbols-outlined text-sm">timeline</span>
+                        Timeline
+                    </button>
+<button class="flex items-center gap-2 px-3 py-1.5 text-secondary hover:bg-surface-container-low rounded-lg font-label-md text-label-md transition-colors">
+<span class="material-symbols-outlined text-sm">calendar_month</span>
+                        Calendar
+                    </button>
+<button class="flex items-center gap-2 px-3 py-1.5 text-secondary hover:bg-surface-container-low rounded-lg font-label-md text-label-md transition-colors">
+<span class="material-symbols-outlined text-sm">description</span>
+                        Files
+                    </button>
+</div>
+</div>
+<!-- Kanban Columns Container -->
+<div class="flex-1 overflow-x-auto overflow-y-hidden p-8 flex gap-6 kanban-scroll items-start h-full">
+<!-- Column 1: Backlog -->
+<div class="flex-shrink-0 w-[300px] flex flex-col max-h-full">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex items-center gap-2">
+<h3 class="font-title-lg text-title-lg text-on-surface">Backlog</h3>
+<span class="px-2 py-0.5 bg-surface-container-high rounded-full text-xs font-medium text-secondary">6</span>
+</div>
+<button class="text-outline hover:text-on-surface p-1 rounded transition-colors"><span class="material-symbols-outlined text-sm">add</span></button>
+</div>
+<div class="flex-1 overflow-y-auto space-y-3 pb-4 kanban-scroll pr-1">
+<!-- Task Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-grab group flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1 flex-1">
+<h4 class="font-label-md text-label-md text-on-surface font-semibold line-clamp-1">User research</h4>
+<div class="flex items-center gap-2"><span class="inline-block px-2 py-0.5 bg-primary-fixed text-primary text-[10px] font-bold rounded uppercase tracking-wider">Design</span><span class="inline-block px-2 py-0.5 bg-error-container text-error text-[10px] font-bold rounded uppercase tracking-wider">Priority</span></div>
+<span class="font-label-sm text-[10px] uppercase text-slate-500 mt-1 tracking-wider">Assigned by Ahmed Khan</span>
+</div>
+<button class="text-outline hover:text-on-surface"><span class="material-symbols-outlined text-sm">more_vert</span></button>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-surface-variant">
+<div class="flex -space-x-1"><img alt="Assignee" class="w-5 h-5 rounded-full border border-surface-lowest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAOGypDv9TXOykM1U_tKumRfNnmjURMyTD3W2_IXX0OlnRTIGmYcPitwtNPn6ooW4BQwGTrHk_3UeIMdc9BVTjMk87G_iavgzu1IhCBL03vQdqky8UasE0jHs7-mB3RbcqmXMIQKk7g347dCAkl5xZfpiGgFuP79fGG358NtupbhlEuRUvpcyvFVaM-ovo9Bavzx_USbxbwGtIavFV3JMFVRWUnlst1JnrC-2p_t4SuxuGYssQxpk9oib01ZyreaPueN3qEhXIqDYs"><img alt="Assignee" class="w-5 h-5 rounded-full border border-surface-lowest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-b8_3y7PQxRWtAScD0acOXTDeurclSuBXJB7Y3lNe6BVbOEZodkETwu3_tnudB2n5qBKrj6oLyKxG5qM5kJHYz-EyQbOPNidTbrNJcHdf88lHJQJfLbNbySazBCOkZBMEQFKMbseAvO74XBo26mRB2BXo3O0ei-_85ekCMI1wlsY-XDcWhcop7MgkB5apNWDsw-WuX-boYcKsBpDk6d15vOvQsCltTfznzXr82yPDaQvElbUcDs9BhsZU8MZFw4fzYf3x51WRsYmH"></div>
+<div class="flex items-center gap-3"><div class="flex items-center gap-1 text-outline text-[10px]"><span class="material-symbols-outlined text-[12px]">calendar_today</span><span class="">Oct 24</span></div><div class="flex items-center gap-1 text-outline text-[10px]"><span class="material-symbols-outlined text-[12px]">check_box</span><span class="">2/5</span></div></div>
+</div>
+</div>
+<!-- Task Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-grab group flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1 flex-1">
+<h4 class="font-label-md text-label-md text-on-surface font-semibold line-clamp-1">Define MVP features</h4>
+<div class="flex items-center gap-2"><span class="inline-block px-2 py-0.5 bg-primary-fixed text-primary text-[10px] font-bold rounded uppercase tracking-wider">Product</span></div>
+<span class="font-label-sm text-[10px] uppercase text-slate-500 mt-1 tracking-wider">Assigned by Sarah Lee</span>
+</div>
+<button class="text-outline hover:text-on-surface"><span class="material-symbols-outlined text-sm">more_vert</span></button>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-surface-variant">
+<div class="flex -space-x-1"><img alt="Assignee" class="w-5 h-5 rounded-full border border-surface-lowest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAOGypDv9TXOykM1U_tKumRfNnmjURMyTD3W2_IXX0OlnRTIGmYcPitwtNPn6ooW4BQwGTrHk_3UeIMdc9BVTjMk87G_iavgzu1IhCBL03vQdqky8UasE0jHs7-mB3RbcqmXMIQKk7g347dCAkl5xZfpiGgFuP79fGG358NtupbhlEuRUvpcyvFVaM-ovo9Bavzx_USbxbwGtIavFV3JMFVRWUnlst1JnrC-2p_t4SuxuGYssQxpk9oib01ZyreaPueN3qEhXIqDYs"></div>
+<div class="flex items-center gap-1 text-outline text-[10px]"><span class="material-symbols-outlined text-[12px]">calendar_today</span><span class="">Oct 26</span></div>
+</div>
+</div>
+</div>
+<button class="mt-2 w-full py-3 flex items-center justify-center gap-2 text-secondary hover:bg-surface-container-low rounded-lg transition-colors border border-dashed border-outline-variant bg-surface-bright">
+<span class="material-symbols-outlined text-sm">add</span>
+<span class="font-label-md text-label-md">Add Task</span>
+</button>
+</div>
+<!-- Column 2: In Progress -->
+<div class="flex-shrink-0 w-[300px] flex flex-col max-h-full">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex items-center gap-2">
+<h3 class="font-title-lg text-title-lg text-on-surface">In Progress</h3>
+<span class="px-2 py-0.5 bg-surface-container-high rounded-full text-xs font-medium text-secondary">4</span>
+</div>
+<button class="text-outline hover:text-on-surface p-1 rounded transition-colors"><span class="material-symbols-outlined text-sm">add</span></button>
+</div>
+<div class="flex-1 overflow-y-auto space-y-3 pb-4 kanban-scroll pr-1">
+<!-- Task Card 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-grab group flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1 flex-1">
+<h4 class="font-label-md text-label-md text-on-surface font-semibold line-clamp-1">Design system update</h4>
+<div class="flex items-center gap-2"><span class="inline-block px-2 py-0.5 bg-primary-fixed text-primary text-[10px] font-bold rounded uppercase tracking-wider">Design</span></div>
+<span class="font-label-sm text-[10px] uppercase text-slate-500 mt-1 tracking-wider">Assigned by John Doe</span>
+</div>
+<button class="text-outline hover:text-on-surface"><span class="material-symbols-outlined text-sm">more_vert</span></button>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-surface-variant">
+<div class="flex -space-x-1"><img alt="Assignee" class="w-5 h-5 rounded-full border border-surface-lowest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAOGypDv9TXOykM1U_tKumRfNnmjURMyTD3W2_IXX0OlnRTIGmYcPitwtNPn6ooW4BQwGTrHk_3UeIMdc9BVTjMk87G_iavgzu1IhCBL03vQdqky8UasE0jHs7-mB3RbcqmXMIQKk7g347dCAkl5xZfpiGgFuP79fGG358NtupbhlEuRUvpcyvFVaM-ovo9Bavzx_USbxbwGtIavFV3JMFVRWUnlst1JnrC-2p_t4SuxuGYssQxpk9oib01ZyreaPueN3qEhXIqDYs"></div>
+<div class="flex items-center gap-3"><div class="flex items-center gap-1 text-outline text-[10px]"><span class="material-symbols-outlined text-[12px]">calendar_today</span><span class="">Oct 28</span></div><div class="flex items-center gap-1 text-outline text-[10px]"><span class="material-symbols-outlined text-[12px]">check_box</span><span class="">4/10</span></div></div>
+</div>
+</div>
+<!-- Task Card 4 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-grab group flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1 flex-1">
+<h4 class="font-label-md text-label-md text-on-surface font-semibold line-clamp-1">Dashboard UI</h4>
+<div class="flex items-center gap-2"><span class="inline-block px-2 py-0.5 bg-primary-fixed text-primary text-[10px] font-bold rounded uppercase tracking-wider">UI/UX</span></div>
+<span class="font-label-sm text-[10px] uppercase text-slate-500 mt-1 tracking-wider">Assigned by Ahmed Khan</span>
+</div>
+<button class="text-outline hover:text-on-surface"><span class="material-symbols-outlined text-sm">more_vert</span></button>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-surface-variant">
+<div class="flex -space-x-1"><img alt="Assignee" class="w-5 h-5 rounded-full border border-surface-lowest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAOGypDv9TXOykM1U_tKumRfNnmjURMyTD3W2_IXX0OlnRTIGmYcPitwtNPn6ooW4BQwGTrHk_3UeIMdc9BVTjMk87G_iavgzu1IhCBL03vQdqky8UasE0jHs7-mB3RbcqmXMIQKk7g347dCAkl5xZfpiGgFuP79fGG358NtupbhlEuRUvpcyvFVaM-ovo9Bavzx_USbxbwGtIavFV3JMFVRWUnlst1JnrC-2p_t4SuxuGYssQxpk9oib01ZyreaPueN3qEhXIqDYs"><img alt="Assignee" class="w-5 h-5 rounded-full border border-surface-lowest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0qbXtxj4i45LlJD4BamhhfY8MfVN9tiqsDuvZNT2J_Mb3g0mA3ui1BoOmx69wNKFANfcuLwIDQsPhw-E2o4O7bMAMpLPiKpzSTdKnpyHlBjSvfMNKsMLT39rirgZJqrvZcGUTBt4K5ncbAF5n3B9ZjUHoqbtgLFMNtf8YOGxNO7Wy-7zgPSeE4f9soHMfXFia5qrXofe8uTT-kx-vFKijLp9Qx01YpSFMuYbPP0s-HTq6r3qVFRREHakd79-OtBk5uxDvIo5P8gIk"></div>
+<div class="flex items-center gap-1 text-outline text-[10px]"><span class="material-symbols-outlined text-[12px]">calendar_today</span><span class="">Oct 30</span></div>
+</div>
+</div>
+</div>
+<button class="mt-2 w-full py-3 flex items-center justify-center gap-2 text-secondary hover:bg-surface-container-low rounded-lg transition-colors border border-dashed border-outline-variant bg-surface-bright">
+<span class="material-symbols-outlined text-sm">add</span>
+<span class="font-label-md text-label-md">Add Task</span>
+</button>
+</div>
+<!-- Column 3: Review -->
+<div class="flex-shrink-0 w-[300px] flex flex-col max-h-full">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex items-center gap-2">
+<h3 class="font-title-lg text-title-lg text-on-surface">Review</h3>
+<span class="px-2 py-0.5 bg-surface-container-high rounded-full text-xs font-medium text-secondary">2</span>
+</div>
+<button class="text-outline hover:text-on-surface p-1 rounded transition-colors"><span class="material-symbols-outlined text-sm">add</span></button>
+</div>
+<div class="flex-1 overflow-y-auto space-y-3 pb-4 kanban-scroll pr-1">
+<!-- Task Card 5 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-grab group flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1 flex-1">
+<h4 class="font-label-md text-label-md text-on-surface font-semibold line-clamp-1">Onboarding flow</h4>
+<div class="flex items-center gap-2"><span class="inline-block px-2 py-0.5 bg-primary-fixed text-primary text-[10px] font-bold rounded uppercase tracking-wider">Tag</span></div>
+<span class="font-label-sm text-[10px] uppercase text-slate-500 mt-1 tracking-wider">Assigned by Sarah Lee</span>
+</div>
+<div class="flex flex-col items-end gap-2">
+<button class="text-outline hover:text-on-surface"><span class="material-symbols-outlined text-sm">more_vert</span></button>
+
+</div>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-surface-variant"><div class="flex -space-x-1"><img alt="Assignee" class="w-5 h-5 rounded-full border border-surface-lowest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAOGypDv9TXOykM1U_tKumRfNnmjURMyTD3W2_IXX0OlnRTIGmYcPitwtNPn6ooW4BQwGTrHk_3UeIMdc9BVTjMk87G_iavgzu1IhCBL03vQdqky8UasE0jHs7-mB3RbcqmXMIQKk7g347dCAkl5xZfpiGgFuP79fGG358NtupbhlEuRUvpcyvFVaM-ovo9Bavzx_USbxbwGtIavFV3JMFVRWUnlst1JnrC-2p_t4SuxuGYssQxpk9oib01ZyreaPueN3qEhXIqDYs"></div><div class="flex items-center gap-3"><div class="flex items-center gap-1 text-outline text-[10px]"><span class="material-symbols-outlined text-[12px]">calendar_today</span><span class="">Date</span></div><div class="flex items-center gap-1 text-outline text-[10px]"><span class="material-symbols-outlined text-[12px]">check_box</span><span class="">0/0</span></div></div></div>
+</div>
+<!-- Task Card 6 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-grab group flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1 flex-1">
+<h4 class="font-label-md text-label-md text-on-surface font-semibold line-clamp-1">API integration</h4>
+<div class="flex items-center gap-2"><span class="inline-block px-2 py-0.5 bg-primary-fixed text-primary text-[10px] font-bold rounded uppercase tracking-wider">Tag</span></div>
+<span class="font-label-sm text-[10px] uppercase text-slate-500 mt-1 tracking-wider">Assigned by John Doe</span>
+</div>
+<div class="flex flex-col items-end gap-2">
+<button class="text-outline hover:text-on-surface"><span class="material-symbols-outlined text-sm">more_vert</span></button>
+
+</div>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-surface-variant"><div class="flex -space-x-1"><img alt="Assignee" class="w-5 h-5 rounded-full border border-surface-lowest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAOGypDv9TXOykM1U_tKumRfNnmjURMyTD3W2_IXX0OlnRTIGmYcPitwtNPn6ooW4BQwGTrHk_3UeIMdc9BVTjMk87G_iavgzu1IhCBL03vQdqky8UasE0jHs7-mB3RbcqmXMIQKk7g347dCAkl5xZfpiGgFuP79fGG358NtupbhlEuRUvpcyvFVaM-ovo9Bavzx_USbxbwGtIavFV3JMFVRWUnlst1JnrC-2p_t4SuxuGYssQxpk9oib01ZyreaPueN3qEhXIqDYs"></div><div class="flex items-center gap-3"><div class="flex items-center gap-1 text-outline text-[10px]"><span class="material-symbols-outlined text-[12px]">calendar_today</span><span class="">Date</span></div><div class="flex items-center gap-1 text-outline text-[10px]"><span class="material-symbols-outlined text-[12px]">check_box</span><span class="">0/0</span></div></div></div>
+</div>
+</div>
+<button class="mt-2 w-full py-3 flex items-center justify-center gap-2 text-secondary hover:bg-surface-container-low rounded-lg transition-colors border border-dashed border-outline-variant bg-surface-bright">
+<span class="material-symbols-outlined text-sm">add</span>
+<span class="font-label-md text-label-md">Add Task</span>
+</button>
+</div>
+<!-- Column 4: Done -->
+<div class="flex-shrink-0 w-[300px] flex flex-col max-h-full">
+<div class="flex items-center justify-between mb-4 px-1">
+<div class="flex items-center gap-2">
+<h3 class="font-title-lg text-title-lg text-on-surface">Done</h3>
+<span class="px-2 py-0.5 bg-surface-container-high rounded-full text-xs font-medium text-secondary">8</span>
+</div>
+<button class="text-outline hover:text-on-surface p-1 rounded transition-colors"><span class="material-symbols-outlined text-sm">add</span></button>
+</div>
+<div class="flex-1 overflow-y-auto space-y-3 pb-4 kanban-scroll pr-1">
+<!-- Task Card 7 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-grab group flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1 flex-1">
+<h4 class="font-label-md text-label-md text-on-surface font-semibold line-clamp-1">Task Title</h4>
+<div class="flex items-center gap-2"><span class="inline-block px-2 py-0.5 bg-primary-fixed text-primary text-[10px] font-bold rounded uppercase tracking-wider">Tag</span></div>
+<span class="font-label-sm text-[10px] uppercase text-slate-500 mt-1 tracking-wider">Assigned by Ahmed Khan</span>
+</div>
+<div class="flex flex-col items-end gap-2">
+<button class="text-outline hover:text-on-surface"><span class="material-symbols-outlined text-sm">more_vert</span></button>
+
+</div>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-surface-variant"><div class="flex -space-x-1"><img alt="Assignee" class="w-5 h-5 rounded-full border border-surface-lowest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAOGypDv9TXOykM1U_tKumRfNnmjURMyTD3W2_IXX0OlnRTIGmYcPitwtNPn6ooW4BQwGTrHk_3UeIMdc9BVTjMk87G_iavgzu1IhCBL03vQdqky8UasE0jHs7-mB3RbcqmXMIQKk7g347dCAkl5xZfpiGgFuP79fGG358NtupbhlEuRUvpcyvFVaM-ovo9Bavzx_USbxbwGtIavFV3JMFVRWUnlst1JnrC-2p_t4SuxuGYssQxpk9oib01ZyreaPueN3qEhXIqDYs"></div><div class="flex items-center gap-3"><div class="flex items-center gap-1 text-outline text-[10px]"><span class="material-symbols-outlined text-[12px]">calendar_today</span><span class="">Date</span></div><div class="flex items-center gap-1 text-outline text-[10px]"><span class="material-symbols-outlined text-[12px]">check_box</span><span class="">0/0</span></div></div></div>
+</div>
+<!-- Task Card 8 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-grab group flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<div class="flex flex-col gap-1 flex-1">
+<h4 class="font-label-md text-label-md text-on-surface font-semibold line-clamp-1">Task Title</h4>
+<div class="flex items-center gap-2"><span class="inline-block px-2 py-0.5 bg-primary-fixed text-primary text-[10px] font-bold rounded uppercase tracking-wider">Tag</span></div>
+<span class="font-label-sm text-[10px] uppercase text-slate-500 mt-1 tracking-wider">Assigned by Sarah Lee</span>
+</div>
+<div class="flex flex-col items-end gap-2">
+<button class="text-outline hover:text-on-surface"><span class="material-symbols-outlined text-sm">more_vert</span></button>
+
+</div>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-surface-variant"><div class="flex -space-x-1"><img alt="Assignee" class="w-5 h-5 rounded-full border border-surface-lowest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAOGypDv9TXOykM1U_tKumRfNnmjURMyTD3W2_IXX0OlnRTIGmYcPitwtNPn6ooW4BQwGTrHk_3UeIMdc9BVTjMk87G_iavgzu1IhCBL03vQdqky8UasE0jHs7-mB3RbcqmXMIQKk7g347dCAkl5xZfpiGgFuP79fGG358NtupbhlEuRUvpcyvFVaM-ovo9Bavzx_USbxbwGtIavFV3JMFVRWUnlst1JnrC-2p_t4SuxuGYssQxpk9oib01ZyreaPueN3qEhXIqDYs"></div><div class="flex items-center gap-3"><div class="flex items-center gap-1 text-outline text-[10px]"><span class="material-symbols-outlined text-[12px]">calendar_today</span><span class="">Date</span></div><div class="flex items-center gap-1 text-outline text-[10px]"><span class="material-symbols-outlined text-[12px]">check_box</span><span class="">0/0</span></div></div></div>
+</div>
+</div>
+<button class="mt-2 w-full py-3 flex items-center justify-center gap-2 text-secondary hover:bg-surface-container-low rounded-lg transition-colors border border-dashed border-outline-variant bg-surface-bright">
+<span class="material-symbols-outlined text-sm">add</span>
+<span class="font-label-md text-label-md">Add Task</span>
+</button>
+</div>
+<!-- Spacer for right padding in scroll area -->
+<div class="flex-shrink-0 w-4"></div>
+</div>
+</main>
+</div>
+
+
+
+
+
+
+
+
+</body></html>

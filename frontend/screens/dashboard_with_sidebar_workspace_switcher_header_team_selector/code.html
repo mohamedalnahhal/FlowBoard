@@ -1,0 +1,447 @@
+<!DOCTYPE html><html class="light" lang="en" style="width: 1280px; height: 1137px; overflow: hidden; position: relative;"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>FlowBoard - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#f7f9fb",
+                    "on-tertiary": "#ffffff",
+                    "secondary": "#516072",
+                    "surface": "#f7f9fb",
+                    "on-error": "#ffffff",
+                    "on-surface-variant": "#464554",
+                    "outline": "#767586",
+                    "on-error-container": "#93000a",
+                    "primary-fixed": "#e1e0ff",
+                    "on-surface": "#191c1e",
+                    "on-tertiary-fixed": "#000767",
+                    "on-background": "#191c1e",
+                    "surface-tint": "#494bd6",
+                    "surface-variant": "#e0e3e5",
+                    "tertiary-fixed-dim": "#bdc2ff",
+                    "tertiary": "#4651b9",
+                    "on-primary-fixed-variant": "#2f2ebe",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-highest": "#e0e3e5",
+                    "inverse-surface": "#2d3133",
+                    "secondary-fixed-dim": "#b9c8de",
+                    "error": "#ba1a1a",
+                    "primary": "#4648d4",
+                    "on-primary-container": "#fffbff",
+                    "surface-container-low": "#f2f4f6",
+                    "on-primary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e6e8ea",
+                    "surface-container": "#eceef0",
+                    "secondary-fixed": "#d4e4fa",
+                    "on-secondary-fixed": "#0d1c2d",
+                    "tertiary-fixed": "#e0e0ff",
+                    "inverse-on-surface": "#eff1f3",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#6063ee",
+                    "primary-fixed-dim": "#c0c1ff",
+                    "outline-variant": "#c7c4d7",
+                    "on-secondary-container": "#556477",
+                    "tertiary-container": "#606ad4",
+                    "secondary-container": "#d2e1f7",
+                    "background": "#f7f9fb",
+                    "on-tertiary-fixed-variant": "#2f3aa3",
+                    "on-tertiary-container": "#fffbff",
+                    "on-secondary-fixed-variant": "#39485a",
+                    "surface-dim": "#d8dadc",
+                    "on-primary-fixed": "#07006c",
+                    "inverse-primary": "#c0c1ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "sidebar-collapsed": "80px",
+                    "sidebar-width": "260px",
+                    "container-max": "1440px",
+                    "sm": "12px",
+                    "xl": "32px",
+                    "md": "16px",
+                    "xs": "8px",
+                    "lg": "24px",
+                    "base": "4px"
+            },
+            "fontFamily": {
+                    "display": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "label-md": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"]
+            },
+            "fontSize": {
+                    "display": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-md": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-surface-bright text-on-surface font-body-md min-h-screen flex">
+<!-- SideNavBar Component -->
+<nav class="hidden md:flex flex-col bg-surface-container-lowest border-r border-outline-variant fixed left-0 top-0 h-full w-[260px] z-50">
+<div class="flex flex-col h-full py-6 px-4">
+<!-- Header -->
+<div class="flex items-center gap-2 mb-6 px-2">
+<span class="material-symbols-outlined text-primary text-[28px]" data-weight="fill">flowsheet</span>
+<div>
+<h1 class="font-display text-headline-md font-bold text-primary">FlowBoard</h1>
+</div>
+</div>
+<!-- Workspace Switcher -->
+<div class="mb-6 px-2">
+<button class="w-full flex items-center justify-between bg-surface-container-low hover:bg-surface-container-high border border-outline-variant/60 rounded-lg p-2 transition-colors duration-200">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-primary-fixed text-primary flex items-center justify-center font-bold text-[10px]">
+GC
+</div>
+<span class="font-label-md text-on-surface">Global Corp</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">unfold_more</span>
+</button>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 overflow-y-auto">
+<ul class="space-y-1">
+<li class="">
+<a class="flex items-center gap-3 bg-primary-fixed text-on-primary-fixed-variant font-semibold rounded-lg px-3 py-2 border-l-4 border-primary hover:bg-surface-container-low transition-colors duration-200 opacity-90 transition-opacity" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Boards</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-md text-label-md">Calendar</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span class="font-label-md text-label-md">Announcements</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dynamic_form">dynamic_form</span>
+<span class="font-label-md text-label-md">Form Builder</span>
+</a>
+</li>
+<div class="my-4 border-t border-outline-variant/50"></div>
+<li class="">
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-label-md text-label-md">Teams</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="lock_person">lock_person</span>
+<span class="font-label-md text-label-md">Permissions</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person_search">person_search</span>
+<span class="font-label-md text-label-md">Users</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</li>
+</ul>
+</div>
+<!-- Footer -->
+<div class="mt-auto pt-4 border-t border-outline-variant">
+<button class="flex items-center gap-3 w-full p-2 hover:bg-surface-container-low rounded-lg transition-colors duration-200">
+<img alt="Ahmed Khan" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="A small, circular profile picture of a professional man with short dark hair and a neat beard, smiling gently against a neutral background. The image is clear, well-lit, and suitable for a corporate SaaS dashboard avatar." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbDWH9gFJwa56sMJwg2TnhAE-NaAmR6m--UXNRUBZtWF7shqptDDWIRSuItXcNaIyty1MkttP6u1umZ0cmXX53hs9qMc_oz8N3gguYCoO8I2zHBhTfSBhOdpOypYiMro9BVnpZMm0uQRG3aKzm4H4_yYGdT4IPmoIuiaRRp_-8a5YYdR5QA3oCdWuRLf7IFqHW47GmLU1g82hFii024xE7rl5VwxSDwu6QZTHv4KJ_rhgqjGPKbOSo-l2D_F2mtQpglFdepImHIwoT">
+<div class="text-left flex-1">
+<p class="font-label-sm text-label-sm text-on-surface">Ahmed Khan</p>
+<p class="text-[11px] text-on-surface-variant">Team Leader</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">expand_more</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col md:ml-[260px] min-h-screen">
+<!-- TopNavBar Component -->
+<header class="bg-surface-bright flex justify-between items-center w-full h-16 px-8 docked full-width top-0 z-40 border-b border-outline-variant/30">
+<!-- Mobile Menu Button -->
+<button class="md:hidden text-on-surface p-2 hover:bg-surface-container-high rounded-full">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<!-- Search Bar -->
+<div class="flex-1 max-w-2xl hidden md:flex items-center">
+<div class="relative w-full max-w-lg">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-xl">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" placeholder="Search boards, tasks, teams..." type="text">
+</div>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-4">
+<button class="hidden sm:flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-lg font-label-sm text-label-sm hover:bg-surface-container-lowest transition-colors">
+Product Team
+                    <span class="material-symbols-outlined text-lg">expand_more</span>
+</button>
+<div class="flex items-center gap-2">
+<button class="text-on-surface-variant hover:bg-surface-container-high rounded-full p-2 transition-all hover:scale-95 duration-150 relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-high rounded-full p-2 transition-all hover:scale-95 duration-150 relative">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<main class="flex-1 p-4 md:p-8 overflow-y-auto max-w-container-max mx-auto w-full"><div class="mb-8 py-6">
+  <h1 class="font-display text-headline-lg text-on-surface mb-2">Good Morning, Ahmed</h1>
+  <p class="font-body-md text-on-surface-variant">Product Team</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Main Column (Left) -->
+<div class="lg:col-span-8 xl:col-span-9 flex flex-col gap-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+<!-- My Tasks Card -->
+<div class="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-6 shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:-translate-y-[2px] transition-transform duration-200 cursor-pointer flex flex-col justify-between group">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+<h3 class="font-label-md text-label-md font-semibold">My Tasks</h3>
+</div>
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-weight="fill">task_alt</span>
+</div>
+</div>
+<div>
+<p class="font-display text-display text-on-surface">12</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Tasks assigned to you</p>
+</div>
+</div>
+<!-- Favorites Card -->
+<div class="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-6 shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:-translate-y-[2px] transition-transform duration-200 cursor-pointer flex flex-col justify-between group">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-tertiary-container text-xl">star</span>
+<h3 class="font-label-md text-label-md font-semibold">Favorites</h3>
+</div>
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed flex items-center justify-center text-tertiary-container group-hover:bg-tertiary-container group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">star_border</span>
+</div>
+</div>
+<div>
+<p class="font-display text-display text-on-surface">8</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Favorite boards</p>
+</div>
+</div>
+</div>
+<!-- Announcements Section -->
+<div class="bg-surface-container-lowest border border-outline-variant/60 rounded-xl shadow-[0_2px_4px_rgba(0,0,0,0.02)] overflow-hidden">
+<div class="p-4 border-b border-outline-variant/40">
+<h2 class="font-title-lg text-title-lg text-on-surface">Announcements</h2>
+</div>
+<div class="divide-y divide-outline-variant/40">
+<div class="p-4 flex items-start gap-4 hover:bg-surface-container-lowest/50 transition-colors">
+<div class="w-10 h-10 rounded-full bg-primary-fixed/50 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-primary">campaign</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-label-sm text-label-sm text-on-surface">Q2 Planning Meeting</h4>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-[10px]">New</span>
+</div>
+<p class="font-body-md text-[13px] text-on-surface-variant mt-1">Product Team • May 25, 2024</p>
+</div>
+</div>
+<div class="p-4 flex items-start gap-4 hover:bg-surface-container-lowest/50 transition-colors">
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed/50 flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-tertiary">sentiment_satisfied</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h4 class="font-label-sm text-label-sm text-on-surface">System Maintenance</h4>
+</div>
+<p class="font-body-md text-[13px] text-on-surface-variant mt-1">All Teams • May 22, 2024</p>
+</div>
+</div>
+</div>
+<div class="p-3 border-t border-outline-variant/40 bg-surface-bright/50 flex justify-between items-center cursor-pointer hover:bg-surface-container-low transition-colors">
+<span class="font-label-md text-[13px] text-primary">View all announcements</span>
+<span class="material-symbols-outlined text-primary text-sm">chevron_right</span>
+</div>
+</div>
+<!-- Boards Section -->
+<div>
+<h2 class="font-title-lg text-title-lg text-on-surface mb-4">Boards</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<div class="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-4 shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:-translate-y-[2px] transition-transform duration-200 cursor-pointer flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed/50 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">dashboard</span>
+</div>
+<div>
+<h4 class="font-label-sm text-[13px] text-on-surface font-semibold group-hover:text-primary transition-colors">Product Roadmap</h4>
+<p class="text-[11px] text-on-surface-variant">Product Team</p>
+</div>
+</div>
+<button class="text-outline hover:text-on-surface p-1 rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-sm">more_vert</span>
+</button>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-4 shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:-translate-y-[2px] transition-transform duration-200 cursor-pointer flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed/50 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary">web</span>
+</div>
+<div>
+<h4 class="font-label-sm text-[13px] text-on-surface font-semibold group-hover:text-primary transition-colors">Website Redesign</h4>
+<p class="text-[11px] text-on-surface-variant">Design Team</p>
+</div>
+</div>
+<button class="text-outline hover:text-on-surface p-1 rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-sm">more_vert</span>
+</button>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-4 shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:-translate-y-[2px] transition-transform duration-200 cursor-pointer flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-secondary-container/50 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary">campaign</span>
+</div>
+<div>
+<h4 class="font-label-sm text-[13px] text-on-surface font-semibold group-hover:text-primary transition-colors">Marketing Campaign</h4>
+<p class="text-[11px] text-on-surface-variant">Marketing Team</p>
+</div>
+</div>
+<button class="text-outline hover:text-on-surface p-1 rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-sm">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Sidebar (Calendar & Upcoming) -->
+<div class="lg:col-span-4 xl:col-span-3 flex flex-col gap-6">
+<!-- Calendar Widget -->
+<div class="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-5 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+<h3 class="font-label-md text-label-md font-semibold text-on-surface mb-4">Calendar</h3>
+<div class="flex justify-between items-center mb-4">
+<button class="p-1 rounded hover:bg-surface-container-low text-on-surface-variant"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+<span class="font-label-sm text-sm text-on-surface font-semibold">May 2024</span>
+<button class="p-1 rounded hover:bg-surface-container-low text-on-surface-variant"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+<div class="grid grid-cols-7 gap-1 text-center mb-2">
+<div class="text-[10px] font-semibold text-outline">Su</div>
+<div class="text-[10px] font-semibold text-outline">Mo</div>
+<div class="text-[10px] font-semibold text-outline">Tu</div>
+<div class="text-[10px] font-semibold text-outline">We</div>
+<div class="text-[10px] font-semibold text-outline">Th</div>
+<div class="text-[10px] font-semibold text-outline">Fr</div>
+<div class="text-[10px] font-semibold text-outline">Sa</div>
+</div>
+<div class="grid grid-cols-7 gap-1 text-center text-[12px] font-body-md text-on-surface">
+<div class="p-1.5 text-outline-variant">28</div><div class="p-1.5 text-outline-variant">29</div><div class="p-1.5 text-outline-variant">30</div>
+<div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">1</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">2</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">3</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">4</div>
+<div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">5</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">6</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">7</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">8</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">9</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">10</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">11</div>
+<div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">12</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">13</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">14</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">15</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">16</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">17</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">18</div>
+<div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">19</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">20</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">21</div><div class="p-1.5 bg-primary text-white rounded cursor-pointer font-bold shadow-sm">22</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">23</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">24</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">25</div>
+<div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">26</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">27</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">28</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">29</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">30</div><div class="p-1.5 hover:bg-surface-container-low rounded cursor-pointer">31</div><div class="p-1.5 text-outline-variant">1</div>
+</div>
+</div>
+<!-- Upcoming List -->
+<div class="bg-surface-container-lowest border border-outline-variant/60 rounded-xl p-5 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+<h3 class="font-label-md text-label-md font-semibold text-on-surface mb-4">Upcoming</h3>
+<div class="space-y-4">
+<div class="flex gap-3 relative before:content-[''] before:absolute before:left-[5px] before:top-4 before:bottom-[-16px] before:w-[2px] before:bg-outline-variant/30 last:before:hidden">
+<div class="w-3 h-3 rounded-full bg-primary mt-1 relative z-10 border-2 border-surface-container-lowest"></div>
+<div>
+<h4 class="font-label-sm text-[13px] text-on-surface">Design Review</h4>
+<p class="text-[11px] text-on-surface-variant">Tomorrow • 10:00 AM</p>
+</div>
+</div>
+<div class="flex gap-3 relative before:content-[''] before:absolute before:left-[5px] before:top-4 before:bottom-[-16px] before:w-[2px] before:bg-outline-variant/30 last:before:hidden">
+<div class="w-3 h-3 rounded-full bg-tertiary mt-1 relative z-10 border-2 border-surface-container-lowest"></div>
+<div>
+<h4 class="font-label-sm text-[13px] text-on-surface">Sprint Planning</h4>
+<p class="text-[11px] text-on-surface-variant">May 24 • 11:00 AM</p>
+</div>
+</div>
+<div class="flex gap-3 relative before:content-[''] before:absolute before:left-[5px] before:top-4 before:bottom-[-16px] before:w-[2px] before:bg-outline-variant/30 last:before:hidden">
+<div class="w-3 h-3 rounded-full bg-secondary mt-1 relative z-10 border-2 border-surface-container-lowest"></div>
+<div>
+<h4 class="font-label-sm text-[13px] text-on-surface">API Integration</h4>
+<p class="text-[11px] text-on-surface-variant">May 24 • 2:00 PM</p>
+</div>
+</div>
+</div>
+<a class="inline-block mt-4 text-[12px] font-semibold text-primary hover:underline" href="#">View calendar</a>
+</div>
+<!-- Quick Actions -->
+<div class="flex flex-col gap-2">
+<button class="flex items-center gap-3 w-full bg-surface-container-lowest border border-outline-variant/60 rounded-lg p-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors shadow-sm">
+<span class="material-symbols-outlined text-outline">add</span>
+                            Create Board
+                        </button>
+<button class="flex items-center gap-3 w-full bg-surface-container-lowest border border-outline-variant/60 rounded-lg p-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors shadow-sm">
+<span class="material-symbols-outlined text-outline">add</span>
+                            Create Task
+                        </button>
+<button class="flex items-center gap-3 w-full bg-surface-container-lowest border border-outline-variant/60 rounded-lg p-3 text-sm text-on-surface hover:bg-surface-container-low transition-colors shadow-sm">
+<span class="material-symbols-outlined text-outline">person_add</span>
+                            Invite Members
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+
+</body></html>

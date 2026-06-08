@@ -1,0 +1,434 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>FlowBoard - Task Details</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#516072",
+                        "inverse-on-surface": "#eff1f3",
+                        "primary-fixed": "#e1e0ff",
+                        "outline": "#767586",
+                        "on-background": "#191c1e",
+                        "background": "#f7f9fb",
+                        "on-tertiary-fixed-variant": "#2f3aa3",
+                        "secondary-fixed-dim": "#b9c8de",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-container": "#fffbff",
+                        "inverse-primary": "#c0c1ff",
+                        "on-primary-fixed": "#07006c",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e6e8ea",
+                        "surface-tint": "#494bd6",
+                        "on-secondary": "#ffffff",
+                        "surface": "#f7f9fb",
+                        "on-surface-variant": "#464554",
+                        "on-tertiary": "#ffffff",
+                        "surface-container": "#eceef0",
+                        "tertiary-fixed-dim": "#bdc2ff",
+                        "surface-container-low": "#f2f4f6",
+                        "on-primary-container": "#fffbff",
+                        "outline-variant": "#c7c4d7",
+                        "surface-bright": "#f7f9fb",
+                        "on-secondary-fixed-variant": "#39485a",
+                        "tertiary-container": "#606ad4",
+                        "secondary-container": "#d2e1f7",
+                        "primary": "#4648d4",
+                        "surface-variant": "#e0e3e5",
+                        "tertiary-fixed": "#e0e0ff",
+                        "on-surface": "#191c1e",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#2d3133",
+                        "surface-dim": "#d8dadc",
+                        "on-secondary-fixed": "#0d1c2d",
+                        "on-secondary-container": "#556477",
+                        "error": "#ba1a1a",
+                        "primary-container": "#6063ee",
+                        "secondary-fixed": "#d4e4fa",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#000767",
+                        "tertiary": "#4651b9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "sm": "12px",
+                        "container-max": "1440px",
+                        "xl": "32px",
+                        "gutter": "24px",
+                        "xs": "8px",
+                        "sidebar-width": "260px",
+                        "lg": "24px",
+                        "sidebar-collapsed": "80px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "display": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "label-md": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "display": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+        }
+        /* Custom scrollbar for modal */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #c7c4d7;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased overflow-hidden">
+<!-- App Shell (Background) -->
+<div class="flex h-screen w-full relative">
+<!-- SideNavBar -->
+<nav class="hidden md:flex fixed left-0 top-0 h-full w-[260px] border-r border-outline-variant bg-surface-container-lowest flex-col py-6 px-4 z-10">
+<div class="flex items-center gap-3 mb-8 px-3">
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary font-display font-bold text-headline-md">F</div>
+<div>
+<h1 class="font-display text-headline-lg font-bold text-primary">FlowBoard</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Collaboration Suite</p>
+</div>
+</div>
+<div class="flex-1 space-y-1">
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="home">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</a>
+<a class="flex items-center gap-3 bg-primary-fixed text-on-primary-fixed-variant font-semibold rounded-lg px-3 py-2 border-l-4 border-primary" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Boards</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-md text-label-md">Calendar</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="campaign">campaign</span>
+<span class="font-label-md text-label-md">Announcements</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dynamic_form">dynamic_form</span>
+<span class="font-label-md text-label-md">Form Builder</span>
+</a>
+</div>
+<div class="mt-auto border-t border-outline-variant pt-4">
+<a class="flex items-center gap-3 text-on-surface-variant px-3 py-2 hover:bg-surface-container-low transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+<div class="flex items-center gap-3 mt-2 px-3 py-2">
+<img alt="Ahmed Khan" class="w-8 h-8 rounded-full border border-outline-variant" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5TST0sS02-NXiojMKvDnEGu-tC2rssytqPj05QktcQWy4Suy8KaMvLLLXdb59QKIImmiOOz6BXLIN9B-cjVmbdGuQiM3clBTvjkB0HHQqTRPbO-7O_b8_sMBpX67zKO7rAipZZf5RCND6Ic0lyctPHottaCGlcoNnNdPeFjyYAPp4eQwh19dl9ADZexsnTC2tlSlTnsccBvxhoHNmxV5SUEhTBU5EeQusdju70DKDTgarb_KYO-Eb1p0CzjCiVdMFxYOGbJRAjSlc">
+<span class="font-label-md text-label-md">Ahmed Khan</span>
+</div>
+</div>
+</nav>
+<!-- Main Content Area (Background) -->
+<main class="flex-1 ml-0 md:ml-[260px] h-full flex flex-col blur-sm opacity-50 pointer-events-none transition-all duration-300">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full h-16 px-8 bg-surface-bright border-b border-surface-variant">
+<div class="flex items-center gap-4">
+<h2 class="font-title-lg text-title-lg text-on-surface font-semibold">Product Roadmap Board</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" data-icon="search">search</span>
+<input class="pl-10 pr-4 py-2 w-64 rounded-full border border-outline-variant bg-surface-container-lowest text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="Search board..." type="text">
+</div>
+<button class="hover:bg-surface-container-high rounded-full p-2 transition-all text-on-surface-variant">
+<span class="material-symbols-outlined text-[24px]" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:bg-surface-container-high rounded-full p-2 transition-all text-on-surface-variant">
+<span class="material-symbols-outlined text-[24px]" data-icon="history">history</span>
+</button>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg font-label-md flex items-center gap-2 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+                        New Task
+                    </button>
+</div>
+</header>
+<!-- Board Content (Simulated Background) -->
+<div class="flex-1 overflow-auto p-8 flex gap-6">
+<!-- Column 1 -->
+<div class="w-80 flex-shrink-0 flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h3 class="font-title-lg text-title-lg font-semibold text-on-surface">To Do <span class="text-on-surface-variant text-sm font-normal ml-2">4</span></h3>
+<button class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-[20px]" data-icon="more_horiz">more_horiz</span></button>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant shadow-sm h-32"></div>
+<div class="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant shadow-sm h-40"></div>
+</div>
+<!-- Column 2 -->
+<div class="w-80 flex-shrink-0 flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h3 class="font-title-lg text-title-lg font-semibold text-on-surface">In Progress <span class="text-on-surface-variant text-sm font-normal ml-2">2</span></h3>
+<button class="text-on-surface-variant hover:text-on-surface"><span class="material-symbols-outlined text-[20px]" data-icon="more_horiz">more_horiz</span></button>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant shadow-sm h-48 border-l-4 border-l-primary"></div>
+</div>
+</div>
+</main>
+</div>
+<!-- Modal Overlay Backdrop -->
+<div class="fixed inset-0 bg-on-background/40 z-50 flex items-center justify-center p-4 sm:p-6 backdrop-blur-sm">
+<!-- Modal Container -->
+<div class="bg-surface-container-lowest rounded-xl shadow-2xl w-full max-w-[1000px] max-h-[921px] flex flex-col overflow-hidden border border-outline-variant">
+<!-- Modal Header -->
+<div class="flex justify-between items-start p-6 border-b border-surface-variant bg-surface-bright">
+<div class="flex gap-4 items-start">
+<span class="material-symbols-outlined text-primary text-[28px] mt-1" data-icon="task_alt">task_alt</span>
+<div>
+<div class="flex gap-2 mb-2">
+<span class="px-2 py-1 bg-tertiary-container/10 text-tertiary rounded-full font-label-sm text-label-sm uppercase tracking-wider">Design</span>
+<span class="px-2 py-1 bg-error-container/20 text-error rounded-full font-label-sm text-label-sm uppercase tracking-wider">High Priority</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">User research</h2>
+<div class="font-label-md text-label-md text-on-surface-variant mt-1 flex items-center gap-2">
+<span>in list <a class="underline text-on-surface" href="#">In Progress</a></span>
+<span class="text-outline-variant">•</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]" data-icon="visibility">visibility</span> Watching</span>
+</div>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors" onclick="document.querySelector('.fixed.inset-0').style.display='none'">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+</div>
+<!-- Modal Body (Two Columns) -->
+<div class="flex-1 overflow-y-auto flex flex-col lg:flex-row bg-surface">
+<!-- Left Column (Main Details) -->
+<div class="flex-1 p-6 lg:border-r border-surface-variant space-y-8 bg-surface-container-lowest">
+<!-- Meta Info (Assigned, Dates) -->
+<div class="flex flex-wrap gap-8">
+<div>
+<h4 class="font-label-sm text-label-sm text-on-surface-variant mb-2 uppercase tracking-wide">Assigned By</h4>
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant/50">
+<img alt="Sarah J." class="w-6 h-6 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNA4xoAWV9WQW-ed-3wNPYNjVrBaQiDILi9Vm7Jg-wGzpAF1wdQ0BFCmAYDv2bZXG2yWZaf9A00KXBOZ8wDTllRQuNHh5ahqYFDEpv7jPmVYwBIaoN_oL26mjB8kI3CjBRI4cI34M4yMp60NHY8kIA09krW1FAarvgaesxBxNcpWGBXyt0qZ0m69ModtYUQzFB85H1f9_kgW3T_d8sCuqjUNL6nUTUHlPgvhQAvNGsTws3Qhb1ZyDCGPcTVqfPzXUlilHUkJGglN87">
+<span class="font-label-md text-label-md text-on-surface">Sarah J.</span>
+</div>
+</div>
+<div>
+<h4 class="font-label-sm text-label-sm text-on-surface-variant mb-2 uppercase tracking-wide">Assigned To</h4>
+<div class="flex items-center gap-2">
+<div class="flex -space-x-2">
+<img alt="Ahmed K." class="w-8 h-8 rounded-full border-2 border-surface-container-lowest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxPqTT1aPTThvBDWqeHpw4hcjCgFMCWpm9TJJt_dgYJrwyhxWcwbWE5WWe0MliZausPvksTipLarw2Of-ckH1B8_X9nAYPsH_QwcLPa2-XW7WD5pO_VHh0-Rd7AsC10m7j4UUa5ePU26evJprZpqTUgedI50lyl9igd6j7c0bikVhTkTam8TZULqA_UFVzm1FIz3A6umEHkKv0TCJHTK63rPY52pQTr2uj_zGtntdxvQyseowBDGVx1aD67YJHKoymyUJ9fASqwfRD">
+<img alt="Lin C." class="w-8 h-8 rounded-full border-2 border-surface-container-lowest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAa8ALxJcAIqJdKjY3xddE3cvVDi4vR5aC-xsDPlWjvrsfgI_90UKeaks_v7z5RyqUgT_RGApT1XuNtdArw1NC8Fhd1YLGGLxAAQ6bEQgbGkOAL6jGsDjrld1VQcoPjfxdR9Xatg8EYLFgcIB_Tk-zChao-6-mZ-ZxwwCbeL9ruw4wG0kTiq5X30ti_wEktwY67iYMBNGEwI9HeCLe7XKB_xmCtM_D7ZEEW5SNKt_oYCPW61xlXmTsS2IgUvv3N9jKHWXyM71mYr_1B">
+</div>
+<button class="w-8 h-8 rounded-full bg-surface-container-low border border-outline-variant border-dashed flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+</button>
+</div>
+</div>
+<div>
+<h4 class="font-label-sm text-label-sm text-on-surface-variant mb-2 uppercase tracking-wide">Due Date</h4>
+<div class="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant/50 cursor-pointer hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant" data-icon="calendar_month">calendar_month</span>
+<span class="font-label-md text-label-md text-on-surface">Oct 24 at 5:00 PM</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant ml-2" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Description -->
+<div>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="subject">subject</span>
+<h3 class="font-title-lg text-title-lg font-semibold text-on-surface">Description</h3>
+<button class="ml-auto px-3 py-1 bg-surface-container-low hover:bg-surface-container-high rounded-md font-label-sm text-label-sm text-on-surface transition-colors border border-outline-variant">Edit</button>
+</div>
+<div class="pl-7">
+<div class="font-body-md text-body-md text-on-surface-variant space-y-3 leading-relaxed">
+<p>We need to conduct preliminary user research for the upcoming mobile app redesign. The focus should be on navigating the main dashboard and discovering new features.</p>
+<ul class="list-disc pl-5 space-y-1">
+<li>Interview 5 existing power users.</li>
+<li>Create a brief survey for the broader user base.</li>
+<li>Compile findings into a summary presentation.</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Attachments -->
+<div>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="attach_file">attach_file</span>
+<h3 class="font-title-lg text-title-lg font-semibold text-on-surface">Attachments</h3>
+<button class="ml-auto px-3 py-1 bg-surface-container-low hover:bg-surface-container-high rounded-md font-label-sm text-label-sm text-on-surface transition-colors border border-outline-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="add">add</span> Add
+                            </button>
+</div>
+<div class="pl-7 grid grid-cols-2 gap-4">
+<!-- Attachment 1 -->
+<div class="flex items-center gap-3 p-3 border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="w-12 h-12 bg-secondary-container text-secondary-fixed-dim rounded flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" data-icon="image">image</span>
+</div>
+<div class="overflow-hidden">
+<p class="font-label-md text-label-md text-on-surface truncate group-hover:underline">mockups_v1.png</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Added Oct 12 • 2.4 MB</p>
+</div>
+</div>
+<!-- Attachment 2 -->
+<div class="flex items-center gap-3 p-3 border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="w-12 h-12 bg-error-container text-error rounded flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined" data-icon="picture_as_pdf">picture_as_pdf</span>
+</div>
+<div class="overflow-hidden">
+<p class="font-label-md text-label-md text-on-surface truncate group-hover:underline">interview_script.pdf</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Added Oct 14 • 156 KB</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Checklist -->
+<div>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="checklist">checklist</span>
+<h3 class="font-title-lg text-title-lg font-semibold text-on-surface">Checklist</h3>
+<button class="ml-auto px-3 py-1 bg-surface-container-low hover:bg-surface-container-high rounded-md font-label-sm text-label-sm text-on-surface transition-colors border border-outline-variant">Delete</button>
+</div>
+<div class="pl-7">
+<div class="flex items-center gap-3 mb-4">
+<span class="font-label-sm text-label-sm text-on-surface-variant w-8">33%</span>
+<div class="h-2 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary transition-all duration-500" style="width: 33%"></div>
+</div>
+</div>
+<div class="space-y-2">
+<label class="flex items-start gap-3 p-2 hover:bg-surface-container-low rounded-lg transition-colors cursor-pointer group">
+<input checked="" class="mt-0.5 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox">
+<span class="font-body-md text-body-md text-on-surface line-through text-on-surface-variant">Draft interview questions</span>
+</label>
+<label class="flex items-start gap-3 p-2 hover:bg-surface-container-low rounded-lg transition-colors cursor-pointer group">
+<input class="mt-0.5 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox">
+<span class="font-body-md text-body-md text-on-surface">Schedule meetings with 5 users</span>
+</label>
+<label class="flex items-start gap-3 p-2 hover:bg-surface-container-low rounded-lg transition-colors cursor-pointer group">
+<input class="mt-0.5 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox">
+<span class="font-body-md text-body-md text-on-surface">Synthesize feedback into presentation</span>
+</label>
+<button class="mt-2 ml-7 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors">Add an item</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column (Activity & Comments) -->
+<div class="w-full lg:w-[380px] bg-surface flex flex-col shrink-0">
+<div class="p-6 border-b border-surface-variant flex items-center gap-2 sticky top-0 bg-surface/95 backdrop-blur z-10">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="format_list_bulleted">format_list_bulleted</span>
+<h3 class="font-title-lg text-title-lg font-semibold text-on-surface">Activity</h3>
+<button class="ml-auto px-3 py-1 bg-surface-container-low hover:bg-surface-container-high rounded-md font-label-sm text-label-sm text-on-surface transition-colors border border-outline-variant">Show Details</button>
+</div>
+<div class="flex-1 p-6 overflow-y-auto space-y-6">
+<!-- Activity Item -->
+<div class="flex gap-3">
+<img alt="Sarah J." class="w-8 h-8 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAl6tg1Dm6LQWBRUUxymjhNstmdnFY93n6P62v-Xjm_1KLJHA0Ln8pOpz7qQiOvGz6r0oWeCHym5DNRyD449aMp6CmK95SlEIAY4h5HbMDH_iay6dx4YJcSACgIIhApyLaRUHaRZ4-LB6MrOW-4EPqCHGccep2RIi0a-tI88RIFLi05IsZn2LA11H8rY8qsDFmhtqywbvgxR7WJrjK44rPA0etOsqh0DNhfh9VnhfRo1Y5A5rHI_XHqy14JOkAyEZBeI1NFocgUlRh5">
+<div>
+<p class="font-body-md text-body-md text-on-surface">
+<span class="font-semibold">Sarah J.</span> attached <span class="font-medium">interview_script.pdf</span> to this card
+                                </p>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Oct 14 at 10:23 AM</p>
+</div>
+</div>
+<!-- Comment Item -->
+<div class="flex gap-3">
+<img alt="Ahmed K." class="w-8 h-8 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgwMW3vnsU7SQX5vhUZ4zTg9QJO1RRSkzywm4TG3ikBOs6fAJF-Z9OgZVpMNH3SEEefga5GjdbCK_Pmi6CAdbe-9z0HYuxYmGIABM9W5-g9WnInt8sLsKS-X5dzbDodapkGb9colhXrTu2y8vud7e6mpm7lVOtw0FicmIzAzoLav0yx-wUM6o5rNz8yIrovaJNZVossh7cnMq59KKrnLZKY07_BsuHz-5CSKu2d5XQKLnp1kG9D4zBxwUqXxNr3ky0Tlw8bz4Z0Fmn">
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="font-semibold font-label-md text-label-md text-on-surface">Ahmed Khan</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Oct 15 at 2:45 PM</span>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-3 rounded-lg rounded-tl-none font-body-md text-body-md text-on-surface shadow-sm">
+                                    I've started reaching out to the users on our shortlist. So far, 2 have confirmed for next week.
+                                </div>
+<div class="flex gap-4 mt-2">
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface underline">Reply</button>
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface flex items-center gap-1"><span class="material-symbols-outlined text-[14px]" data-icon="mood">mood</span> React</button>
+</div>
+</div>
+</div>
+<!-- Activity Item -->
+<div class="flex gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="sync">sync</span>
+</div>
+<div>
+<p class="font-body-md text-body-md text-on-surface">
+<span class="font-semibold">Ahmed Khan</span> moved this card from <span class="font-medium text-on-surface-variant">To Do</span> to <span class="font-medium underline">In Progress</span>
+</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Oct 15 at 2:46 PM</p>
+</div>
+</div>
+</div>
+<!-- Comment Input -->
+<div class="p-6 border-t border-surface-variant bg-surface-container-lowest sticky bottom-0">
+<div class="flex gap-3">
+<img alt="Current User" class="w-8 h-8 rounded-full shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0QrwK2QKqptDDFxNcUWcqbRhw0VteSSVliolP3aHMlPBoACtFtx4Agf1_rgP0-s07Kyccwp8NMbDBcvuUaYjut0XuIdsChkA8Lap1ApEtyRocw4v4KEm7ze8jDuO_y7u8y8dL_-7ehpWEDXiBJh02QZWeaG3hHIMTLkQVIEu-vT1EspDNDukoy-cH1tIRXOdgJpPyVVcHl6zncxZ8Wa-Y4hktuFsawWhNHLyLuTeRDDGZplbmMW0VqTBoTt90xOYdGtZYUn5ksCjC">
+<div class="flex-1 relative">
+<textarea class="w-full bg-surface border border-outline-variant rounded-lg p-3 pb-10 text-body-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none min-h-[80px]" placeholder="Write a comment..." rows="2"></textarea>
+<div class="absolute bottom-2 left-2 right-2 flex justify-between items-center">
+<div class="flex gap-1">
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="format_bold">format_bold</span></button>
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="format_italic">format_italic</span></button>
+<button class="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded transition-colors"><span class="material-symbols-outlined text-[18px]" data-icon="alternate_email">alternate_email</span></button>
+</div>
+<button class="bg-primary text-on-primary px-4 py-1.5 rounded-md font-label-md hover:bg-primary/90 transition-colors shadow-sm">Save</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>

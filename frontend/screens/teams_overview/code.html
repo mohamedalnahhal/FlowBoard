@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FlowBoard - Teams</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#e6e8ea",
+                    "tertiary-container": "#606ad4",
+                    "on-primary-container": "#fffbff",
+                    "inverse-surface": "#2d3133",
+                    "on-secondary-container": "#556477",
+                    "on-secondary-fixed-variant": "#39485a",
+                    "inverse-primary": "#c0c1ff",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed": "#07006c",
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#e0e3e5",
+                    "primary-fixed": "#e1e0ff",
+                    "on-tertiary": "#ffffff",
+                    "outline": "#767586",
+                    "on-primary": "#ffffff",
+                    "primary-container": "#6063ee",
+                    "surface": "#f7f9fb",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-variant": "#e0e3e5",
+                    "outline-variant": "#c7c4d7",
+                    "on-background": "#191c1e",
+                    "primary": "#4648d4",
+                    "on-surface": "#191c1e",
+                    "tertiary": "#4651b9",
+                    "surface-container-low": "#f2f4f6",
+                    "tertiary-fixed-dim": "#bdc2ff",
+                    "on-secondary-fixed": "#0d1c2d",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed": "#e0e0ff",
+                    "secondary": "#516072",
+                    "surface-bright": "#f7f9fb",
+                    "on-error": "#ffffff",
+                    "surface-dim": "#d8dadc",
+                    "secondary-fixed": "#d4e4fa",
+                    "on-tertiary-container": "#fffbff",
+                    "on-surface-variant": "#464554",
+                    "on-primary-fixed-variant": "#2f2ebe",
+                    "inverse-on-surface": "#eff1f3",
+                    "primary-fixed-dim": "#c0c1ff",
+                    "secondary-container": "#d2e1f7",
+                    "error": "#ba1a1a",
+                    "surface-container": "#eceef0",
+                    "on-tertiary-fixed": "#000767",
+                    "surface-tint": "#494bd6",
+                    "on-tertiary-fixed-variant": "#2f3aa3",
+                    "background": "#f7f9fb",
+                    "secondary-fixed-dim": "#b9c8de"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "sidebar-collapsed": "80px",
+                    "xs": "8px",
+                    "container-max": "1440px",
+                    "xl": "32px",
+                    "sidebar-width": "260px",
+                    "lg": "24px",
+                    "base": "4px",
+                    "sm": "12px",
+                    "md": "16px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "label-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "display": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "label-md": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                    "headline-lg-mobile": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "display": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md h-screen w-full flex overflow-hidden">
+<!-- SideNavBar (from JSON) -->
+<aside class="hidden md:flex flex-col h-full py-xl px-md gap-base bg-surface-container-low w-sidebar-width sticky left-0 top-0 border-r border-outline-variant shrink-0 z-20">
+<!-- Header -->
+<div class="flex items-center gap-sm px-[12px] mb-lg">
+<div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-primary text-[20px] icon-fill" data-icon="token">token</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title-lg text-title-lg font-bold text-on-surface">FlowBoard</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Product Workspace</span>
+</div>
+</div>
+<!-- CTA -->
+<div class="px-[12px] mb-md">
+<button class="w-full bg-primary text-on-primary rounded-lg py-sm px-md flex items-center justify-center gap-xs hover:brightness-90 transition-all duration-200 ease-in-out font-label-md text-label-md">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+                New Board
+            </button>
+</div>
+<!-- Navigation Links -->
+<nav class="flex flex-col gap-1 flex-1 overflow-y-auto">
+<a class="flex items-center gap-sm px-[12px] py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="home">home</span>
+                Home
+            </a>
+<a class="flex items-center gap-sm px-[12px] py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+                Boards
+            </a>
+<a class="flex items-center gap-sm px-[12px] py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="calendar_today">calendar_today</span>
+                Calendar
+            </a>
+<a class="flex items-center gap-sm px-[12px] py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="campaign">campaign</span>
+                Announcements
+            </a>
+<a class="flex items-center gap-sm px-[12px] py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dynamic_form">dynamic_form</span>
+                Form Builder
+            </a>
+<!-- Active Tab -->
+<a class="flex items-center gap-sm px-[12px] py-xs rounded-lg bg-secondary-container text-on-secondary-container border-l-4 border-primary transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="groups">groups</span>
+                Teams
+            </a>
+<a class="flex items-center gap-sm px-[12px] py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="lock_person">lock_person</span>
+                Permissions
+            </a>
+<a class="flex items-center gap-sm px-[12px] py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="person">person</span>
+                Users
+            </a>
+<a class="flex items-center gap-sm px-[12px] py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+                Settings
+            </a>
+</nav>
+<!-- Footer Links -->
+<div class="flex flex-col gap-1 mt-auto pt-md border-t border-outline-variant">
+<a class="flex items-center gap-sm px-[12px] py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="account_circle">account_circle</span>
+                Profile
+            </a>
+<a class="flex items-center gap-sm px-[12px] py-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all duration-200 ease-in-out font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="contact_support">contact_support</span>
+                Support
+            </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-background overflow-hidden relative">
+<!-- TopAppBar (from JSON) -->
+<header class="w-full h-16 flex items-center justify-between px-lg bg-surface border-b border-outline-variant shrink-0 z-10">
+<!-- Left: Brand (Mobile) & Search -->
+<div class="flex items-center gap-md">
+<div class="md:hidden font-display text-display text-primary">FlowBoard</div>
+<div class="hidden md:flex items-center bg-surface-container-low rounded-lg px-sm py-xs border border-outline-variant focus-within:ring-2 focus-within:ring-primary/20 w-64">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] mr-xs" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 p-0 font-body-md text-body-md text-on-surface w-full outline-none placeholder-on-surface-variant" placeholder="Search..." type="text"/>
+</div>
+</div>
+<!-- Right: Actions & Profile -->
+<div class="flex items-center gap-sm">
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer active:scale-95">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer active:scale-95">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden ml-xs border border-outline-variant cursor-pointer">
+<img alt="User avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a person wearing a smart casual outfit, set against a clean, blurred, light gray modern office background. The lighting is soft and flattering, typical of a high-quality corporate directory photo." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB38lWmxBDJskd8nNfgSdDa0styHFD1JT3riDrOUvc4lzQdBGtBJAvYwWef1XtR1AMIMsytNtWyV6OST16oOs1Og5vZ43FuAWhaEYPO5KcP6HEwlQOubZdSnGo1ax1jymq_BE8jti8DXBZmHdzw7Z63fYC-JiSahOuWEd3wzHcd870Crndgg8G2_FqCKhuTrvGZtgC7ejd5i5vgJfjmG5b1vV6nla6UeOL7RtZUFuvSzp9oHiuC4JBP8ViKKa4S9jFecJJxsiL2CE7A"/>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<div class="flex-1 overflow-y-auto p-md md:p-xl">
+<div class="max-w-container-max mx-auto">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-md mb-lg">
+<div>
+<h1 class="font-display text-display text-on-surface mb-xs">Teams</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Manage your organization's groups and functional units.</p>
+</div>
+<button class="bg-primary text-on-primary rounded-lg px-md py-sm font-label-md text-label-md hover:brightness-90 transition-colors flex items-center gap-xs shadow-[0_2px_4px_rgba(0,0,0,0.1)] active:scale-95 w-fit">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+                        Create Team
+                    </button>
+</div>
+<!-- Filters/Search Bar for Canvas -->
+<div class="flex flex-col sm:flex-row gap-sm mb-xl">
+<div class="flex items-center bg-surface-container-lowest rounded-lg px-sm py-xs border border-outline-variant focus-within:ring-2 focus-within:ring-primary/20 flex-1 max-w-md">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] mr-xs" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 p-0 font-body-md text-body-md text-on-surface w-full outline-none placeholder-on-surface-variant" placeholder="Filter teams..." type="text"/>
+</div>
+<button class="flex items-center justify-center gap-xs px-md py-sm rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low transition-colors font-label-md text-label-md w-fit">
+<span class="material-symbols-outlined text-[20px]" data-icon="filter_list">filter_list</span>
+                        Filter
+                    </button>
+</div>
+<!-- Teams Grid (Bento style) -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-lg">
+<!-- Team Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-md flex flex-col gap-md shadow-[0_2px_4px_rgba(0,0,0,0.05)] hover:-translate-y-[2px] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-200">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed text-on-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined icon-fill" data-icon="design_services">design_services</span>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg text-on-surface">Design Ops</h3>
+<span class="inline-flex items-center rounded-full bg-secondary-fixed/50 px-2 py-0.5 font-label-sm text-label-sm text-on-secondary-fixed mt-1">12 Members</span>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 min-h-[40px]">Maintaining the design system, tooling, and establishing cross-functional workflows.</p>
+<div class="pt-sm border-t border-outline-variant flex justify-between items-center mt-auto">
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Lead</span>
+<span class="font-label-md text-label-md text-on-surface">Sarah Jenkins</span>
+</div>
+<div class="flex -space-x-2 overflow-hidden">
+<img alt="" class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest object-cover" data-alt="A smiling woman with dark hair pulled back, wearing a simple white blouse, set against a bright, out-of-focus modern office window. Professional corporate directory portrait style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDN42KE6L6luOiSDGjdZ3KPTOGF1eog62VEoxcJtifZgHzd3StlXI3W9TxFdSYsyJWTKUmWYbNinPmnqJSBitmVJ2mVNVhurJDzGj9UpeucD1ccTREiu7MuzJeEna1sc4zWzTEIHlkmnOO2Le_0HfwajqVlCztXLmJ9mEFPDidKVbIsJ86PbzuUnlrFsm4JSOkFalcMNU7j_Ikp-TolvVVbvj4ffdIi_9HHnDbeXV_foCT_Hn3lCCMiJEtqyjTfS9a_OiRn5Rv3wjf"/>
+<img alt="" class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest object-cover" data-alt="A professional headshot of a young man with short brown hair and glasses, wearing a blue button-down shirt. Clean, light gray studio background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaymR56NCLTDUp1veFHVCcRzrJ0t0RtgoHGCRYwQq8gK-ScnG-yjVbFA_j297JHQqTVQTxGdkPh07D2OFyQh5OOqYbCJcbP44nsBvDjf4bflLu49iABgx5dS99Z0VOMqBAUr7ofzWZPBQrsXweIm3cw7HD9kOjkgqWbJiriE86iz3ASdFNkCJTjmLiIuLU_Li8cNJHl-3UnpcrXc5B8dCy1xteABAwrJxF6C3triPdbDO8Gjwlq0uvVvmWnpu_0xu2AUyQ4Nv5mIdV"/>
+<img alt="" class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest object-cover" data-alt="Close-up portrait of a man with a short beard, wearing a dark grey t-shirt. The background is a soft, blurred corporate workspace with cool lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7BHD8-2RRt5BZ9Hnb8cVNX7IGeS0lTAgCWWAcctXakUFzooR66JPEGMkZJr-w7BHinomfjt2_dA1yXnczL5gBxdPaxCEdC1FlA3YPdXUl6khctd6BUkLLonVJ2N1nQkMFwUAF9hZ29lDRG8mOy5kfsC_61RwepGJbKVWkp7TzGT8J8qofvnIG9xqnu5ezrAPqh2ZPnCXntWnfe3BlzQqf-ZRGpvtnlJ8aGsDstz675XZ70y4yHSzzt2tTyAnBt50W2qkXlydVIP9R"/>
+<div class="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-surface-container-lowest bg-surface-container-high font-label-sm text-label-sm text-on-surface-variant z-10 relative">
+                                    +9
+                                </div>
+</div>
+</div>
+<button class="w-full mt-sm py-xs border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors">
+                            Manage Team
+                        </button>
+</div>
+<!-- Team Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-md flex flex-col gap-md shadow-[0_2px_4px_rgba(0,0,0,0.05)] hover:-translate-y-[2px] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-200">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-lg bg-tertiary-container/30 text-tertiary flex items-center justify-center">
+<span class="material-symbols-outlined icon-fill" data-icon="code_blocks">code_blocks</span>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg text-on-surface">Core Engineering</h3>
+<span class="inline-flex items-center rounded-full bg-secondary-fixed/50 px-2 py-0.5 font-label-sm text-label-sm text-on-secondary-fixed mt-1">24 Members</span>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 min-h-[40px]">Building and scaling the primary backend microservices and database infrastructure.</p>
+<div class="pt-sm border-t border-outline-variant flex justify-between items-center mt-auto">
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Lead</span>
+<span class="font-label-md text-label-md text-on-surface">Marcus Chen</span>
+</div>
+<div class="flex -space-x-2 overflow-hidden">
+<img alt="" class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest object-cover" data-alt="Portrait of a young woman with a neutral expression, wearing a black top. Crisp, even lighting against a plain white background, ideal for an employee profile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7pKM41ZY3K_D1gM9hSJq2Y09ALOKF489Dm0Sr9T7_c_1Kza3Hpcnxv55Kk5L3oluFYyUbgpTHVPQGFtU3LjL90F8JZ8get1ylDmDfJ9ekWwcwVZ7qSzCNX16NOvrmhVw8-sbKrGMRv0yAP5glR51WwnvpRcKRggBt5_32IGEYFC5VjbkjuG9DVsmujwTgyrQD_UfMl9xYkkdmpMP0wBDJ9diwZi1luLb8wTJDj7wm2cI5MPwMytZ4MhmAd80qj3YzXGWJxLZq7e5H"/>
+<img alt="" class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest object-cover" data-alt="A professional headshot of a man with styled hair, wearing a grey suit jacket over a white shirt. Soft, diffused lighting in a modern architectural setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4agfHCFRZ9E4EoBBPZzJiHYAZUbDVj0F6KpcsI6tE9peQYev-t1NX5ymvmDJQch27fwW_ADEp4xLyj_rNr8--tf2HY_lMoZY5T1fv-PZPp4vGipXv1yrG4HeYTM-r19AejjR5aLRl_qUqdzD2FKquMk4TogMrE_jXFhlUR2XTcm2jYabwNpq6bvaW5rU7I_7U40vaIggaDMGWw4ywiW8IFmYIMPRUHjrxVmSk1duAGex2UwSGW-jZgibhmOp4uYpGX6qqM4V6BxuS"/>
+<img alt="" class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest object-cover" data-alt="Portrait of a mature woman with grey hair, smiling gently, wearing a navy blue blouse. The background is a soft, out-of-focus light grey, conveying a corporate environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtvfFJdJNtdflKUDTi__Xr0vNvJy9cV6Aa5J1ocp39yCNCPo1Gin8AOEeuLtNAMHtoSRZ8o9hTwIB1e5XFWfW-tPDG0cQ-Z3KRTDLsh-iDdbCaUj1hDeOY5P_5N4yapH93R2hmDGueAMBjAISbntUEg4jt3Srrjr7cAU2qYAJYHs7kVjP1MFAXKrA_jvr15OdQ2cLazUicLwaxtaIgKjLxM1niklEbXrG2o9HJ6i2bZ3ez2PWMqfDGWm-qx0Fm1hLqFqabIsAJNX6H"/>
+<div class="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-surface-container-lowest bg-surface-container-high font-label-sm text-label-sm text-on-surface-variant z-10 relative">
+                                    +21
+                                </div>
+</div>
+</div>
+<button class="w-full mt-sm py-xs border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors">
+                            Manage Team
+                        </button>
+</div>
+<!-- Team Card 3 -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-md flex flex-col gap-md shadow-[0_2px_4px_rgba(0,0,0,0.05)] hover:-translate-y-[2px] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-200">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest text-on-surface flex items-center justify-center">
+<span class="material-symbols-outlined icon-fill" data-icon="campaign">campaign</span>
+</div>
+<div>
+<h3 class="font-title-lg text-title-lg text-on-surface">Product Marketing</h3>
+<span class="inline-flex items-center rounded-full bg-secondary-fixed/50 px-2 py-0.5 font-label-sm text-label-sm text-on-secondary-fixed mt-1">8 Members</span>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2 min-h-[40px]">Driving go-to-market strategies, user research, and competitive analysis.</p>
+<div class="pt-sm border-t border-outline-variant flex justify-between items-center mt-auto">
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Lead</span>
+<span class="font-label-md text-label-md text-on-surface">Elena Rodriguez</span>
+</div>
+<div class="flex -space-x-2 overflow-hidden">
+<img alt="" class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest object-cover" data-alt="A vibrant professional portrait of a woman with a bright smile, wearing a casual denim shirt. The background is a slightly blurred, warm-toned indoor office setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-D4V-Z8ZnAb2ZJqyxji5fqeAHn-Oiaxyg_PpFigZ0u_27pVWa3mRwKy6a3l8qQAxlmVB9YEiBhNfR8-Z4UVUqVCmeHSZyvf03qFdRZ1-nRizHe8P17CC_Kr8qSwFpuYlDMAQ278nkvdCUuK8HfGISkwimDmQ_JnoCjBdPtPG2CMCRAZdH-a6r_nonmz_wQzTHgE6EhpsOc0h0QK6oCCyGnEiPVVIZ9it7r5F2BGgy3cCOtpE6lvsT3om3y1Wkcm7mUWl0PpWD6R_M"/>
+<img alt="" class="inline-block h-8 w-8 rounded-full ring-2 ring-surface-container-lowest object-cover" data-alt="A standard corporate headshot of a man with short hair, wearing a dark suit and light blue shirt. Plain, neutral grey background with soft studio lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1YaULH_JkoPABTG-0-Cki8VeaUF4Ozju4pXEgr9AmZBip36VVuSzwXgiMxYCnIvI02uj9nqLYt3jcTQVV6x9cK2xNalUE6DwgmjbzMlymGQ8_HTwX5FW-FwOrEFffsDX21Z3LwBdkN2Z6_iAHItnM6FwIhXGwe68BgOPH2ZFTujfP8Yjl2dmGJjwCseDFyDYEWe9iX43-OtE09oyzkhLWaKj0tCidM1Tc2-SIb1V98xrf9PdiT_wZdxO6Z3S3yPSgFvDjsUNkWUSv"/>
+<div class="flex items-center justify-center h-8 w-8 rounded-full ring-2 ring-surface-container-lowest bg-surface-container-high font-label-sm text-label-sm text-on-surface-variant z-10 relative">
+                                    +6
+                                </div>
+</div>
+</div>
+<button class="w-full mt-sm py-xs border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors">
+                            Manage Team
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html><html class="light" lang="en" style="width: 1280px; height: 1024px; overflow: hidden; position: relative;"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Edit User Permissions</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed-variant": "#2f3aa3",
+                    "outline-variant": "#c7c4d7",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#767586",
+                    "on-secondary-fixed-variant": "#39485a",
+                    "on-secondary-fixed": "#0d1c2d",
+                    "on-secondary-container": "#556477",
+                    "inverse-primary": "#c0c1ff",
+                    "error": "#ba1a1a",
+                    "surface-container-high": "#e6e8ea",
+                    "tertiary-container": "#606ad4",
+                    "primary": "#4648d4",
+                    "error-container": "#ffdad6",
+                    "surface-tint": "#494bd6",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed-variant": "#2f2ebe",
+                    "surface-container-low": "#f2f4f6",
+                    "on-tertiary-fixed": "#000767",
+                    "surface-dim": "#d8dadc",
+                    "tertiary-fixed-dim": "#bdc2ff",
+                    "secondary-fixed": "#d4e4fa",
+                    "inverse-on-surface": "#eff1f3",
+                    "tertiary": "#4651b9",
+                    "on-tertiary-container": "#fffbff",
+                    "on-error-container": "#93000a",
+                    "primary-container": "#6063ee",
+                    "on-tertiary": "#ffffff",
+                    "primary-fixed": "#e1e0ff",
+                    "on-surface-variant": "#464554",
+                    "on-surface": "#191c1e",
+                    "surface-container": "#eceef0",
+                    "secondary-container": "#d2e1f7",
+                    "primary-fixed-dim": "#c0c1ff",
+                    "secondary-fixed-dim": "#b9c8de",
+                    "surface-variant": "#e0e3e5",
+                    "on-primary-container": "#fffbff",
+                    "surface-bright": "#f7f9fb",
+                    "on-background": "#191c1e",
+                    "on-primary": "#ffffff",
+                    "background": "#f7f9fb",
+                    "inverse-surface": "#2d3133",
+                    "tertiary-fixed": "#e0e0ff",
+                    "secondary": "#516072",
+                    "on-error": "#ffffff",
+                    "surface-container-highest": "#e0e3e5",
+                    "surface": "#f7f9fb",
+                    "on-primary-fixed": "#07006c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "sidebar-collapsed": "80px",
+                    "sidebar-width": "260px",
+                    "sm": "12px",
+                    "base": "4px",
+                    "md": "16px",
+                    "xs": "8px",
+                    "container-max": "1440px",
+                    "xl": "32px",
+                    "lg": "24px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "display": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "label-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-md": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "display": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .ambient-shadow { box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-background text-on-background h-screen overflow-hidden flex relative">
+<!-- Background (Mock of the Users Tab) -->
+<div class="absolute inset-0 z-0">
+<img alt="Permissions Users Tab Background" class="w-full h-full object-cover opacity-50 blur-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRqIgtQrwPbRi4OwBc5r9a96HZcpiKI_TekeOwWxHMejXp6MzOzvyI6NZEauiNIMNDgysWcf8G_q_PUoHjZCbg2p4J0CE2JrFFUi5gkTNsHO5OxQXuEo_FPmU7u9q7RUu1dl9tSzxz3uY6IEq1E73ZKO3f_uBW3PaTRiAGad4ddYMwbJLhlCJOxr040ZMZ-QJd8qz8SndmL2j7TbccDL8ug9wUqlitO-1Gh1D0bgXiXDTwtd8edOxGnFGOUKc4O2lagfTL4E-Gw4kD">
+<div class="absolute inset-0 bg-surface-variant opacity-60"></div>
+</div>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-md sm:p-lg backdrop-blur-sm bg-inverse-surface/40">
+<!-- Modal Container -->
+<div class="bg-surface-container-lowest rounded-xl ambient-shadow w-full max-w-2xl flex flex-col border border-outline-variant max-h-[90vh] overflow-hidden">
+<!-- Header -->
+<div class="flex items-center justify-between px-lg py-md border-b border-outline-variant">
+<div>
+<h2 class="font-title-lg text-title-lg text-on-surface">Edit User Permissions</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Sarah Jenkins</p>
+</div>
+<button aria-label="Close modal" class="text-on-surface-variant hover:text-on-surface transition-colors p-sm rounded-full hover:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto p-lg flex flex-col gap-lg">
+<!-- User Info Summary -->
+<div class="flex items-center gap-md bg-surface-container-low p-md rounded-lg border border-outline-variant">
+<img alt="User Avatar" class="w-12 h-12 rounded-full border-2 border-surface-container-lowest" data-alt="A professional headshot of a woman with dark hair, smiling slightly, set against a neutral light grey background. The lighting is soft and flattering, suitable for a corporate SaaS application avatar. The image should feel modern, crisp, and align with a professional, dependable brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPljn8CBApIIfoiMMz1NPB1j1rGqMtxHa5_ZPhESoxnU-JKDDC2lnv98KVrARjumnkXrFQsNweGpXRn99uh7thEpdj0rJeR58T3Tz8uFgDK8e3sc_XxuTdcxhJfdXOYeoVGx1YInDuZbntWlDZXybw0xj_pwLeaIfFyJJ7I4zRok6pwV7eERs1pV9MF2LlmcGwbSvE67SJe7PB4iW5LdXX7x-8XZI-IyeQGmN2WnavfyeHPvQszs-SGffqqE51hRX7UnN_gIzk7LWb">
+<div class="flex-1">
+<p class="font-headline-md text-headline-md text-on-surface">Sarah Jenkins</p>
+<p class="font-label-md text-label-md text-on-surface-variant">sarah.j@example.com</p>
+</div>
+<div class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="shield">shield</span>
+                        Current Role: Admin
+                    </div>
+</div>
+<!-- Global Override Toggle -->
+
+<!-- Permission Overrides Section -->
+<div class="flex flex-col gap-sm max-h-[400px] overflow-y-auto"><h3 class="font-title-lg text-title-lg text-on-surface mb-2">Permissions</h3>
+<!-- Action Item 1: Delete Boards -->
+<div class="flex items-center justify-between p-md bg-surface-bright rounded-lg border border-outline-variant hover:border-primary transition-colors group"><div class="flex-1"><div class="flex items-center gap-2"><p class="font-label-md text-label-md text-on-surface">Delete Boards</p><span class="bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider">Global</span></div><p class="font-body-md text-body-md text-on-surface-variant mt-1 text-xs">Permanently remove boards and their contents.</p></div><div class="flex items-center gap-2"><label class="flex items-center gap-1 cursor-pointer"><input class="form-radio text-primary border-outline-variant focus:ring-primary" name="perm_delete_boards" type="radio" value="allow"><span class="font-label-sm text-label-sm text-on-surface-variant">Allow</span></label><label class="flex items-center gap-1 cursor-pointer ml-2 bg-error-container/30 px-2 py-1 rounded"><input checked="" class="form-radio text-error border-outline-variant focus:ring-error" name="perm_delete_boards" type="radio" value="deny"><span class="font-label-sm text-label-sm text-error font-semibold">Current: Deny</span></label></div></div>
+<!-- Action Item 2: Manage Billing -->
+<div class="flex items-center justify-between p-md bg-surface-bright rounded-lg border border-outline-variant hover:border-primary transition-colors group"><div class="flex-1"><div class="flex items-center gap-2"><p class="font-label-md text-label-md text-on-surface">Manage Billing</p><span class="bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider">Global</span></div><p class="font-body-md text-body-md text-on-surface-variant mt-1 text-xs">Access invoices and update payment methods.</p></div><div class="flex items-center gap-2"><label class="flex flex-col items-center gap-0 cursor-pointer bg-primary-container/20 px-2 py-1 rounded"><div class="flex items-center gap-1"><input checked="" class="form-radio text-primary border-outline-variant focus:ring-primary" name="perm_manage_billing" type="radio" value="allow"><span class="font-label-sm text-label-sm text-primary font-semibold">Current: Allow</span></div><span class="text-[10px] text-primary/70 font-medium">Default</span></label><label class="flex items-center gap-1 cursor-pointer ml-2"><input class="form-radio text-error border-outline-variant focus:ring-error" name="perm_manage_billing" type="radio" value="deny"><span class="font-label-sm text-label-sm text-on-surface-variant">Deny</span></label></div></div>
+<!-- Action Item 3: Invite Users -->
+<div class="flex items-center justify-between p-md bg-surface-bright rounded-lg border border-outline-variant hover:border-primary transition-colors group"><div class="flex-1"><div class="flex items-center gap-2"><p class="font-label-md text-label-md text-on-surface">Invite Users</p><span class="bg-primary-fixed-dim text-on-primary-fixed px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider">Specific Board</span></div><p class="font-body-md text-body-md text-on-surface-variant mt-1 text-xs">Add new members to selected boards.</p></div><div class="flex items-center gap-2"><label class="flex items-center gap-1 cursor-pointer bg-primary-container/20 px-2 py-1 rounded"><input checked="" class="form-radio text-primary border-outline-variant focus:ring-primary" name="perm_invite_users" type="radio" value="allow"><span class="font-label-sm text-label-sm text-primary font-semibold">Current: Allow</span></label><label class="flex items-center gap-1 cursor-pointer ml-2"><input class="form-radio text-error border-outline-variant focus:ring-error" name="perm_invite_users" type="radio" value="deny"><span class="font-label-sm text-label-sm text-on-surface-variant">Deny</span></label></div></div>
+<!-- Action Item 4: Edit Tasks -->
+<div class="flex items-center justify-between p-md bg-surface-bright rounded-lg border border-outline-variant hover:border-primary transition-colors group"><div class="flex-1"><div class="flex items-center gap-2"><p class="font-label-md text-label-md text-on-surface">Edit Tasks</p><span class="bg-primary-fixed-dim text-on-primary-fixed px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider">Specific Board</span></div><p class="font-body-md text-body-md text-on-surface-variant mt-1 text-xs">Modify task details, assignees, and status.</p></div><div class="flex items-center gap-2"><label class="flex items-center gap-1 cursor-pointer bg-primary-container/20 px-2 py-1 rounded"><input checked="" class="form-radio text-primary border-outline-variant focus:ring-primary" name="perm_edit_tasks" type="radio" value="allow"><span class="font-label-sm text-label-sm text-primary font-semibold">Current: Allow</span></label><label class="flex items-center gap-1 cursor-pointer ml-2"><input class="form-radio text-error border-outline-variant focus:ring-error" name="perm_edit_tasks" type="radio" value="deny"><span class="font-label-sm text-label-sm text-on-surface-variant">Deny</span></label></div></div>
+<!-- Action Item 5: View Analytics -->
+<div class="flex items-center justify-between p-md bg-surface-bright rounded-lg border border-outline-variant hover:border-primary transition-colors group"><div class="flex-1"><div class="flex items-center gap-2"><p class="font-label-md text-label-md text-on-surface">View Analytics</p><span class="bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider">Global</span></div><p class="font-body-md text-body-md text-on-surface-variant mt-1 text-xs">Access performance reports and data dashboards.</p></div><div class="flex items-center gap-2"><label class="flex flex-col items-center gap-0 cursor-pointer bg-primary-container/20 px-2 py-1 rounded"><div class="flex items-center gap-1"><input checked="" class="form-radio text-primary border-outline-variant focus:ring-primary" name="perm_view_analytics" type="radio" value="allow"><span class="font-label-sm text-label-sm text-primary font-semibold">Current: Allow</span></div><span class="text-[10px] text-primary/70 font-medium">Default</span></label><label class="flex items-center gap-1 cursor-pointer ml-2"><input class="form-radio text-error border-outline-variant focus:ring-error" name="perm_view_analytics" type="radio" value="deny"><span class="font-label-sm text-label-sm text-on-surface-variant">Deny</span></label></div></div>
+<!-- Action Item 6: Manage Permissions -->
+<div class="flex items-center justify-between p-md bg-surface-bright rounded-lg border border-outline-variant hover:border-primary transition-colors group"><div class="flex-1"><div class="flex items-center gap-2"><p class="font-label-md text-label-md text-on-surface">Manage Permissions</p><span class="bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider">Global</span></div><p class="font-body-md text-body-md text-on-surface-variant mt-1 text-xs">Edit roles and access levels for other team members.</p></div><div class="flex items-center gap-2"><label class="flex items-center gap-1 cursor-pointer"><input class="form-radio text-primary border-outline-variant focus:ring-primary" name="perm_manage_perms" type="radio" value="allow"><span class="font-label-sm text-label-sm text-on-surface-variant">Allow</span></label><label class="flex items-center gap-1 cursor-pointer ml-2 bg-error-container/30 px-2 py-1 rounded"><input checked="" class="form-radio text-error border-outline-variant focus:ring-error" name="perm_manage_perms" type="radio" value="deny"><span class="font-label-sm text-label-sm text-error font-semibold">Current: Deny</span></label></div></div></div>
+</div>
+<!-- Footer Actions -->
+<div class="p-lg border-t border-outline-variant bg-surface-container-lowest flex justify-end gap-md">
+<button class="font-label-md text-label-md text-primary hover:bg-surface-container-low px-4 py-2 rounded-lg transition-colors">Cancel</button>
+<button class="font-label-md text-label-md bg-primary text-on-primary hover:bg-primary-container hover:text-on-primary-container px-4 py-2 rounded-lg transition-colors shadow-sm">Save Changes</button>
+</div>
+</div>
+</div>
+
+
+
+
+
+
+<div id="snapdom-sandbox" data-snapdom-sandbox="true" aria-hidden="true" style="position: absolute; left: -9999px; top: -9999px; width: 0px; height: 0px; overflow: hidden;"></div>
+
+</body></html>
