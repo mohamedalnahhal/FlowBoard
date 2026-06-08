@@ -17,9 +17,9 @@ services:
     container_name: taskboard_backend
     restart: unless-stopped
     working_dir: /app
-    command: sh -c "npm install && node index.js"
+    command: sh -c "npm install && node src/app"
     ports:
-      - "3000:3000"
+      - "6000:3000"
     volumes:
       - ./backend:/app
     depends_on:
@@ -32,7 +32,7 @@ services:
     working_dir: /app
     command: sh -c "npm install && npm run dev"
     ports:
-      - "3001:3000"
+      - "6001:3000"
     volumes:
       - ./frontend:/app
     depends_on:

@@ -38,27 +38,100 @@ model User {
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
 
-  user_groups   UserGroup[]
-  user_teams    UserTeam[]
-  task_members  TaskMember[]
-  task_history  TaskHistory[]
-  task_comments TaskComment[]
-  created_tasks Task[]        @relation("TaskCreatedBy")
+  user_groups    UserGroup[]
+  user_teams     UserTeam[]
+  task_members   TaskMember[]
+  task_history   TaskHistory[]
+  task_comments  TaskComment[]
+  created_tasks  Task[]         @relation("TaskCreatedBy")
+  announcements  Announcement[]
+  favorites      Favorite[]
+  notifications  Notification[]
 
   @@map("users")
 }
 
-model Team {
+model Workspace {
   id         String   @id @default(uuid()) @db.Uuid
   name       String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  user_teams UserTeam[]
-  boards     Board[]
-  groups     Group[]
+  teams         Team[]
+  announcements Announcement[]
+
+  @@map("workspaces")
+}
+
+model Team {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  workspace_id String   @db.Uuid
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  workspace      Workspace       @relation(fields: [workspace_id], references: [id])
+  user_teams     UserTeam[]
+  boards         Board[]
+  groups         Group[]
+  calendar_events CalendarEvent[]
 
   @@map("teams")
+}
+
+model Announcement {
+  id           String   @id @default(uuid()) @db.Uuid
+  workspace_id String   @db.Uuid
+  author_id    String   @db.Uuid
+  title        String
+  body         String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspace_id], references: [id])
+  author    User      @relation(fields: [author_id], references: [id])
+
+  @@map("announcements")
+}
+
+model CalendarEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  team_id    String   @db.Uuid
+  title      String
+  starts_at  DateTime
+  ends_at    DateTime
+  color      String   @default("#4648d4")
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  team Team @relation(fields: [team_id], references: [id])
+
+  @@map("calendar_events")
+}
+
+model Favorite {
+  user_id    String   @db.Uuid
+  board_id   String   @db.Uuid
+  created_at DateTime @default(now())
+
+  user  User  @relation(fields: [user_id], references: [id])
+  board Board @relation(fields: [board_id], references: [id])
+
+  @@id([user_id, board_id])
+  @@map("favorites")
+}
+
+model Notification {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  message    String
+  link       String?
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("notifications")
 }
 
 model Group {
@@ -112,6 +185,7 @@ model Board {
   lists      List[]
   checklists Checklist[]
   labels     Label[]
+  favorites  Favorite[]
 
   permissions Permission[]
 
