@@ -81,7 +81,7 @@ export default async function TeamsPage({ searchParams }: PageProps<"/teams">) {
               </div>
 
               <p className="font-body-md text-body-md text-on-surface-variant min-h-[40px]">
-                {team.description ?? "No description available"}
+                Part of {team.workspace?.name ?? "—"} · {team.board_count} {team.board_count === 1 ? "board" : "boards"}
               </p>
 
               <div className="pt-3 border-t border-outline-variant flex justify-between items-center mt-auto">

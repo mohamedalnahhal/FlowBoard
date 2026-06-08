@@ -13,6 +13,7 @@ import dashboardRouter from './routes/dashboard.js';
 import permissionsRouter from './routes/permissions.js';
 import groupsRouter from './routes/groups.js';
 import boardsRouter from './routes/boards.js';
+import boardDetailRouter from './routes/boardDetail.js';
 import tasksRouter from './routes/tasks.js';
 
 const app = express();
@@ -33,6 +34,7 @@ app.use('/workspaces', workspacesRouter);
 app.use('/teams', teamsRouter);
 app.use('/users', usersRouter);
 app.use('/dashboard', dashboardRouter);
+app.use('/boards', boardDetailRouter);
 app.use('/tasks', tasksRouter);
 
 app.use('/teams/:teamId/permissions', permissionsRouter);

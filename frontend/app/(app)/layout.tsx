@@ -23,7 +23,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-screen">
       <Sidebar workspaceName={workspaceName} user={user} />
-      <div className="flex-1 flex flex-col md:ml-sidebar-width min-h-screen">
+      <div className="flex-1 min-w-0 flex flex-col md:ml-sidebar-width min-h-screen">
         <TopHeader teamName={teamName} unreadNotifications={unreadNotifications} />
         <main className="flex-1 p-4 md:p-8 overflow-y-auto max-w-container-max mx-auto w-full">
           {children}

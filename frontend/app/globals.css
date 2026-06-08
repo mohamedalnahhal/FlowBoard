@@ -117,3 +117,31 @@ body {
 .material-symbols-outlined.fill {
   font-variation-settings: "FILL" 1;
 }
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.kanban-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-outline-variant) transparent;
+}
+
+.kanban-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 6px;
+}
+
+.kanban-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--color-outline-variant);
+  border-radius: 9999px;
+}
+
+.kanban-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}

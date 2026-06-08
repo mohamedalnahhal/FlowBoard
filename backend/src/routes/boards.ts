@@ -5,12 +5,27 @@ import { ACTIONS } from '../core/permissions/constants.js';
 
 const router = Router({ mergeParams: true }); // parent mounts at /teams/:teamId/boards
 
-const TASK_CARD_SELECT = {
+export const TASK_CARD_SELECT = {
   id: true, name: true, status: true, position: true, start_date: true, end_date: true,
-  checklist_id: true,
+  checklist:    { select: { checklist_items: { select: { status: true } } } },
   task_members: { include: { user: { select: { id: true, display_name: true, username: true } } } },
   task_labels:  { include: { label: true } },
   creator:      { select: { id: true, display_name: true, username: true } },
+} as const;
+
+export const BOARD_DETAIL_INCLUDE = {
+  team: {
+    select: {
+      id: true,
+      name: true,
+      user_teams: { include: { user: { select: { id: true, display_name: true, username: true } } } },
+    },
+  },
+  labels: true,
+  lists: {
+    orderBy: { created_at: 'asc' },
+    include: { tasks: { orderBy: { position: 'asc' }, select: TASK_CARD_SELECT } },
+  },
 } as const;
 
 // ── GET /teams/:teamId/boards ──────────────────────────────────────────────────
@@ -62,14 +77,7 @@ router.get(
       const prisma = req.app.get('prisma') as PrismaClient;
       const board  = await prisma.board.findFirst({
         where:   { id: (req.params.boardId as string), team_id: (req.params.teamId as string) },
-        include: {
-          team: { select: { id: true, name: true } },
-          labels: true,
-          lists: {
-            orderBy: { created_at: 'asc' },
-            include: { tasks: { orderBy: { position: 'asc' }, select: TASK_CARD_SELECT } },
-          },
-        },
+        include: BOARD_DETAIL_INCLUDE,
       });
       if (!board) return res.status(404).json({ error: 'Board not found' });
       res.json(board);
