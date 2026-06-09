@@ -274,15 +274,41 @@ router.post(
   },
 );
 
+// ── PATCH /teams/:teamId/boards/:boardId/tasks/:taskId/move ──────────────────
+// Separate endpoint for drag-drop moves; requires task:move (not task:edit)
+router.patch(
+  '/:boardId/tasks/:taskId/move',
+  checkPermission(ACTIONS.TASK_MOVE, 'task', (req) => (req.params.taskId as string), { inherit: true }),
+  async (req, res, next) => {
+    try {
+      const prisma = req.app.get('prisma') as PrismaClient;
+      const { list_id, position } = req.body ?? {};
+      if (!list_id) return res.status(400).json({ error: 'list_id is required' });
+
+      const task = await prisma.task.updateMany({
+        where: { id: (req.params.taskId as string) },
+        data:  {
+          list_id,
+          ...(position !== undefined && { position }),
+        },
+      });
+
+      if (task.count === 0) return res.status(404).json({ error: 'Task not found' });
+      res.json({ updated: true });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // ── PATCH /teams/:teamId/boards/:boardId/tasks/:taskId ────────────────────────
-// task:edit — also demonstrates inherit:true which walks task → list → board → team
 router.patch(
   '/:boardId/tasks/:taskId',
   checkPermission(ACTIONS.TASK_EDIT, 'task', (req) => (req.params.taskId as string), { inherit: true }),
   async (req, res, next) => {
     try {
       const prisma = req.app.get('prisma') as PrismaClient;
-      const { name, description, status, start_date, end_date, list_id, position } = req.body ?? {};
+      const { name, description, status, start_date, end_date } = req.body ?? {};
 
       const task = await prisma.task.updateMany({
         where: { id: (req.params.taskId as string) },
@@ -292,8 +318,6 @@ router.patch(
           ...(status      !== undefined && { status }),
           ...(start_date  !== undefined && { start_date: start_date ? new Date(start_date) : null }),
           ...(end_date    !== undefined && { end_date: end_date ? new Date(end_date) : null }),
-          ...(list_id     !== undefined && { list_id }),
-          ...(position    !== undefined && { position }),
         },
       });
 

@@ -528,6 +528,32 @@ async function main() {
 
   // ── Permissions ────────────────────────────────────────────────────────────
   await Promise.all([
+    // Team-wide: all frontend members can manage their team's permissions/groups
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000040' },
+      update: {},
+      create: {
+        id: '00000000-0000-0000-0012-000000000040',
+        action: 'team:manage_members',
+        type: PermissionType.ALLOW,
+        priority: 10,
+        group_id: feAllGroup.id,
+        description: 'All frontend team members can manage team permissions',
+      },
+    }),
+    // Team-wide: all backend members can manage their team's permissions/groups
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000041' },
+      update: {},
+      create: {
+        id: '00000000-0000-0000-0012-000000000041',
+        action: 'team:manage_members',
+        type: PermissionType.ALLOW,
+        priority: 10,
+        group_id: beAllGroup.id,
+        description: 'All backend team members can manage team permissions',
+      },
+    }),
     // Team-wide: all frontend members can view their team (and its boards list)
     prisma.permission.upsert({
       where: { id: '00000000-0000-0000-0012-000000000005' },
@@ -648,6 +674,37 @@ async function main() {
         task_id: loginTask.id,
         description: 'Only developers may edit this task',
       },
+    }),
+    // Team-wide: all members can move, create, and edit tasks
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000050' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000050', action: 'task:move',   type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can move tasks' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000051' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000051', action: 'task:move',   type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can move tasks' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000052' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000052', action: 'task:create', type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can create tasks' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000053' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000053', action: 'task:create', type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can create tasks' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000054' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000054', action: 'task:edit',   type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can edit tasks' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000055' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000055', action: 'task:edit',   type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can edit tasks' },
     }),
   ]);
   console.log('✓ Permissions');

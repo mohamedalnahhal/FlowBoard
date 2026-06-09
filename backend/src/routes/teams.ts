@@ -24,7 +24,14 @@ router.get('/mine', async (req, res, next) => {
     const prisma = req.app.get('prisma') as PrismaClient;
     const memberships = await prisma.userTeam.findMany({
       where:   { user_id: userId },
-      include: { team: { include: { workspace: true } } },
+      include: {
+        team: {
+          include: {
+            workspace: true,
+            boards: { select: { id: true, name: true, status: true }, orderBy: { name: 'asc' } },
+          },
+        },
+      },
     });
 
     res.json(memberships.map((m) => ({ ...m.team, my_role: m.role })));

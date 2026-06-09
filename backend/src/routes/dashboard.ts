@@ -151,6 +151,24 @@ router.get('/notifications', async (req, res, next) => {
   }
 });
 
+// ── PATCH /dashboard/notifications/read-all ───────────────────────────────────
+router.patch('/notifications/read-all', async (req, res, next) => {
+  try {
+    const userId = await requireAuth(req, res);
+    if (!userId) return;
+
+    const prisma = req.app.get('prisma') as PrismaClient;
+    await prisma.notification.updateMany({
+      where: { user_id: userId, is_read: false },
+      data:  { is_read: true },
+    });
+
+    res.json({ updated: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── PATCH /dashboard/notifications/:notificationId/read ───────────────────────
 router.patch('/notifications/:notificationId/read', async (req, res, next) => {
   try {
@@ -164,6 +182,60 @@ router.patch('/notifications/:notificationId/read', async (req, res, next) => {
     });
 
     res.json({ updated: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── GET /dashboard/activity?team_id=&limit= ───────────────────────────────────
+router.get('/activity', async (req, res, next) => {
+  try {
+    const userId = await requireAuth(req, res);
+    if (!userId) return;
+
+    const prisma = req.app.get('prisma') as PrismaClient;
+    const { team_id, limit = '50' } = req.query as Record<string, string | undefined>;
+
+    const take = Math.min(parseInt(limit, 10) || 50, 100);
+
+    let teamIds: string[];
+    if (team_id) {
+      teamIds = [team_id];
+    } else {
+      const memberships = await prisma.userTeam.findMany({
+        where:  { user_id: userId },
+        select: { team_id: true },
+      });
+      teamIds = memberships.map((m) => m.team_id);
+    }
+
+    if (teamIds.length === 0) return res.json([]);
+
+    const history = await prisma.taskHistory.findMany({
+      where: {
+        task: { list: { board: { team_id: { in: teamIds } } } },
+      },
+      include: {
+        user: { select: { id: true, display_name: true, username: true } },
+        task: {
+          select: {
+            id: true,
+            name: true,
+            list: {
+              select: {
+                board: {
+                  select: { id: true, name: true, team: { select: { id: true, name: true } } },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { created_at: 'desc' },
+      take,
+    });
+
+    res.json(history);
   } catch (err) {
     next(err);
   }

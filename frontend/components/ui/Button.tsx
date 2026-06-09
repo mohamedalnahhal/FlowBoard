@@ -33,10 +33,12 @@ export function Button({
   fullWidth = false,
   className = "",
   children,
+  type = "button",
   ...rest
 }: ButtonProps) {
   return (
     <button
+      type={type}
       className={`inline-flex items-center justify-center font-semibold rounded-md transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`}
       {...rest}
     >

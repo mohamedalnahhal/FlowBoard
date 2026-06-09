@@ -5,6 +5,22 @@ import { api, ApiError } from "./api";
 
 type ActionState = { error?: string } | undefined;
 
+export async function updateTaskDescriptionAction(
+  teamId: string,
+  boardId: string,
+  taskId: string,
+  description: string,
+): Promise<ActionState> {
+  try {
+    await api.patch(`/teams/${teamId}/boards/${boardId}/tasks/${taskId}`, { description });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to update description." };
+  }
+  revalidatePath(`/boards/${boardId}/tasks/${taskId}`);
+  revalidatePath(`/boards/${boardId}`);
+  return undefined;
+}
+
 export async function addCommentAction(
   boardId: string,
   taskId: string,

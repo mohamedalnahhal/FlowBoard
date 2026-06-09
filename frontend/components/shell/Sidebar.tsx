@@ -1,109 +1,208 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { Icon } from "../ui/Icon";
 import { Avatar } from "../ui/Avatar";
 
-type NavItem = { label: string; href: string; icon: string };
+type Board = { id: string; name: string; status: string };
+type Team = { id: string; name: string; boards?: Board[] };
+type Workspace = { id: string; name: string };
 
-const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS = [
   { label: "Home", href: "/", icon: "home" },
   { label: "Boards", href: "/boards", icon: "dashboard" },
   { label: "Calendar", href: "/calendar", icon: "calendar_today" },
   { label: "Announcements", href: "/announcements", icon: "campaign" },
 ];
 
-const ORG_ITEMS: NavItem[] = [
+const ORG_ITEMS = [
   { label: "Teams", href: "/teams", icon: "groups" },
   { label: "Permissions", href: "/permissions", icon: "lock_person" },
   { label: "Users", href: "/users", icon: "person_search" },
 ];
 
-function isActiveHref(pathname: string, href: string) {
+function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
-  const isActive = isActiveHref(pathname, item.href);
-  return (
-    <li>
-      <Link
-        href={item.href}
-        className={`flex items-center gap-3 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors duration-150 ${isActive
-            ? "bg-primary-fixed text-on-primary-fixed-variant font-semibold border-primary"
-            : "text-on-surface-variant hover:bg-surface-container-low border-transparent"
-          }`}
-      >
-        <Icon name={item.icon} filled={isActive} />
-        <span>{item.label}</span>
-      </Link>
-    </li>
-  );
-}
-
 type SidebarProps = {
-  workspaceName: string;
-  user: { display_name: string; username: string };
+  workspaces: Workspace[];
+  currentWorkspaceId: string;
+  teams: Team[];
+  user: { id: string; display_name: string; username: string };
 };
 
-export function Sidebar({ workspaceName, user }: SidebarProps) {
+export function Sidebar({ workspaces, currentWorkspaceId, teams, user }: SidebarProps) {
   const pathname = usePathname();
-  const initials = workspaceName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase())
-    .join("");
+  const router = useRouter();
+  const [wsOpen, setWsOpen] = useState(false);
+  const [expandedBoards, setExpandedBoards] = useState(false);
+
+  const currentWs = workspaces.find((w) => w.id === currentWorkspaceId) ?? workspaces[0];
+  const initials = currentWs?.name
+    .split(/\s+/).filter(Boolean).slice(0, 2)
+    .map((w) => w[0]?.toUpperCase()).join("") ?? "W";
+
+  const allBoards = teams.flatMap((t) =>
+    (t.boards ?? []).map((b) => ({ ...b, teamName: t.name, teamId: t.id }))
+  );
 
   return (
     <nav className="hidden md:flex flex-col bg-surface-container-lowest border-r border-outline-variant fixed left-0 top-0 h-full w-sidebar-width z-50">
       <div className="flex flex-col h-full py-6 px-4">
+        {/* Logo */}
         <div className="flex items-center gap-2 mb-6 px-2">
           <Icon name="flowsheet" className="text-primary text-[28px]" filled />
           <h1 className="font-display text-headline-md font-bold text-primary">TaskHub</h1>
         </div>
 
-        <div className="px-2 mb-4">
-          <button className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-surface-container-low transition-colors duration-200 border border-outline-variant bg-surface-bright shadow-sm group">
+        {/* Workspace switcher */}
+        <div className="px-2 mb-4 relative">
+          <button
+            type="button"
+            onClick={() => setWsOpen((v) => !v)}
+            className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-surface-container-low transition-colors border border-outline-variant bg-surface-bright shadow-sm group"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded bg-primary-fixed text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">
+              <div className="w-8 h-8 rounded bg-primary-fixed text-primary flex items-center justify-center font-bold text-sm shrink-0">
                 {initials}
               </div>
               <div className="text-left">
-                <p className="font-label-md text-label-md text-on-surface font-semibold">{workspaceName}</p>
+                <p className="font-label-md text-label-md text-on-surface font-semibold truncate max-w-[110px]">
+                  {currentWs?.name ?? "Workspace"}
+                </p>
                 <p className="text-[10px] text-on-surface-variant">Workspace</p>
               </div>
             </div>
-            <span className="material-symbols-outlined text-outline text-sm group-hover:text-on-surface transition-colors">unfold_more</span>
+            <Icon name="unfold_more" className="text-outline text-sm group-hover:text-on-surface transition-colors" />
           </button>
-        </div>
 
-          <div className="flex-1 overflow-y-auto">
-            <ul className="space-y-1">
-              {NAV_ITEMS.map((item) => (
-                <NavLink key={item.href} item={item} pathname={pathname} />
-              ))}
-            </ul>
-            <div className="my-4 border-t border-outline-variant/50" />
-            <ul className="space-y-1">
-              {ORG_ITEMS.map((item) => (
-                <NavLink key={item.href} item={item} pathname={pathname} />
-              ))}
-            </ul>
-          </div>
-
-          <div className="mt-auto pt-4 border-t border-outline-variant">
-            <div className="flex items-center gap-3 w-full p-2 rounded-lg">
-              <Avatar person={{ id: user.username, display_name: user.display_name }} size="sm" />
-              <div className="text-left flex-1 min-w-0">
-                <p className="font-label-sm text-label-sm text-on-surface truncate">{user.display_name}</p>
-                <p className="text-[11px] text-on-surface-variant truncate">@{user.username}</p>
+          {wsOpen && (
+            <>
+              <button type="button" className="fixed inset-0 z-10" onClick={() => setWsOpen(false)} aria-label="Close" />
+              <div className="absolute left-0 top-full mt-1 z-20 w-full bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg overflow-hidden">
+                <p className="px-3 py-2 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider border-b border-outline-variant/50 text-[10px]">
+                  Workspaces
+                </p>
+                {workspaces.map((ws) => (
+                  <button
+                    key={ws.id}
+                    type="button"
+                    onClick={() => { setWsOpen(false); router.push("/"); }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 hover:bg-surface-container-low transition-colors font-label-md text-label-md text-on-surface text-left ${ws.id === currentWs?.id ? "bg-primary-fixed/10" : ""}`}
+                  >
+                    <div className="w-6 h-6 rounded bg-primary-fixed flex items-center justify-center font-bold text-[10px] text-on-primary-fixed-variant shrink-0">
+                      {ws.name[0]?.toUpperCase()}
+                    </div>
+                    <span className="truncate">{ws.name}</span>
+                    {ws.id === currentWs?.id && <Icon name="check" className="ml-auto text-primary text-[16px] shrink-0" />}
+                  </button>
+                ))}
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
+
+        {/* Nav */}
+        <div className="flex-1 overflow-y-auto">
+          <ul className="space-y-1">
+            {NAV_ITEMS.map((item) => {
+              const active = isActive(pathname, item.href);
+              if (item.href === "/boards") {
+                return (
+                  <li key={item.href}>
+                    <div className="flex items-center gap-1">
+                      <Link
+                        href={item.href}
+                        className={`flex-1 flex items-center gap-3 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors duration-150 ${active ? "bg-primary-fixed text-on-primary-fixed-variant font-semibold" : "text-on-surface-variant hover:bg-surface-container-low"}`}
+                      >
+                        <Icon name={item.icon} filled={active} />
+                        <span>{item.label}</span>
+                      </Link>
+                      {allBoards.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedBoards((v) => !v)}
+                          className="p-1.5 rounded-md text-on-surface-variant hover:bg-surface-container-low transition-colors"
+                          aria-label="Toggle boards"
+                        >
+                          <Icon name={expandedBoards ? "expand_less" : "expand_more"} className="text-[18px]" />
+                        </button>
+                      )}
+                    </div>
+                    {expandedBoards && allBoards.length > 0 && (
+                      <ul className="ml-6 mt-1 space-y-0.5 border-l border-outline-variant/40 pl-3">
+                        {allBoards.map((board) => {
+                          const boardActive = pathname === `/boards/${board.id}` || pathname.startsWith(`/boards/${board.id}/`);
+                          return (
+                            <li key={board.id}>
+                              <Link
+                                href={`/boards/${board.id}`}
+                                className={`flex items-center gap-2 px-2 py-1.5 rounded-md font-label-sm text-label-sm transition-colors truncate ${boardActive ? "bg-primary-fixed/60 text-on-primary-fixed-variant font-semibold" : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"}`}
+                              >
+                                <Icon name="table_view" className="text-[14px] shrink-0" />
+                                <span className="truncate">{board.name}</span>
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </li>
+                );
+              }
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors duration-150 ${active ? "bg-primary-fixed text-on-primary-fixed-variant font-semibold" : "text-on-surface-variant hover:bg-surface-container-low"}`}
+                  >
+                    <Icon name={item.icon} filled={active} />
+                    <span>{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="my-4 border-t border-outline-variant/50" />
+
+          <ul className="space-y-1">
+            {ORG_ITEMS.map((item) => {
+              const active = isActive(pathname, item.href);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors duration-150 ${active ? "bg-primary-fixed text-on-primary-fixed-variant font-semibold" : "text-on-surface-variant hover:bg-surface-container-low"}`}
+                  >
+                    <Icon name={item.icon} filled={active} />
+                    <span>{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        {/* User footer */}
+        <div className="mt-auto pt-4 border-t border-outline-variant">
+          <Link
+            href="/profile"
+            className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-surface-container-low transition-colors group"
+          >
+            <Avatar person={{ id: user.id, display_name: user.display_name }} size="sm" />
+            <div className="text-left flex-1 min-w-0">
+              <p className="font-label-sm text-label-sm text-on-surface truncate">{user.display_name}</p>
+              <p className="text-[11px] text-on-surface-variant truncate">@{user.username}</p>
+            </div>
+            <Icon name="settings" className="text-[18px] text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+          </Link>
+        </div>
+      </div>
     </nav>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 import { createTaskAction } from "@/lib/board-actions";
@@ -10,13 +10,17 @@ export function AddTaskForm({ teamId, boardId, listId }: { teamId: string; board
   const action = createTaskAction.bind(null, teamId, boardId, listId);
   const [state, formAction, pending] = useActionState(action, undefined);
   const formRef = useRef<HTMLFormElement>(null);
+  const [, startTransition] = useTransition();
+  const wasSubmittingRef = useRef(false);
 
   useEffect(() => {
-    if (!pending && !state?.error && open) {
+    if (pending) { wasSubmittingRef.current = true; return; }
+    if (wasSubmittingRef.current && !state?.error && open) {
+      wasSubmittingRef.current = false;
       formRef.current?.reset();
-      setOpen(false);
+      startTransition(() => setOpen(false));
     }
-  }, [pending, state, open]);
+  }, [pending, state, open, startTransition]);
 
   if (!open) {
     return (

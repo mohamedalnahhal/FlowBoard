@@ -33,6 +33,7 @@ export function EditUserGroupsModal({
   return (
     <>
       <button
+        type="button"
         onClick={() => setOpen(true)}
         className="text-on-surface-variant hover:text-primary p-2 rounded-md hover:bg-primary/5 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
         aria-label={`Edit groups for ${user.display_name}`}

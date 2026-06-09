@@ -54,11 +54,69 @@ router.get('/me', async (req, res, next) => {
     const prisma = req.app.get('prisma') as PrismaClient;
     const user = await prisma.user.findUnique({
       where:  { id: req.user.id },
-      select: { id: true, display_name: true, username: true, email: true, role: true },
+      select: { id: true, display_name: true, username: true, email: true, phone_number: true, role: true },
     });
 
     if (!user) return res.status(401).json({ error: 'Unauthenticated' });
     res.json(user);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── PATCH /auth/me ─────────────────────────────────────────────────────────────
+router.patch('/me', async (req, res, next) => {
+  try {
+    if (!req.user?.id) return res.status(401).json({ error: 'Unauthenticated' });
+
+    const prisma = req.app.get('prisma') as PrismaClient;
+    const { display_name, email, phone_number } = req.body ?? {};
+
+    if (display_name !== undefined && !String(display_name).trim()) {
+      return res.status(400).json({ error: 'display_name cannot be empty' });
+    }
+
+    const updated = await prisma.user.update({
+      where:  { id: req.user.id },
+      data:   {
+        ...(display_name !== undefined && { display_name: String(display_name).trim() }),
+        ...(email        !== undefined && { email: email ? String(email).trim() : null }),
+        ...(phone_number !== undefined && { phone_number: phone_number ? String(phone_number).trim() : null }),
+      },
+      select: { id: true, display_name: true, username: true, email: true, phone_number: true, role: true },
+    });
+
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── POST /auth/change-password ─────────────────────────────────────────────────
+router.post('/change-password', async (req, res, next) => {
+  try {
+    if (!req.user?.id) return res.status(401).json({ error: 'Unauthenticated' });
+
+    const prisma = req.app.get('prisma') as PrismaClient;
+    const { current_password, new_password } = req.body ?? {};
+
+    if (!current_password || !new_password) {
+      return res.status(400).json({ error: 'current_password and new_password are required' });
+    }
+    if (String(new_password).length < 6) {
+      return res.status(400).json({ error: 'new_password must be at least 6 characters' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) return res.status(401).json({ error: 'Unauthenticated' });
+
+    const valid = await bcrypt.compare(String(current_password), user.password);
+    if (!valid) return res.status(400).json({ error: 'Current password is incorrect' });
+
+    const hashed = await bcrypt.hash(String(new_password), 10);
+    await prisma.user.update({ where: { id: req.user.id }, data: { password: hashed } });
+
+    res.json({ updated: true });
   } catch (err) {
     next(err);
   }

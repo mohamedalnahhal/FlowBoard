@@ -31,16 +31,26 @@ export async function createPermissionRuleAction(
   return undefined;
 }
 
-export async function deletePermissionRuleAction(teamId: string, permissionId: string) {
-  await api.delete(`/teams/${teamId}/permissions/${permissionId}`);
-  revalidatePath("/permissions");
+export async function deletePermissionRuleAction(teamId: string, permissionId: string): Promise<ActionState> {
+  try {
+    await api.delete(`/teams/${teamId}/permissions/${permissionId}`);
+    revalidatePath("/permissions");
+    return undefined;
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to delete permission rule." };
+  }
 }
 
-export async function togglePermissionTypeAction(teamId: string, permissionId: string, currentType: string) {
-  await api.patch(`/teams/${teamId}/permissions/${permissionId}`, {
-    type: currentType === "ALLOW" ? "DENY" : "ALLOW",
-  });
-  revalidatePath("/permissions");
+export async function togglePermissionTypeAction(teamId: string, permissionId: string, currentType: string): Promise<ActionState> {
+  try {
+    await api.patch(`/teams/${teamId}/permissions/${permissionId}`, {
+      type: currentType === "ALLOW" ? "DENY" : "ALLOW",
+    });
+    revalidatePath("/permissions");
+    return undefined;
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to toggle permission type." };
+  }
 }
 
 export async function updateUserGroupsAction(

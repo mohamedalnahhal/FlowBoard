@@ -57,6 +57,7 @@ export async function getCurrentUser() {
       display_name: string;
       username: string;
       email: string | null;
+      phone_number: string | null;
       role: number;
     }>("/auth/me");
   } catch (err) {

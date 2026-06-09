@@ -52,6 +52,6 @@ export async function createTaskAction(
 }
 
 export async function moveTaskAction(teamId: string, boardId: string, taskId: string, listId: string, position: number) {
-  await api.patch(`/teams/${teamId}/boards/${boardId}/tasks/${taskId}`, { list_id: listId, position });
+  await api.patch(`/teams/${teamId}/boards/${boardId}/tasks/${taskId}/move`, { list_id: listId, position });
   revalidatePath(`/boards/${boardId}`);
 }

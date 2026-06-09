@@ -55,8 +55,10 @@ export default async function DashboardPage() {
   ]);
 
   const firstName = user?.display_name.split(" ")[0] ?? "there";
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
   const upcoming = events
-    .filter((e) => new Date(e.ends_at).getTime() >= Date.now())
+    .filter((e) => new Date(e.ends_at).getTime() >= now)
     .slice(0, 4);
 
   return (
@@ -204,15 +206,15 @@ export default async function DashboardPage() {
           </Card>
 
           <div className="flex flex-col gap-2">
-            <Button variant="secondary" icon={<Icon name="add" className="text-outline" />} className="w-full justify-start shadow-sm">
-              Create Board
-            </Button>
-            <Button variant="secondary" icon={<Icon name="add" className="text-outline" />} className="w-full justify-start shadow-sm">
-              Create Task
-            </Button>
-            <Button variant="secondary" icon={<Icon name="person_add" className="text-outline" />} className="w-full justify-start shadow-sm">
-              Invite Members
-            </Button>
+            <Link href="/boards" className="inline-flex items-center gap-2 w-full justify-start px-4 py-2 rounded-md border border-outline-variant bg-surface-container-lowest text-on-surface font-semibold text-label-md hover:bg-surface-container-low transition-colors shadow-sm">
+              <Icon name="add" className="text-outline" /> Create Board
+            </Link>
+            <Link href="/boards" className="inline-flex items-center gap-2 w-full justify-start px-4 py-2 rounded-md border border-outline-variant bg-surface-container-lowest text-on-surface font-semibold text-label-md hover:bg-surface-container-low transition-colors shadow-sm">
+              <Icon name="add" className="text-outline" /> Create Task
+            </Link>
+            <Link href="/users" className="inline-flex items-center gap-2 w-full justify-start px-4 py-2 rounded-md border border-outline-variant bg-surface-container-lowest text-on-surface font-semibold text-label-md hover:bg-surface-container-low transition-colors shadow-sm">
+              <Icon name="person_add" className="text-outline" /> Invite Members
+            </Link>
           </div>
         </div>
       </div>

@@ -24,7 +24,7 @@ export function CreateRuleModal({ teamId, groups, boards }: { teamId: string; gr
 
   return (
     <>
-      <Button variant="secondary" icon={<Icon name="add_circle" className="text-[18px]" />} onClick={() => setOpen(true)}>
+      <Button type="button" variant="secondary" icon={<Icon name="add_circle" className="text-[18px]" />} onClick={() => setOpen(true)}>
         Create Rule
       </Button>
 

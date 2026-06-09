@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type DragEvent } from "react";
+import { useEffect, useState, useTransition, type DragEvent } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { AvatarStack } from "@/components/ui/Avatar";
@@ -111,9 +111,10 @@ export function KanbanBoard({ teamId, boardId, lists }: { teamId: string; boardI
   const [dragOverListId, setDragOverListId] = useState<string | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
 
+  const [, startTransition] = useTransition();
   useEffect(() => {
-    setColumns(lists);
-  }, [lists]);
+    startTransition(() => setColumns(lists));
+  }, [lists, startTransition]);
 
   useEffect(() => {
     if (!moveError) return;

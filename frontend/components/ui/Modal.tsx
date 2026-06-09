@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "./Icon";
 
 type ModalProps = {
@@ -13,13 +14,20 @@ type ModalProps = {
 };
 
 const WIDTHS = {
-  sm: "max-w-md",
-  md: "max-w-lg",
-  lg: "max-w-2xl",
-  xl: "max-w-4xl",
+  sm: "max-w-[448px]",
+  md: "max-w-[512px]",
+  lg: "max-w-[672px]",
+  xl: "max-w-[896px]",
 };
 
 export function Modal({ open, onClose, title, children, footer, width = "md" }: ModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
@@ -33,11 +41,12 @@ export function Modal({ open, onClose, title, children, footer, width = "md" }: 
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       <button
+        type="button"
         aria-label="Close modal"
         className="absolute inset-0 bg-on-surface/40 backdrop-blur-[1px]"
         onClick={onClose}
@@ -49,6 +58,7 @@ export function Modal({ open, onClose, title, children, footer, width = "md" }: 
           <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/50">
             <h2 className="font-title-lg text-title-lg text-on-surface">{title}</h2>
             <button
+              type="button"
               onClick={onClose}
               className="text-on-surface-variant hover:bg-surface-container-high rounded-full p-1.5 transition-colors"
               aria-label="Close"
@@ -60,6 +70,7 @@ export function Modal({ open, onClose, title, children, footer, width = "md" }: 
         <div className="px-6 py-5 overflow-y-auto flex-1">{children}</div>
         {footer && <div className="px-6 py-4 border-t border-outline-variant/50 flex items-center justify-end gap-3">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

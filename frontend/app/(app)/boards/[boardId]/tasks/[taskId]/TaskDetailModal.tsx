@@ -1,13 +1,18 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { Avatar, AvatarStack } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { addChecklistItemAction, addCommentAction, toggleChecklistItemAction } from "@/lib/task-actions";
+import {
+  addChecklistItemAction,
+  addCommentAction,
+  toggleChecklistItemAction,
+  updateTaskDescriptionAction,
+} from "@/lib/task-actions";
 
 type Person = { id: string; display_name: string; username: string };
 type Label = { id: string; name: string; color: string };
@@ -174,26 +179,56 @@ export function TaskDetailModal({ boardId, task }: { boardId: string; task: Task
   const itemsDone = items.filter((i) => i.status).length;
   const itemsPercent = items.length > 0 ? Math.round((itemsDone / items.length) * 100) : checklistPercent;
 
+  // Description editing
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [descText, setDescText] = useState(task.description);
+  const [descSaving, setDescSaving] = useState(false);
+  const [descError, setDescError] = useState<string | null>(null);
+  const [, startRefreshTransition] = useTransition();
+
+  async function saveDesc() {
+    const trimmed = descText.trim();
+    if (trimmed === task.description) { setEditingDesc(false); return; }
+    setDescSaving(true);
+    setDescError(null);
+    const result = await updateTaskDescriptionAction(task.list.board.team_id, boardId, task.id, trimmed);
+    setDescSaving(false);
+    if (result?.error) {
+      setDescError(result.error);
+    } else {
+      setEditingDesc(false);
+      startRefreshTransition(() => router.refresh());
+    }
+  }
+
   const commentAction = addCommentAction.bind(null, boardId, task.id);
   const [commentState, commentFormAction, commentPending] = useActionState(commentAction, undefined);
   const commentFormRef = useRef<HTMLFormElement>(null);
+  const wasCommentSubmittingRef = useRef(false);
   useEffect(() => {
-    if (!commentPending && !commentState?.error && commentFormRef.current?.dataset.submitted === "true") {
-      commentFormRef.current.reset();
-      commentFormRef.current.dataset.submitted = "false";
+    if (commentPending) { wasCommentSubmittingRef.current = true; return; }
+    if (wasCommentSubmittingRef.current && !commentState?.error) {
+      wasCommentSubmittingRef.current = false;
+      commentFormRef.current?.reset();
+      startRefreshTransition(() => router.refresh());
     }
-  }, [commentPending, commentState]);
+  }, [commentPending, commentState, router, startRefreshTransition]);
 
   const [addingItem, setAddingItem] = useState(false);
   const checklistAction = addChecklistItemAction.bind(null, boardId, task.id);
   const [checklistState, checklistFormAction, checklistPending] = useActionState(checklistAction, undefined);
   const checklistFormRef = useRef<HTMLFormElement>(null);
+  const [, startChecklistTransition] = useTransition();
+  const wasChecklistSubmittingRef = useRef(false);
   useEffect(() => {
-    if (!checklistPending && !checklistState?.error && addingItem) {
+    if (checklistPending) { wasChecklistSubmittingRef.current = true; return; }
+    if (wasChecklistSubmittingRef.current && !checklistState?.error && addingItem) {
+      wasChecklistSubmittingRef.current = false;
       checklistFormRef.current?.reset();
-      setAddingItem(false);
+      startChecklistTransition(() => setAddingItem(false));
+      startRefreshTransition(() => router.refresh());
     }
-  }, [checklistPending, checklistState, addingItem]);
+  }, [checklistPending, checklistState, addingItem, router, startChecklistTransition, startRefreshTransition]);
 
   const dueDate = formatDateTime(task.end_date ?? task.start_date);
   const activityFeed = [
@@ -203,7 +238,7 @@ export function TaskDetailModal({ boardId, task }: { boardId: string; task: Task
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
-      <button aria-label="Close task details" className="absolute inset-0 bg-on-background/40 backdrop-blur-sm" onClick={close} />
+      <button type="button" aria-label="Close task details" className="absolute inset-0 bg-on-background/40 backdrop-blur-sm" onClick={close} />
       <div className="relative bg-surface-container-lowest rounded-xl shadow-2xl w-full max-w-[1000px] max-h-[90vh] flex flex-col overflow-hidden border border-outline-variant">
         {/* Header */}
         <div className="flex justify-between items-start p-6 border-b border-surface-variant bg-surface-bright shrink-0">
@@ -242,7 +277,7 @@ export function TaskDetailModal({ boardId, task }: { boardId: string; task: Task
             <button type="button" title="Coming soon" className="p-2 text-on-surface-variant rounded-lg cursor-default opacity-60">
               <Icon name="more_horiz" />
             </button>
-            <button onClick={close} className="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors" aria-label="Close">
+            <button type="button" onClick={close} className="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors" aria-label="Close">
               <Icon name="close" />
             </button>
           </div>
@@ -294,18 +329,42 @@ export function TaskDetailModal({ boardId, task }: { boardId: string; task: Task
               <div className="flex items-center gap-2 mb-3">
                 <Icon name="subject" className="text-on-surface-variant text-[20px]" />
                 <h3 className="font-title-lg text-title-lg font-semibold text-on-surface">Description</h3>
-                <button
-                  type="button"
-                  title="Coming soon"
-                  className="ml-auto px-3 py-1 bg-surface-container-low rounded-md font-label-sm text-label-sm text-on-surface border border-outline-variant cursor-default opacity-60"
-                >
-                  Edit
-                </button>
+                {!editingDesc && (
+                  <button
+                    type="button"
+                    onClick={() => { setDescText(task.description); setDescError(null); setEditingDesc(true); }}
+                    className="ml-auto px-3 py-1 bg-surface-container-low rounded-md font-label-sm text-label-sm text-on-surface border border-outline-variant hover:bg-surface-container-high transition-colors"
+                  >
+                    Edit
+                  </button>
+                )}
               </div>
               <div className="pl-7">
-                <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed whitespace-pre-wrap">
-                  {task.description || "No description provided."}
-                </p>
+                {editingDesc ? (
+                  <div className="flex flex-col gap-2">
+                    <textarea
+                      value={descText}
+                      onChange={(e) => setDescText(e.target.value)}
+                      autoFocus
+                      rows={4}
+                      placeholder="Add a description…"
+                      className="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none transition-all"
+                    />
+                    {descError && <p className="font-body-md text-[12px] text-error">{descError}</p>}
+                    <div className="flex items-center gap-2">
+                      <Button type="button" size="sm" onClick={saveDesc} disabled={descSaving}>
+                        {descSaving ? "Saving…" : "Save"}
+                      </Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setEditingDesc(false)} disabled={descSaving}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed whitespace-pre-wrap">
+                    {task.description || "No description provided."}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -438,10 +497,7 @@ export function TaskDetailModal({ boardId, task }: { boardId: string; task: Task
             </div>
             <form
               ref={commentFormRef}
-              action={(formData) => {
-                if (commentFormRef.current) commentFormRef.current.dataset.submitted = "true";
-                commentFormAction(formData);
-              }}
+              action={commentFormAction}
               className="p-6 border-t border-surface-variant bg-surface-container-lowest sticky bottom-0"
             >
               <div className="flex flex-col gap-2">
