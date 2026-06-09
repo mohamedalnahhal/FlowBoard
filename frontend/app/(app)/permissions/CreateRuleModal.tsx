@@ -8,7 +8,7 @@ import { Icon } from "@/components/ui/Icon";
 import { createPermissionRuleAction } from "@/lib/permissions-actions";
 import { ACTION_LABELS, groupLabel } from "./action-labels";
 
-type Group = { id: string; all_members: boolean };
+type Group = { id: string; name?: string | null; all_members: boolean };
 type Board = { id: string; name: string };
 
 export function CreateRuleModal({ teamId, groups, boards }: { teamId: string; groups: Group[]; boards: Board[] }) {

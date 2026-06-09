@@ -10,7 +10,7 @@ import workspacesRouter from './routes/workspaces.js';
 import teamsRouter from './routes/teams.js';
 import usersRouter from './routes/users.js';
 import dashboardRouter from './routes/dashboard.js';
-import permissionsRouter from './routes/permissions.js';
+import permissionsRouter, { userPermissionsRouter } from './routes/permissions.js';
 import groupsRouter from './routes/groups.js';
 import boardsRouter from './routes/boards.js';
 import boardDetailRouter from './routes/boardDetail.js';
@@ -40,6 +40,7 @@ app.use('/tasks', tasksRouter);
 app.use('/search', searchRouter);
 
 app.use('/teams/:teamId/permissions', permissionsRouter);
+app.use('/teams/:teamId/users/:userId/permissions', userPermissionsRouter);
 app.use('/teams/:teamId/groups', groupsRouter);
 app.use('/teams/:teamId/boards', boardsRouter);
 

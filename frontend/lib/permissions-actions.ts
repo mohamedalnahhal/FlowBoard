@@ -75,6 +75,43 @@ export async function updatePermissionRuleAction(
   }
 }
 
+export async function grantUserPermissionAction(
+  teamId: string,
+  userId: string,
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const action = formData.get("action")?.toString();
+  const type = formData.get("type")?.toString() ?? "ALLOW";
+  const scope_type = formData.get("scope_type")?.toString() ?? "team";
+  const scope_id = formData.get("scope_id")?.toString() || undefined;
+
+  if (!action) return { error: "Please select a permission action." };
+
+  try {
+    await api.post(`/teams/${teamId}/users/${userId}/permissions`, { action, type, scope_type, scope_id });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to grant permission." };
+  }
+
+  revalidatePath("/permissions");
+  return undefined;
+}
+
+export async function revokeUserPermissionAction(
+  teamId: string,
+  userId: string,
+  permissionId: string,
+): Promise<ActionState> {
+  try {
+    await api.delete(`/teams/${teamId}/users/${userId}/permissions/${permissionId}`);
+    revalidatePath("/permissions");
+    return undefined;
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to revoke permission." };
+  }
+}
+
 export async function updateUserGroupsAction(
   teamId: string,
   userId: string,

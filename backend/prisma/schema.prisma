@@ -138,6 +138,7 @@ model Notification {
 model Group {
   id          String  @id @default(uuid()) @db.Uuid
   team_id     String  @db.Uuid
+  name        String?
   all_members Boolean @default(false)
 
   team        Team        @relation(fields: [team_id], references: [id])

@@ -35,6 +35,9 @@ export function actionLabel(action: string) {
   return ACTION_LABELS[action] ?? action;
 }
 
-export function groupLabel(group: { all_members: boolean; id: string }) {
-  return group.all_members ? "All Members" : `Group ${group.id.slice(0, 8)}`;
+export function groupLabel(group: { all_members: boolean; id: string; name?: string | null }) {
+  if (group.all_members) return "All Members";
+  if (group.name?.startsWith("__personal__")) return "Personal";
+  if (group.name) return group.name;
+  return `Group ${group.id.slice(0, 8)}`;
 }

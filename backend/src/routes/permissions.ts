@@ -282,4 +282,127 @@ router.post(
   },
 );
 
+// ── User-scoped permission endpoints (mounted separately at /teams/:teamId/users/:userId/permissions) ──
+
+export const userPermissionsRouter = Router({ mergeParams: true });
+
+// GET /teams/:teamId/users/:userId/permissions
+// Returns all permission rules that affect the given user (via their group memberships).
+userPermissionsRouter.get(
+  '/',
+  checkPermission(ACTIONS.TEAM_MANAGE_MEMBERS, 'team', (req) => req.params.teamId as string),
+  async (req, res, next) => {
+    try {
+      const prisma = req.app.get('prisma') as PrismaClient;
+      const { teamId, userId } = req.params as Record<string, string>;
+
+      const userGroupRows = await prisma.userGroup.findMany({
+        where: { user_id: userId, group: { team_id: teamId } },
+        select: { group_id: true },
+      });
+      const groupIds = userGroupRows.map((r) => r.group_id);
+
+      const permissions = await prisma.permission.findMany({
+        where: { group_id: { in: groupIds } },
+        include: { group: { select: { id: true, name: true, all_members: true } } },
+        orderBy: [{ priority: 'desc' }, { created_at: 'asc' }],
+      });
+
+      res.json(permissions.map((p) => ({ ...p, ...scopeFromRow(p) })));
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// POST /teams/:teamId/users/:userId/permissions
+// Grants a permission directly to a user by finding/creating their personal group.
+userPermissionsRouter.post(
+  '/',
+  checkPermission(ACTIONS.TEAM_MANAGE_MEMBERS, 'team', (req) => req.params.teamId as string),
+  async (req, res, next) => {
+    try {
+      const prisma = req.app.get('prisma') as PrismaClient;
+      const { teamId, userId } = req.params as Record<string, string>;
+      const { action, type, scope_type, scope_id, priority = 50 } = req.body ?? {};
+
+      if (!action || !VALID_ACTIONS.has(action)) {
+        return res.status(400).json({ error: `action must be one of: ${[...VALID_ACTIONS].join(', ')}` });
+      }
+      if (!type || !VALID_TYPES.has(type)) {
+        return res.status(400).json({ error: `type must be ALLOW or DENY` });
+      }
+      if (!scope_type || !VALID_SCOPE_TYPES.has(scope_type)) {
+        return res.status(400).json({ error: `scope_type must be one of: ${[...VALID_SCOPE_TYPES].join(', ')}` });
+      }
+
+      const targetUser = await prisma.user.findUnique({ where: { id: userId }, select: { display_name: true } });
+      if (!targetUser) return res.status(404).json({ error: 'User not found' });
+
+      const groupName = `__personal__${userId}`;
+
+      const result = await prisma.$transaction(async (tx) => {
+        let group = await tx.group.findFirst({
+          where: { team_id: teamId, name: groupName },
+        });
+
+        if (!group) {
+          group = await tx.group.create({
+            data: { team_id: teamId, name: groupName, all_members: false },
+          });
+          await tx.userGroup.create({ data: { user_id: userId, group_id: group.id } });
+        } else {
+          const alreadyIn = await tx.userGroup.findFirst({ where: { user_id: userId, group_id: group.id } });
+          if (!alreadyIn) {
+            await tx.userGroup.create({ data: { user_id: userId, group_id: group.id } });
+          }
+        }
+
+        const column = scopeColumnFor(scope_type as ScopeType);
+        const scopeData = column ? { [column]: scope_id } : {};
+
+        const permission = await tx.permission.create({
+          data: { action, type, priority: Number(priority), group_id: group.id, ...scopeData },
+          include: { group: { select: { id: true, name: true, all_members: true } } },
+        });
+
+        return permission;
+      });
+
+      res.status(201).json({ ...result, ...scopeFromRow(result) });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// DELETE /teams/:teamId/users/:userId/permissions/:permissionId
+// Removes a permission rule. Only allowed if the rule belongs to the user's personal group.
+userPermissionsRouter.delete(
+  '/:permissionId',
+  checkPermission(ACTIONS.TEAM_MANAGE_MEMBERS, 'team', (req) => req.params.teamId as string),
+  async (req, res, next) => {
+    try {
+      const prisma = req.app.get('prisma') as PrismaClient;
+      const { teamId, userId, permissionId } = req.params as Record<string, string>;
+
+      const permission = await prisma.permission.findFirst({
+        where: {
+          id: permissionId,
+          group: { team_id: teamId, name: `__personal__${userId}` },
+        },
+      });
+
+      if (!permission) {
+        return res.status(404).json({ error: 'Permission not found or not a personal rule' });
+      }
+
+      await prisma.permission.delete({ where: { id: permissionId } });
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 export default router;

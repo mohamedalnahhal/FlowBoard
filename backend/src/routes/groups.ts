@@ -35,12 +35,13 @@ router.post(
   async (req, res, next) => {
     try {
       const prisma = req.app.get('prisma') as PrismaClient;
-      const { all_members = false } = req.body ?? {};
+      const { all_members = false, name } = req.body ?? {};
 
       const group = await prisma.group.create({
         data: {
           team_id:     (req.params.teamId as string)!,
           all_members: Boolean(all_members),
+          ...(name && { name: String(name).trim() }),
         },
       });
 

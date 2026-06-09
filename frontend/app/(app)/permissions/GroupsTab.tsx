@@ -108,12 +108,12 @@ export function GroupsTab({ teamId, groups }: { teamId: string; groups: Group[] 
       )}
 
       <div className="flex flex-col gap-3">
-        {groups.length === 0 && !addingGroup && (
+        {groups.filter((g) => !g.name?.startsWith("__personal__")).length === 0 && !addingGroup && (
           <p className="font-body-md text-body-md text-on-surface-variant py-4 text-center">
             No groups yet. Create one to use in permission rules.
           </p>
         )}
-        {groups.map((group) => {
+        {groups.filter((g) => !g.name?.startsWith("__personal__")).map((group) => {
           const members = group.user_groups.map((ug) => ug.user);
           const label = group.name ?? groupLabel(group);
           const isDeleting = deletingId === group.id;

@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/Card";
 import { Tabs } from "@/components/ui/Tabs";
 import { AvatarStack } from "@/components/ui/Avatar";
 import { CreateRuleModal } from "./CreateRuleModal";
-import { EditUserGroupsModal } from "./EditUserGroupsModal";
+import { UserPermissionsModal } from "./UserPermissionsModal";
 import { PermissionsRulesTable } from "./PermissionsRulesTable";
 import { GroupsTab } from "./GroupsTab";
 import { groupLabel } from "./action-labels";
@@ -20,6 +20,15 @@ type Permission = {
   group: { id: string; all_members: boolean };
   scope_type: "team" | "board" | "list" | "task";
   scope_id: string | null;
+};
+type UserPermission = {
+  id: string;
+  action: string;
+  type: "ALLOW" | "DENY";
+  priority: number;
+  scope_type: string;
+  scope_id: string | null;
+  group: { id: string; name: string | null; all_members: boolean };
 };
 type TeamDetail = {
   id: string;
@@ -54,11 +63,29 @@ export default async function PermissionsPage({ searchParams }: PageProps<"/perm
     api.get<Group[]>(`/teams/${team.id}/groups`),
   ]);
 
-  const groupSummaries = groups.map(({ id, all_members }) => ({ id, all_members }));
+  const groupSummaries = groups.map(({ id, name, all_members }) => ({ id, name, all_members }));
 
   let permissions: Permission[] = [];
   if (tab === "rules") {
     permissions = await api.get<Permission[]>(`/teams/${team.id}/permissions`).catch(() => []);
+  }
+
+  // For users tab, pre-fetch each user's permissions
+  let userPermissionsMap: Record<string, UserPermission[]> = {};
+  if (tab === "users") {
+    const results = await Promise.allSettled(
+      detail.user_teams.map(async ({ user }) => {
+        const perms = await api
+          .get<UserPermission[]>(`/teams/${team.id}/users/${user.id}/permissions`)
+          .catch(() => [] as UserPermission[]);
+        return { userId: user.id, perms };
+      }),
+    );
+    for (const r of results) {
+      if (r.status === "fulfilled") {
+        userPermissionsMap[r.value.userId] = r.value.perms;
+      }
+    }
   }
 
   return (
@@ -106,21 +133,33 @@ export default async function PermissionsPage({ searchParams }: PageProps<"/perm
         </Card>
       ) : (
         <Card className="overflow-hidden">
+          <div className="p-4 border-b border-outline-variant/60 bg-surface-container-low">
+            <p className="font-body-md text-[13px] text-on-surface-variant">
+              Grant or revoke permissions per user. Click <strong className="text-on-surface">Manage</strong> to
+              add direct permissions or adjust group memberships.
+            </p>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
                   <th className="p-4 font-semibold">User</th>
                   <th className="p-4 font-semibold">Team Role</th>
-                  <th className="p-4 font-semibold">Groups</th>
+                  <th className="p-4 font-semibold">Permissions</th>
                   <th className="p-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/60">
                 {detail.user_teams.map(({ user, role }) => {
-                  const memberGroups = groups.filter((g) => g.user_groups.some((ug) => ug.user.id === user.id));
+                  const memberGroups = groups.filter((g) =>
+                    !g.name?.startsWith("__personal__") && g.user_groups.some((ug) => ug.user.id === user.id),
+                  );
+                  const userPerms = userPermissionsMap[user.id] ?? [];
+                  const directCount = userPerms.filter((p) => p.group.name?.startsWith("__personal__")).length;
+                  const inheritedCount = userPerms.filter((p) => !p.group.name?.startsWith("__personal__")).length;
+
                   return (
-                    <tr key={user.id} className="hover:bg-surface-container-low/40 transition-colors group">
+                    <tr key={user.id} className="hover:bg-surface-container-low/40 transition-colors">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <AvatarStack people={[user]} max={1} size="md" />
@@ -136,24 +175,35 @@ export default async function PermissionsPage({ searchParams }: PageProps<"/perm
                         </span>
                       </td>
                       <td className="p-4">
-                        {memberGroups.length === 0 ? (
-                          <span className="text-on-surface-variant text-[12px] italic">No groups</span>
-                        ) : (
-                          <div className="flex flex-wrap gap-1.5">
-                            {memberGroups.map((g) => (
-                              <span key={g.id} className="inline-flex items-center px-2 py-0.5 rounded border border-outline-variant bg-surface font-body-md text-[12px] text-on-surface-variant">
-                                {groupLabel(g)}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                        <div className="flex flex-wrap gap-1.5">
+                          {directCount > 0 && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded border border-primary/30 bg-primary/5 font-body-md text-[12px] text-primary">
+                              {directCount} direct
+                            </span>
+                          )}
+                          {memberGroups.length > 0 && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded border border-outline-variant bg-surface font-body-md text-[12px] text-on-surface-variant">
+                              {memberGroups.length} group{memberGroups.length !== 1 ? "s" : ""}
+                            </span>
+                          )}
+                          {inheritedCount > 0 && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded border border-outline-variant bg-surface font-body-md text-[12px] text-on-surface-variant">
+                              {inheritedCount} inherited
+                            </span>
+                          )}
+                          {directCount === 0 && memberGroups.length === 0 && (
+                            <span className="text-on-surface-variant text-[12px] italic">None</span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-4 text-right">
-                        <EditUserGroupsModal
+                        <UserPermissionsModal
                           teamId={team.id}
                           user={user}
                           groups={groupSummaries}
                           memberGroupIds={memberGroups.map((g) => g.id)}
+                          userPermissions={userPerms}
+                          boards={detail.boards}
                         />
                       </td>
                     </tr>

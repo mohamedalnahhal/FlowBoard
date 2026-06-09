@@ -10,14 +10,14 @@ import { deletePermissionRuleAction, togglePermissionTypeAction, updatePermissio
 import { actionLabel, groupLabel } from "./action-labels";
 
 type Person = { id: string; display_name: string; username: string; email: string | null };
-type Group = { id: string; all_members: boolean; user_groups: { user: Person }[] };
+type Group = { id: string; name?: string | null; all_members: boolean; user_groups: { user: Person }[] };
 type Board = { id: string; name: string };
 type Permission = {
   id: string;
   action: string;
   type: "ALLOW" | "DENY";
   priority: number;
-  group: { id: string; all_members: boolean };
+  group: { id: string; name?: string | null; all_members: boolean };
   scope_type: "team" | "board" | "list" | "task";
   scope_id: string | null;
 };
