@@ -18,7 +18,15 @@ router.get('/my-tasks-count', async (req, res, next) => {
     if (!userId) return;
 
     const prisma = req.app.get('prisma') as PrismaClient;
-    const count = await prisma.taskMember.count({ where: { user_id: userId } });
+    const { team_id } = req.query as Record<string, string | undefined>;
+    const count = await prisma.taskMember.count({
+      where: {
+        user_id: userId,
+        ...(team_id ? {
+          task: { list: { board: { team_id } } }
+        } : {}),
+      },
+    });
 
     res.json({ count });
   } catch (err) {
@@ -81,8 +89,12 @@ router.get('/favorites', async (req, res, next) => {
     if (!userId) return;
 
     const prisma = req.app.get('prisma') as PrismaClient;
+    const { team_id } = req.query as Record<string, string | undefined>;
     const favorites = await prisma.favorite.findMany({
-      where:   { user_id: userId },
+      where: {
+        user_id: userId,
+        ...(team_id ? { board: { team_id } } : {}),
+      },
       include: { board: { select: { id: true, name: true, status: true, team: { select: { id: true, name: true } } } } },
       orderBy: { created_at: 'desc' },
     });

@@ -23,7 +23,7 @@ async function main() {
   const [alice, bob, carol, dave] = await Promise.all([
     prisma.user.upsert({
       where: { id: '00000000-0000-0000-0000-000000000001' },
-      update: {},
+      update: { role: 1 },
       create: {
         id: '00000000-0000-0000-0000-000000000001',
         display_name: 'Alice Admin',
@@ -725,6 +725,147 @@ async function main() {
       where: { id: '00000000-0000-0000-0012-000000000059' },
       update: {},
       create: { id: '00000000-0000-0000-0012-000000000059', action: 'board:manage_labels', type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can manage labels' },
+    }),
+    // Additional missing permissions: board:delete, board:edit, board:update, task:delete, etc.
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000060' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000060', action: 'board:delete',        type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can delete boards' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000061' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000061', action: 'board:delete',        type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can delete boards' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000062' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000062', action: 'board:edit',          type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can edit boards' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000063' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000063', action: 'board:edit',          type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can edit boards' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000064' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000064', action: 'board:update',        type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can update boards' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000065' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000065', action: 'board:update',        type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can update boards' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000066' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000066', action: 'task:delete',         type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can delete tasks' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000067' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000067', action: 'task:delete',         type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can delete tasks' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000068' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000068', action: 'task:assign_others',  type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can assign others to tasks' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000069' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000069', action: 'task:assign_others',  type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can assign others to tasks' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000070' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000070', action: 'task:assign_self',    type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can self-assign tasks' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000071' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000071', action: 'task:assign_self',    type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can self-assign tasks' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000072' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000072', action: 'comment:delete_any',  type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can delete any comment' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000073' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000073', action: 'comment:delete_any',  type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can delete any comment' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000074' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000074', action: 'checklist:manage',    type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can manage checklists' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000075' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000075', action: 'checklist:manage',    type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can manage checklists' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000076' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000076', action: 'label:apply',         type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can apply labels' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000077' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000077', action: 'label:apply',         type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can apply labels' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000078' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000078', action: 'label:define',        type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can define labels' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000079' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000079', action: 'label:define',        type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can define labels' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000080' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000080', action: 'attachment:delete',   type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can delete attachments' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000081' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000081', action: 'attachment:delete',   type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can delete attachments' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000082' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000082', action: 'list:create',         type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can create lists' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000083' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000083', action: 'list:create',         type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can create lists' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000084' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000084', action: 'list:update',         type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can update lists' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000085' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000085', action: 'list:update',         type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can update lists' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000086' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000086', action: 'list:delete',         type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can delete lists' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000087' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000087', action: 'list:delete',         type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can delete lists' },
     }),
   ]);
   console.log('✓ Permissions');

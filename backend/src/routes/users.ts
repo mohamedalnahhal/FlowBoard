@@ -122,6 +122,102 @@ router.post('/', async (req, res, next) => {
   }
 });
 
+// ── PATCH /users/:userId/role ──────────────────────────────────────────────────
+router.patch('/:userId/role', async (req, res, next) => {
+  try {
+    if (!req.user?.id) return res.status(401).json({ error: 'Unauthenticated' });
+    const prisma = req.app.get('prisma') as PrismaClient;
+
+    const requester = await prisma.user.findUnique({ where: { id: req.user.id }, select: { role: true } });
+    // Only workspace owner (role=1) or admin (role=2) or system admin (role=0) can change roles
+    if (!requester || requester.role > 2) {
+      return res.status(403).json({ error: 'Insufficient permissions to change user roles' });
+    }
+
+    const { userId } = req.params as { userId: string };
+    const { role, sync_permissions = true, revoke_extra = false } = req.body ?? {};
+    if (role === undefined || typeof role !== 'number') {
+      return res.status(400).json({ error: 'role (number) is required' });
+    }
+
+    // Map workspace role → team role for default permissions
+    const teamRole = role <= 2 ? 'TEAM_LEAD' : role === 3 ? 'TEAM_MEMBER' : 'TEAM_VIEWER';
+    const ROLE_DEFAULTS: Record<string, string[]> = {
+      TEAM_LEAD: [
+        'team:view','team:manage_members',
+        'board:view','board:edit','board:delete','board:manage_lists','board:manage_labels',
+        'task:view','task:create','task:edit','task:move',
+        'history:view','comment:create','comment:edit_own','comment:delete_own',
+        'checklist_item:toggle','checklist_item:mutate','attachment:upload',
+      ],
+      TEAM_MEMBER: [
+        'team:view',
+        'board:view','board:manage_lists','board:manage_labels',
+        'task:view','task:create','task:edit','task:move',
+        'history:view','comment:create','comment:edit_own','comment:delete_own',
+        'checklist_item:toggle','checklist_item:mutate','attachment:upload',
+      ],
+      TEAM_VIEWER: ['team:view','board:view','task:view','history:view','comment:create'],
+    };
+    const newDefaults = ROLE_DEFAULTS[teamRole] ?? [];
+
+    await prisma.$transaction(async (tx) => {
+      // Update the user's workspace role
+      await tx.user.update({ where: { id: userId }, data: { role } });
+
+      if (!sync_permissions) return;
+
+      // Get all teams the user belongs to
+      const memberships = await tx.userTeam.findMany({
+        where: { user_id: userId },
+        include: { team: { include: { groups: { where: { all_members: true } } } } },
+      });
+
+      for (const membership of memberships) {
+        const allMembersGroup = membership.team.groups[0];
+        if (!allMembersGroup) continue;
+
+        // Ensure user is in the all_members group
+        await tx.userGroup.upsert({
+          where: { user_id_group_id: { user_id: userId, group_id: allMembersGroup.id } },
+          update: {},
+          create: { user_id: userId, group_id: allMembersGroup.id },
+        });
+
+        // Add new default permissions (ALLOW, priority 5)
+        await tx.permission.createMany({
+          data: newDefaults.map((action) => ({
+            action,
+            type: 'ALLOW' as const,
+            priority: 5,
+            group_id: allMembersGroup.id,
+          })),
+          skipDuplicates: true,
+        });
+
+        if (revoke_extra) {
+          // Revoke permissions not in the new defaults
+          await tx.permission.deleteMany({
+            where: {
+              group_id: allMembersGroup.id,
+              action: { notIn: newDefaults },
+              priority: { lte: 5 },
+            },
+          });
+        }
+      }
+    });
+
+    const updated = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, display_name: true, username: true, role: true },
+    });
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── PATCH /users/:userId ───────────────────────────────────────────────────────
 router.patch('/:userId', async (req, res, next) => {
   try {

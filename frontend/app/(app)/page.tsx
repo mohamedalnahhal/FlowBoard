@@ -48,11 +48,11 @@ export default async function DashboardPage() {
     workspace
       ? api.get<Announcement[]>(`/dashboard/announcements?workspace_id=${workspace.id}`).catch(() => [])
       : Promise.resolve([] as Announcement[]),
-    api.get<FavoriteBoard[]>("/dashboard/favorites").catch(() => []),
+    api.get<FavoriteBoard[]>(`/dashboard/favorites${activeTeam ? `?team_id=${activeTeam.id}` : ''}`).catch(() => []),
     activeTeam
       ? api.get<CalendarEvent[]>(`/dashboard/calendar-events?team_id=${activeTeam.id}`).catch(() => [])
       : Promise.resolve([] as CalendarEvent[]),
-    api.get<{ count: number }>("/dashboard/my-tasks-count").catch(() => ({ count: 0 })),
+    api.get<{ count: number }>(`/dashboard/my-tasks-count${activeTeam ? `?team_id=${activeTeam.id}` : ''}`).catch(() => ({ count: 0 })),
   ]);
 
   const firstName = user?.display_name.split(" ")[0] ?? "there";

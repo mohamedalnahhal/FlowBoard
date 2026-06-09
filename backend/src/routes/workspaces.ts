@@ -65,15 +65,36 @@ router.post('/', async (req, res, next) => {
     if (!userId) return;
 
     const prisma = req.app.get('prisma') as PrismaClient;
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
-    if (user?.role !== SYSTEM_ADMIN_ROLE) {
-      return res.status(403).json({ error: 'Only system administrators can create workspaces' });
-    }
-
     const { name } = req.body ?? {};
     if (!name) return res.status(400).json({ error: 'name is required' });
 
-    const workspace = await prisma.workspace.create({ data: { name } });
+    // Create workspace + default team in a transaction
+    const workspace = await prisma.$transaction(async (tx) => {
+      const ws = await tx.workspace.create({ data: { name } });
+      const team = await tx.team.create({ data: { name: 'General', workspace_id: ws.id } });
+      const group = await tx.group.create({ data: { team_id: team.id, all_members: true } });
+      await tx.userTeam.create({ data: { user_id: userId, team_id: team.id, role: 1 } });
+      await tx.userGroup.create({ data: { user_id: userId, group_id: group.id } });
+      // Seed TEAM_LEAD default permissions for the group
+      const leadPerms = [
+        'team:view','team:manage_members',
+        'board:view','board:edit','board:delete','board:manage_lists','board:manage_labels',
+        'task:view','task:create','task:edit','task:move',
+        'history:view','comment:create','comment:edit_own','comment:delete_own',
+        'checklist_item:toggle','checklist_item:mutate','attachment:upload',
+      ];
+      await tx.permission.createMany({
+        data: leadPerms.map((action) => ({
+          action,
+          type: 'ALLOW' as const,
+          priority: 5,
+          group_id: group.id,
+        })),
+        skipDuplicates: true,
+      });
+      return ws;
+    });
+
     res.status(201).json(workspace);
   } catch (err) {
     next(err);
@@ -199,6 +220,47 @@ router.delete('/:workspaceId/members/:targetUserId', async (req, res, next) => {
     }
 
     res.json({ removed: true, count: deleted.count });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── GET /workspaces/:workspaceId/permissions ───────────────────────────────────
+// Returns workspace members with their roles (workspace permission overview).
+router.get('/:workspaceId/permissions', async (req, res, next) => {
+  try {
+    const userId = await requireAuth(req, res);
+    if (!userId) return;
+    const prisma = req.app.get('prisma') as PrismaClient;
+
+    // Check requester is a workspace member
+    const membership = await prisma.userTeam.findFirst({
+      where: { user_id: userId, team: { workspace_id: (req.params.workspaceId as string) } },
+    });
+    if (!membership) return res.status(403).json({ error: 'Not a member of this workspace' });
+
+    // Get all unique members across all teams in workspace
+    const teams = await prisma.team.findMany({
+      where: { workspace_id: (req.params.workspaceId as string) },
+      include: {
+        user_teams: {
+          include: { user: { select: { id: true, display_name: true, username: true, email: true, role: true } } },
+        },
+      },
+    });
+
+    const seen = new Set<string>();
+    const members: Array<{ id: string; display_name: string | null; username: string; email: string | null; role: number }> = [];
+    for (const team of teams) {
+      for (const ut of team.user_teams) {
+        if (!seen.has(ut.user.id)) {
+          seen.add(ut.user.id);
+          members.push(ut.user);
+        }
+      }
+    }
+
+    res.json(members);
   } catch (err) {
     next(err);
   }

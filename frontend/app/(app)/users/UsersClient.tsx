@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
-import { createUserAction, updateUserAction, removeUserFromWorkspaceAction } from "@/lib/user-actions";
+import { createUserAction, updateUserAction, removeUserFromWorkspaceAction, changeUserRoleAction } from "@/lib/user-actions";
 
 type Team = { id: string; name: string };
 type UserRow = {
@@ -164,19 +164,118 @@ function EditUserModal({ user, onClose }: { user: UserRow; onClose: () => void }
           <input name="email" type="email" defaultValue={user.email ?? ""}
             className="px-3 py-2 border border-outline-variant rounded-md font-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
         </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="font-label-md text-label-md text-on-surface-variant">Role</span>
-          <select name="role" defaultValue={user.role}
-            className="px-3 py-2 border border-outline-variant rounded-md font-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
-            <option value="3">Member</option>
-            <option value="2">Leader</option>
-            <option value="1">Owner</option>
-            <option value="0">Admin</option>
-          </select>
-        </label>
         {state?.error && (
           <p className="flex items-center gap-2 text-error font-body-md text-[13px]">
             <Icon name="error" className="text-[16px]" />{state.error}
+          </p>
+        )}
+      </form>
+    </Modal>
+  );
+}
+
+function ChangeRoleModal({ user, onClose }: { user: UserRow; onClose: () => void }) {
+  const router = useRouter();
+  const [selectedRole, setSelectedRole] = useState(user.role);
+  const [syncPermissions, setSyncPermissions] = useState(false);
+  const [revokeExtra, setRevokeExtra] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
+
+  const lowerPermissions = selectedRole > user.role;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    const effectiveSync = syncPermissions || revokeExtra;
+    const result = await changeUserRoleAction(user.id, selectedRole, effectiveSync);
+    setSubmitting(false);
+    if (result?.error) {
+      setError(result.error);
+    } else {
+      onClose();
+      startTransition(() => router.refresh());
+    }
+  }
+
+  return (
+    <Modal open onClose={onClose} title="Change Role" width="md"
+      footer={
+        <>
+          <Button variant="ghost" type="button" onClick={onClose}>Cancel</Button>
+          <Button type="button" onClick={handleSubmit} disabled={submitting || selectedRole === user.role}>
+            {submitting ? "Saving…" : "Save Role"}
+          </Button>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="flex items-center gap-3 bg-surface-container-low p-3 rounded-lg">
+          <Avatar person={user} size="md" />
+          <div>
+            <p className="font-label-md text-label-md text-on-surface font-semibold">{user.display_name}</p>
+            <p className="font-body-md text-on-surface-variant text-[12px]">@{user.username}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 text-[13px] text-on-surface-variant">
+          <span>Current role:</span>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-label-sm text-[11px] font-bold uppercase tracking-wide ${ROLE_TONES[user.role] ?? ROLE_TONES[3]}`}>
+            {ROLE_LABELS[user.role] ?? "Member"}
+          </span>
+        </div>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="font-label-md text-label-md text-on-surface-variant">New Role</span>
+          <select
+            value={selectedRole}
+            onChange={(e) => setSelectedRole(Number(e.target.value))}
+            className="px-3 py-2 border border-outline-variant rounded-md font-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          >
+            <option value={3}>Member</option>
+            <option value={2}>Leader</option>
+            <option value={1}>Owner</option>
+            <option value={0}>Admin</option>
+          </select>
+        </label>
+
+        {lowerPermissions && (
+          <div className="flex items-start gap-2 p-3 bg-[#fdedc8]/40 border border-[#8a5a00]/20 rounded-lg text-[12px] text-on-surface-variant">
+            <Icon name="warning" className="text-[16px] text-[#8a5a00] shrink-0 mt-0.5" />
+            <span>This will revoke non-default permissions if you choose &ldquo;Revoke extra permissions&rdquo;.</span>
+          </div>
+        )}
+
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={syncPermissions}
+            onChange={(e) => setSyncPermissions(e.target.checked)}
+            className="rounded border-outline-variant text-primary focus:ring-primary"
+          />
+          <span className="font-body-md text-[13px] text-on-surface">
+            Sync permissions (assign default permissions for new role)
+          </span>
+        </label>
+
+        <label className={`flex items-center gap-2 select-none ${syncPermissions ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
+          <input
+            type="checkbox"
+            checked={revokeExtra}
+            disabled={!syncPermissions}
+            onChange={(e) => setRevokeExtra(e.target.checked)}
+            className="rounded border-outline-variant text-primary focus:ring-primary"
+          />
+          <span className="font-body-md text-[13px] text-on-surface">
+            Revoke non-default permissions
+          </span>
+        </label>
+
+        {error && (
+          <p className="flex items-center gap-2 text-error font-body-md text-[13px]">
+            <Icon name="error" className="text-[16px]" />{error}
           </p>
         )}
       </form>
@@ -202,6 +301,7 @@ export function UsersClient({
   const router = useRouter();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editUser, setEditUser] = useState<UserRow | null>(null);
+  const [changeRoleUser, setChangeRoleUser] = useState<UserRow | null>(null);
   const [searchValue, setSearchValue] = useState(q);
   const [roleFilter, setRoleFilter] = useState(role);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
@@ -354,6 +454,16 @@ export function UsersClient({
                       >
                         <Icon name="edit" className="text-[18px]" />
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => setChangeRoleUser(user)}
+                        className="text-on-surface-variant hover:text-on-surface p-1.5 rounded-md hover:bg-surface-container-high transition-colors"
+                        aria-label="Change role"
+                        title="Change role"
+                        disabled={removingUserId === user.id}
+                      >
+                        <Icon name="manage_accounts" className="text-[18px]" />
+                      </button>
                       {workspaceId && (
                         <button
                           type="button"
@@ -401,6 +511,7 @@ export function UsersClient({
 
       {inviteOpen && <InviteUserModal onClose={() => setInviteOpen(false)} />}
       {editUser && <EditUserModal user={editUser} onClose={() => setEditUser(null)} />}
+      {changeRoleUser && <ChangeRoleModal user={changeRoleUser} onClose={() => setChangeRoleUser(null)} />}
     </>
   );
 }

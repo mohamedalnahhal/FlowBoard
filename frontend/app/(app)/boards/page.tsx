@@ -9,7 +9,10 @@ type BoardListed = {
 };
 
 export default async function BoardsPage() {
-  const boards = await api.get<BoardListed[]>("/boards").catch(() => [] as BoardListed[]);
+  const [boards, myTeams] = await Promise.all([
+    api.get<BoardListed[]>("/boards").catch(() => [] as BoardListed[]),
+    api.get<{ id: string; name: string }[]>("/teams/mine").catch(() => [] as { id: string; name: string }[]),
+  ]);
 
   const allBoards = boards.map((b) => ({
     ...b,
@@ -18,7 +21,8 @@ export default async function BoardsPage() {
   }));
 
   const teamMap = new Map<string, { id: string; name: string }>();
-  for (const b of boards) teamMap.set(b.team.id, b.team);
+  for (const t of myTeams) teamMap.set(t.id, t);
+  for (const b of boards) if (!teamMap.has(b.team.id)) teamMap.set(b.team.id, b.team);
   const teams = Array.from(teamMap.values());
 
   return <BoardsClient boards={allBoards} teams={teams} />;

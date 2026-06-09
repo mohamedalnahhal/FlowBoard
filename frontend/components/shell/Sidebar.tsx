@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useActionState } from "react";
 import { Icon } from "../ui/Icon";
 import { Avatar } from "../ui/Avatar";
+import { createWorkspaceAction } from "@/lib/workspace-actions";
 
 type Board = { id: string; name: string; status: string };
 type Team = { id: string; name: string; boards?: Board[] };
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
 const WORKSPACE_ITEMS = [
   { label: "Teams", href: "/teams", icon: "groups" },
   { label: "Users", href: "/users", icon: "person_search" },
+  { label: "Workspace Permissions", href: "/workspace/permissions", icon: "admin_panel_settings" },
   { label: "Workspace Settings", href: "/workspace/settings", icon: "tune" },
 ];
 
@@ -39,8 +41,13 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user }: Sidebar
   const pathname = usePathname();
   const router = useRouter();
   const [wsOpen, setWsOpen] = useState(false);
+  const [createWsOpen, setCreateWsOpen] = useState(false);
   const [expandedBoards, setExpandedBoards] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+
+  const [createWsState, createWsFormAction, createWsPending] = useActionState(createWorkspaceAction, undefined);
+  const createWsFormRef = useRef<HTMLFormElement>(null);
+  const wasCreatingWsRef = useRef(false);
 
   // Read collapsed state from localStorage on mount (avoids SSR mismatch)
   useEffect(() => {
@@ -58,6 +65,18 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user }: Sidebar
       collapsed ? "4rem" : ""
     );
   }, [collapsed]);
+
+  // Auto-close create workspace form on success
+  useEffect(() => {
+    if (createWsPending) { wasCreatingWsRef.current = true; return; }
+    if (wasCreatingWsRef.current && !createWsState?.error) {
+      wasCreatingWsRef.current = false;
+      createWsFormRef.current?.reset();
+      setCreateWsOpen(false);
+      setWsOpen(false);
+      router.refresh();
+    }
+  }, [createWsPending, createWsState, router]);
 
   const currentWs = workspaces.find((w) => w.id === currentWorkspaceId) ?? workspaces[0];
   const initials = currentWs?.name
@@ -152,13 +171,46 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user }: Sidebar
                 <div className="border-t border-outline-variant/50">
                   <button
                     type="button"
-                    disabled
-                    title="Coming soon"
-                    className="w-full flex items-center gap-3 px-3 py-2.5 font-label-sm text-label-sm text-on-surface-variant opacity-50 cursor-not-allowed text-left"
+                    onClick={() => setCreateWsOpen((v) => !v)}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 font-label-sm text-label-sm text-on-surface-variant hover:bg-surface-container-low transition-colors text-left"
                   >
                     <Icon name="add" className="text-[16px]" />
                     New Workspace
                   </button>
+                  {createWsOpen && (
+                    <form
+                      ref={createWsFormRef}
+                      action={createWsFormAction}
+                      className="px-3 pb-3 flex flex-col gap-2"
+                    >
+                      <input
+                        name="name"
+                        autoFocus
+                        placeholder="Workspace name…"
+                        required
+                        className="w-full px-2.5 py-1.5 bg-surface border border-outline-variant rounded-md font-body-md text-[13px] text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                      />
+                      {createWsState?.error && (
+                        <p className="text-error font-body-md text-[11px]">{createWsState.error}</p>
+                      )}
+                      <div className="flex gap-2">
+                        <button
+                          type="submit"
+                          disabled={createWsPending}
+                          className="flex-1 px-3 py-1.5 bg-primary text-on-primary rounded-md font-label-sm text-[12px] font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                        >
+                          {createWsPending ? "Creating…" : "Create"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCreateWsOpen(false)}
+                          className="px-3 py-1.5 border border-outline-variant rounded-md font-label-sm text-[12px] text-on-surface-variant hover:bg-surface-container-low transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  )}
                 </div>
               </div>
             </>
@@ -231,19 +283,21 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user }: Sidebar
 
           <div className="my-4 border-t border-outline-variant/50" />
 
-          {/* Team Permissions */}
-          <ul className="space-y-1">
-            <li>
-              <Link
-                href="/permissions"
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors duration-150 ${isActive(pathname, "/permissions") ? "bg-primary-fixed text-on-primary-fixed-variant font-semibold" : "text-on-surface-variant hover:bg-surface-container-low"} ${collapsed ? "justify-center" : ""}`}
-                title={collapsed ? "Team Permissions" : undefined}
-              >
-                <Icon name="lock_person" filled={isActive(pathname, "/permissions")} />
-                {!collapsed && <span>Team Permissions</span>}
-              </Link>
-            </li>
-          </ul>
+          {/* Team Permissions — hidden from viewers (role >= 4) */}
+          {user.role < 4 && (
+            <ul className="space-y-1">
+              <li>
+                <Link
+                  href="/permissions"
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors duration-150 ${isActive(pathname, "/permissions") ? "bg-primary-fixed text-on-primary-fixed-variant font-semibold" : "text-on-surface-variant hover:bg-surface-container-low"} ${collapsed ? "justify-center" : ""}`}
+                  title={collapsed ? "Team Permissions" : undefined}
+                >
+                  <Icon name="lock_person" filled={isActive(pathname, "/permissions")} />
+                  {!collapsed && <span>Team Permissions</span>}
+                </Link>
+              </li>
+            </ul>
+          )}
 
           {/* Workspace admin section */}
           {isWorkspaceAdmin && (

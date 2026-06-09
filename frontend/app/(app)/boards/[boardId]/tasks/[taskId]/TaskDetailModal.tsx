@@ -316,7 +316,7 @@ export function TaskDetailModal({
                       <Avatar person={user} size="xs" />
                       <span className="font-label-sm text-label-sm text-on-surface">{user.display_name}</span>
                       <span className="font-label-sm text-[10px] text-on-surface-variant">
-                        {role === 1 ? "Lead" : "Contributor"}
+                        {role === 1 ? "Assignee" : role === 2 ? "Collaborator" : role === 3 ? "Reviewer" : "Member"}
                       </span>
                     </div>
                   ))}

@@ -1,19 +1,31 @@
-import { Icon } from "@/components/ui/Icon";
-import Link from "next/link";
+import { api, getCurrentUser } from "@/lib/api";
+import { WorkspacePermissionsClient } from "./WorkspacePermissionsClient";
 
-export default function WorkspacePermissionsPage() {
+type WorkspaceMember = {
+  id: string;
+  display_name: string;
+  username: string;
+  email: string | null;
+  role: number;
+};
+
+export default async function WorkspacePermissionsPage() {
+  const [user, workspaces] = await Promise.all([
+    getCurrentUser(),
+    api.get<{ id: string; name: string }[]>("/workspaces").catch(() => [] as { id: string; name: string }[]),
+  ]);
+
+  const workspace = workspaces[0];
+  const members = workspace
+    ? await api
+        .get<WorkspaceMember[]>(`/workspaces/${workspace.id}/permissions`)
+        .catch(() => [] as WorkspaceMember[])
+    : ([] as WorkspaceMember[]);
+
   return (
-    <div className="flex flex-col items-center justify-center gap-6 py-24 text-center">
-      <div className="w-20 h-20 rounded-full bg-surface-container-high flex items-center justify-center">
-        <Icon name="admin_panel_settings" className="text-[40px] text-on-surface-variant" />
-      </div>
-      <div>
-        <h1 className="font-headline-lg text-headline-lg text-on-surface mb-2">Workspace Permissions</h1>
-        <p className="font-body-lg text-body-lg text-on-surface-variant">This page is not implemented yet.</p>
-      </div>
-      <Link href="/" className="px-4 py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity">
-        Back to Home
-      </Link>
-    </div>
+    <WorkspacePermissionsClient
+      members={members}
+      currentUserRole={user?.role ?? 99}
+    />
   );
 }
