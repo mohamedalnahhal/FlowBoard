@@ -238,6 +238,45 @@ router.delete(
   },
 );
 
+// ── POST /tasks/:taskId/members ───────────────────────────────────────────────
+router.post(
+  '/:taskId/members',
+  checkPermission(ACTIONS.TASK_ASSIGN_OTHERS, 'task', (req) => (req.params.taskId as string), { inherit: true }),
+  async (req, res, next) => {
+    try {
+      const prisma = req.app.get('prisma') as PrismaClient;
+      const { user_id, role = 1 } = req.body ?? {};
+      if (!user_id) return res.status(400).json({ error: 'user_id is required' });
+
+      const member = await prisma.taskMember.upsert({
+        where:  { user_id_task_id: { user_id, task_id: (req.params.taskId as string) } },
+        update: { role },
+        create: { user_id, task_id: (req.params.taskId as string), role },
+      });
+      res.status(201).json(member);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ── DELETE /tasks/:taskId/members/:userId ─────────────────────────────────────
+router.delete(
+  '/:taskId/members/:userId',
+  checkPermission(ACTIONS.TASK_ASSIGN_OTHERS, 'task', (req) => (req.params.taskId as string), { inherit: true }),
+  async (req, res, next) => {
+    try {
+      const prisma = req.app.get('prisma') as PrismaClient;
+      await prisma.taskMember.deleteMany({
+        where: { task_id: (req.params.taskId as string), user_id: (req.params.userId as string) },
+      });
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // ── GET /tasks/:taskId/history ─────────────────────────────────────────────────
 router.get(
   '/:taskId/history',

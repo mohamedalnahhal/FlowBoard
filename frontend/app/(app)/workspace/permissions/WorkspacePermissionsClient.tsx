@@ -138,9 +138,11 @@ function ChangeRoleModal({
 
 export function WorkspacePermissionsClient({
   members,
+  currentUserId,
   currentUserRole,
 }: {
   members: WorkspaceMember[];
+  currentUserId: string | null;
   currentUserRole: number;
 }) {
   const canEdit = currentUserRole <= 2;
@@ -204,7 +206,9 @@ export function WorkspacePermissionsClient({
                   </td>
                   {canEdit && (
                     <td className="px-4 py-3 text-right">
-                      {member.role !== 1 && (
+                      {member.id === currentUserId ? (
+                        <span className="font-body-md text-[12px] text-on-surface-variant italic">You</span>
+                      ) : (
                         <button
                           type="button"
                           onClick={() => setEditMember(member)}
@@ -222,6 +226,13 @@ export function WorkspacePermissionsClient({
           </table>
         </div>
       </div>
+
+      {!canEdit && (
+        <div className="mt-4 flex items-center gap-2 p-3 bg-surface-container-low border border-outline-variant rounded-xl text-[13px] text-on-surface-variant">
+          <Icon name="lock" className="text-[16px] shrink-0" />
+          You have read-only access. Only Workspace Owners and Admins can change member roles.
+        </div>
+      )}
 
       {editMember && (
         <ChangeRoleModal member={editMember} onClose={() => setEditMember(null)} />

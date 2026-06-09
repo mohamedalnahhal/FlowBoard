@@ -10,6 +10,8 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import {
   addChecklistItemAction,
   addCommentAction,
+  addTaskMemberAction,
+  removeTaskMemberAction,
   toggleChecklistItemAction,
   updateTaskDescriptionAction,
 } from "@/lib/task-actions";
@@ -131,14 +133,18 @@ function CommentEntry({ comment }: { comment: Comment }) {
   );
 }
 
+type TeamMember = { id: string; display_name: string; username: string };
+
 export function TaskDetailModal({
   boardId,
   task,
   currentUserId,
+  teamMembers = [],
 }: {
   boardId: string;
   task: TaskDetail;
   currentUserId: string | null;
+  teamMembers?: TeamMember[];
 }) {
   const router = useRouter();
   const close = () => router.push(`/boards/${boardId}`);
@@ -207,6 +213,36 @@ export function TaskDetailModal({
       setEditingDesc(false);
       startRefreshTransition(() => router.refresh());
     }
+  }
+
+  // Member assignment
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignRole, setAssignRole] = useState(1);
+  const [assigningUserId, setAssigningUserId] = useState<string | null>(null);
+  const [assignError, setAssignError] = useState<string | null>(null);
+  const assignedIds = new Set(task.task_members.map((m) => m.user.id));
+  const unassignedMembers = teamMembers.filter((m) => !assignedIds.has(m.id));
+
+  async function handleAssign(userId: string) {
+    setAssigningUserId(userId);
+    setAssignError(null);
+    const result = await addTaskMemberAction(boardId, task.id, userId, assignRole);
+    setAssigningUserId(null);
+    if (result?.error) {
+      setAssignError(result.error);
+    } else {
+      setAssignOpen(false);
+      startRefreshTransition(() => router.refresh());
+    }
+  }
+
+  async function handleUnassign(userId: string) {
+    setAssigningUserId(userId);
+    setAssignError(null);
+    const result = await removeTaskMemberAction(boardId, task.id, userId);
+    setAssigningUserId(null);
+    if (result?.error) setAssignError(result.error);
+    else startRefreshTransition(() => router.refresh());
   }
 
   const commentAction = addCommentAction.bind(null, boardId, task.id);
@@ -312,24 +348,84 @@ export function TaskDetailModal({
                 <h4 className="font-label-sm text-label-sm text-on-surface-variant mb-2 uppercase tracking-wide">Assigned To</h4>
                 <div className="flex flex-wrap gap-2">
                   {task.task_members.map(({ user, role }) => (
-                    <div key={user.id} className="flex items-center gap-1.5 bg-surface-container-low px-2 py-1 rounded-lg border border-outline-variant/50">
+                    <div
+                      key={user.id}
+                      className={`flex items-center gap-1.5 bg-surface-container-low px-2 py-1 rounded-lg border border-outline-variant/50 group transition-opacity ${assigningUserId === user.id ? "opacity-50" : ""}`}
+                    >
                       <Avatar person={user} size="xs" />
                       <span className="font-label-sm text-label-sm text-on-surface">{user.display_name}</span>
                       <span className="font-label-sm text-[10px] text-on-surface-variant">
                         {role === 1 ? "Assignee" : role === 2 ? "Collaborator" : role === 3 ? "Reviewer" : "Member"}
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => handleUnassign(user.id)}
+                        disabled={assigningUserId === user.id}
+                        className="ml-0.5 text-on-surface-variant hover:text-error opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-30"
+                        title="Remove"
+                      >
+                        <Icon name="close" className="text-[12px]" />
+                      </button>
                     </div>
                   ))}
-                  {task.task_members.length === 0 && (
+                  {task.task_members.length === 0 && !assignOpen && (
                     <span className="font-label-md text-label-md text-on-surface-variant">Unassigned</span>
                   )}
-                  <button
-                    type="button"
-                    title="Coming soon"
-                    className="w-8 h-8 rounded-full bg-surface-container-low border border-outline-variant border-dashed flex items-center justify-center text-on-surface-variant cursor-default opacity-60"
-                  >
-                    <Icon name="add" className="text-[18px]" />
-                  </button>
+                  {/* Assign popover */}
+                  {assignOpen ? (
+                    <div className="w-full mt-1 p-3 bg-surface-container-low border border-outline-variant rounded-xl shadow-md flex flex-col gap-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Assign member</span>
+                        <button type="button" onClick={() => setAssignOpen(false)} className="text-on-surface-variant hover:text-on-surface">
+                          <Icon name="close" className="text-[16px]" />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <label className="font-label-sm text-label-sm text-on-surface-variant shrink-0">Role:</label>
+                        <select
+                          value={assignRole}
+                          onChange={(e) => setAssignRole(Number(e.target.value))}
+                          className="flex-1 px-2 py-1 border border-outline-variant rounded-md font-body-md text-[13px] text-on-surface bg-surface-container-lowest focus:outline-none focus:border-primary transition-all"
+                        >
+                          <option value={1}>Assignee</option>
+                          <option value={2}>Collaborator</option>
+                          <option value={3}>Reviewer</option>
+                        </select>
+                      </div>
+                      {unassignedMembers.length === 0 ? (
+                        <p className="font-body-md text-[12px] text-on-surface-variant text-center py-2">All team members already assigned.</p>
+                      ) : (
+                        <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
+                          {unassignedMembers.map((member) => (
+                            <button
+                              key={member.id}
+                              type="button"
+                              onClick={() => handleAssign(member.id)}
+                              disabled={assigningUserId === member.id}
+                              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface-container-high transition-colors text-left disabled:opacity-50"
+                            >
+                              <Avatar person={member} size="xs" />
+                              <div>
+                                <span className="font-label-md text-label-md text-on-surface block">{member.display_name}</span>
+                                <span className="font-label-sm text-[11px] text-on-surface-variant">@{member.username}</span>
+                              </div>
+                              {assigningUserId === member.id && <Icon name="hourglass_empty" className="text-[14px] ml-auto text-on-surface-variant" />}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {assignError && <p className="font-body-md text-[11px] text-error">{assignError}</p>}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setAssignOpen(true)}
+                      className="w-8 h-8 rounded-full bg-surface-container-low border border-outline-variant border-dashed flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:border-primary hover:text-primary transition-colors"
+                      title="Assign member"
+                    >
+                      <Icon name="add" className="text-[18px]" />
+                    </button>
+                  )}
                 </div>
               </div>
               {dueDate && (

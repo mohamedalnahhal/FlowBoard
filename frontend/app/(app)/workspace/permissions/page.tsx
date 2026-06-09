@@ -25,6 +25,7 @@ export default async function WorkspacePermissionsPage() {
   return (
     <WorkspacePermissionsClient
       members={members}
+      currentUserId={user?.id ?? null}
       currentUserRole={user?.role ?? 99}
     />
   );

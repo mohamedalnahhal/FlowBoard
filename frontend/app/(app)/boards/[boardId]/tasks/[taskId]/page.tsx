@@ -36,16 +36,29 @@ type TaskDetail = {
   task_history: HistoryEntry[];
 };
 
+type TeamMember = { id: string; display_name: string; username: string };
+
 export default async function TaskDetailPage({ params }: PageProps<"/boards/[boardId]/tasks/[taskId]">) {
   const { boardId, taskId } = await params;
 
-  const [task, currentUser] = await Promise.all([
+  const [task, currentUser, boardData] = await Promise.all([
     api.get<TaskDetail>(`/tasks/${taskId}`).catch((err: unknown) => {
       if (err instanceof ApiError && (err.status === 404 || err.status === 403)) notFound();
       throw err;
     }),
     getCurrentUser(),
+    api.get<{ team: { user_teams: { user: TeamMember }[] } }>(`/boards/${boardId}`)
+      .catch(() => null),
   ]);
 
-  return <TaskDetailModal boardId={boardId} task={task} currentUserId={currentUser?.id ?? null} />;
+  const teamMembers: TeamMember[] = boardData?.team.user_teams.map((ut) => ut.user) ?? [];
+
+  return (
+    <TaskDetailModal
+      boardId={boardId}
+      task={task}
+      currentUserId={currentUser?.id ?? null}
+      teamMembers={teamMembers}
+    />
+  );
 }

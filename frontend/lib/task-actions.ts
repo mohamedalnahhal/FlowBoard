@@ -65,3 +65,32 @@ export async function toggleChecklistItemAction(boardId: string, taskId: string,
   revalidatePath(`/boards/${boardId}/tasks/${taskId}`);
   revalidatePath(`/boards/${boardId}`);
 }
+
+export async function addTaskMemberAction(
+  boardId: string,
+  taskId: string,
+  userId: string,
+  role: number,
+): Promise<ActionState> {
+  try {
+    await api.post(`/tasks/${taskId}/members`, { user_id: userId, role });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to assign member." };
+  }
+  revalidatePath(`/boards/${boardId}/tasks/${taskId}`);
+  return undefined;
+}
+
+export async function removeTaskMemberAction(
+  boardId: string,
+  taskId: string,
+  userId: string,
+): Promise<ActionState> {
+  try {
+    await api.delete(`/tasks/${taskId}/members/${userId}`);
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to remove member." };
+  }
+  revalidatePath(`/boards/${boardId}/tasks/${taskId}`);
+  return undefined;
+}
