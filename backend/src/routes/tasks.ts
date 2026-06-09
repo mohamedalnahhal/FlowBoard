@@ -18,7 +18,7 @@ router.get(
         include: {
           list: { select: { id: true, name: true, board_id: true, board: { select: { id: true, name: true, team_id: true } } } },
           creator:   { select: { id: true, display_name: true, username: true } },
-          task_members: { include: { user: { select: { id: true, display_name: true, username: true } } } },
+          task_members: { select: { id: true, role: true, user: { select: { id: true, display_name: true, username: true } } } },
           task_labels:  { include: { label: true } },
           task_attachments: { include: { attachment: true } },
           checklist: { include: { checklist_items: { orderBy: { created_at: 'asc' } } } },

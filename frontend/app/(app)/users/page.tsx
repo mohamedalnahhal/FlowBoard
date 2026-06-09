@@ -28,7 +28,12 @@ export default async function UsersPage({ searchParams }: PageProps<"/users">) {
   query.set("page", String(page));
   query.set("page_size", "20");
 
-  const { data: users, pagination } = await api.get<UsersResponse>(`/users?${query.toString()}`);
+  const [{ data: users, pagination }, workspaces] = await Promise.all([
+    api.get<UsersResponse>(`/users?${query.toString()}`),
+    api.get<{ id: string; name: string }[]>("/workspaces").catch(() => []),
+  ]);
 
-  return <UsersClient users={users} pagination={pagination} q={q} role={role} page={page} />;
+  const workspaceId = workspaces[0]?.id ?? "";
+
+  return <UsersClient users={users} pagination={pagination} q={q} role={role} page={page} workspaceId={workspaceId} />;
 }

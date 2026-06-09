@@ -74,3 +74,47 @@ export const PERMISSION_TYPES = {
 export type PermissionTypeValue = (typeof PERMISSION_TYPES)[keyof typeof PERMISSION_TYPES];
 
 export const SYSTEM_ADMIN_ROLE = 0;
+
+// ── Role hierarchy ─────────────────────────────────────────────────────────────
+// User.role (global system role):
+//   0 = SYSTEM_ADMIN  – bypasses all permission checks
+//   1 = WORKSPACE_OWNER – owns a workspace; full control within it
+//   2 = WORKSPACE_ADMIN  – manages workspace settings, members, permissions
+//   3 = MEMBER           – standard team member
+//   4 = VIEWER           – read-only access
+//
+// UserTeam.role (per-team role):
+//   1 = TEAM_LEAD        – manages team boards, lists, tasks, members
+//   2 = TEAM_MEMBER      – creates/edits tasks, comments
+//   3 = TEAM_VIEWER      – read-only
+//
+// TaskMember.role (per-task role):
+//   1 = TASK_LEAD        – primary assignee / responsible
+//   2 = TASK_CONTRIBUTOR – contributing member
+export const ROLES = {
+  SYSTEM: { ADMIN: 0, WORKSPACE_OWNER: 1, WORKSPACE_ADMIN: 2, MEMBER: 3, VIEWER: 4 },
+  TEAM:   { LEAD: 1, MEMBER: 2, VIEWER: 3 },
+  TASK:   { LEAD: 1, CONTRIBUTOR: 2 },
+} as const;
+
+// Default permissions granted to each role automatically
+// (team-wide ALLOW rules with priority 5 — seeded on team/workspace creation)
+export const DEFAULT_PERMISSIONS: Record<string, string[]> = {
+  TEAM_LEAD:   [
+    'team:view','team:manage_members',
+    'board:view','board:edit','board:manage_lists','board:manage_labels',
+    'task:view','task:create','task:edit','task:move',
+    'history:view','comment:create','comment:edit_own','comment:delete_own',
+    'checklist_item:toggle','checklist_item:mutate','attachment:upload',
+  ],
+  TEAM_MEMBER: [
+    'team:view',
+    'board:view','board:manage_lists','board:manage_labels',
+    'task:view','task:create','task:edit','task:move',
+    'history:view','comment:create','comment:edit_own','comment:delete_own',
+    'checklist_item:toggle','checklist_item:mutate','attachment:upload',
+  ],
+  TEAM_VIEWER: [
+    'team:view','board:view','task:view','history:view','comment:create',
+  ],
+};

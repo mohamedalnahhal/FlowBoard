@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { createBoardFromTeamAction } from "@/lib/board-actions";
 
 type Board = { id: string; name: string; status: string; teamName: string; teamId: string };
 
@@ -19,9 +23,25 @@ const STATUS_DOTS: Record<string, string> = {
 };
 
 export function BoardsClient({ boards, teams }: { boards: Board[]; teams: { id: string; name: string }[] }) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [teamFilter, setTeamFilter] = useState("all");
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createState, createFormAction, createPending] = useActionState(createBoardFromTeamAction, undefined);
+  const createFormRef = useRef<HTMLFormElement>(null);
+  const wasCreatingRef = useRef(false);
+
+  useEffect(() => {
+    if (createPending) { wasCreatingRef.current = true; return; }
+    if (wasCreatingRef.current && !createState?.error && createOpen) {
+      wasCreatingRef.current = false;
+      createFormRef.current?.reset();
+      setCreateOpen(false);
+      router.refresh();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createPending, createState, createOpen]);
 
   const filtered = boards.filter((b) => {
     const matchesSearch =
@@ -47,8 +67,19 @@ export function BoardsClient({ boards, teams }: { boards: Board[]; teams: { id: 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="font-headline-lg text-headline-lg text-on-surface">Boards</h1>
-        <div className="font-body-md text-on-surface-variant text-[13px]">
-          {filtered.length} board{filtered.length !== 1 ? "s" : ""}
+        <div className="flex items-center gap-3">
+          <div className="font-body-md text-on-surface-variant text-[13px]">
+            {filtered.length} board{filtered.length !== 1 ? "s" : ""}
+          </div>
+          {teams.length > 0 && (
+            <Button
+              type="button"
+              icon={<Icon name="add" className="text-[18px]" />}
+              onClick={() => setCreateOpen(true)}
+            >
+              Create Board
+            </Button>
+          )}
         </div>
       </div>
 
@@ -120,6 +151,52 @@ export function BoardsClient({ boards, teams }: { boards: Board[]; teams: { id: 
       ) : (
         <BoardGrid boards={filtered} />
       )}
+
+      {/* Create Board Modal */}
+      <Modal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title="Create Board"
+        width="sm"
+        footer={
+          <>
+            <Button variant="ghost" type="button" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button form="create-board-form" type="submit" disabled={createPending}>
+              {createPending ? "Creating…" : "Create Board"}
+            </Button>
+          </>
+        }
+      >
+        <form id="create-board-form" ref={createFormRef} action={createFormAction} className="flex flex-col gap-4">
+          <label className="flex flex-col gap-1.5">
+            <span className="font-label-md text-label-md text-on-surface-variant">Team</span>
+            <select
+              name="team_id"
+              required
+              defaultValue=""
+              className="px-3 py-2 border border-outline-variant rounded-md font-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            >
+              <option value="" disabled>Select a team…</option>
+              {teams.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="font-label-md text-label-md text-on-surface-variant">Board name</span>
+            <input
+              name="name"
+              required
+              autoFocus
+              placeholder="e.g. Sprint Planning"
+              className="px-3 py-2 border border-outline-variant rounded-md font-body-md text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
+          </label>
+          {createState?.error && (
+            <p className="font-body-md text-[12px] text-error">{createState.error}</p>
+          )}
+        </form>
+      </Modal>
     </div>
   );
 }

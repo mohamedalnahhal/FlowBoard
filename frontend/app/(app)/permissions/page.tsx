@@ -5,11 +5,12 @@ import { AvatarStack } from "@/components/ui/Avatar";
 import { CreateRuleModal } from "./CreateRuleModal";
 import { EditUserGroupsModal } from "./EditUserGroupsModal";
 import { PermissionsRulesTable } from "./PermissionsRulesTable";
+import { GroupsTab } from "./GroupsTab";
 import { groupLabel } from "./action-labels";
 
 type Team = { id: string; name: string };
 type Person = { id: string; display_name: string; username: string; email: string | null };
-type Group = { id: string; all_members: boolean; user_groups: { user: Person }[] };
+type Group = { id: string; name?: string | null; all_members: boolean; user_groups: { user: Person }[] };
 type Board = { id: string; name: string };
 type Permission = {
   id: string;
@@ -31,7 +32,8 @@ const ROLE_LABELS: Record<number, string> = { 1: "Owner", 2: "Leader", 3: "Membe
 
 export default async function PermissionsPage({ searchParams }: PageProps<"/permissions">) {
   const sp = await searchParams;
-  const tab = (sp.tab ?? "rules").toString() === "users" ? "users" : "rules";
+  const rawTab = (sp.tab ?? "rules").toString();
+  const tab: "rules" | "users" | "groups" = rawTab === "users" ? "users" : rawTab === "groups" ? "groups" : "rules";
 
   const teams = await api.get<Team[]>("/teams/mine");
   const requestedTeamId = sp.team_id?.toString();
@@ -56,7 +58,7 @@ export default async function PermissionsPage({ searchParams }: PageProps<"/perm
 
   let permissions: Permission[] = [];
   if (tab === "rules") {
-    permissions = await api.get<Permission[]>(`/teams/${team.id}/permissions`);
+    permissions = await api.get<Permission[]>(`/teams/${team.id}/permissions`).catch(() => []);
   }
 
   return (
@@ -77,6 +79,7 @@ export default async function PermissionsPage({ searchParams }: PageProps<"/perm
           tabs={[
             { key: "rules", label: "Rules", href: tabHref("rules") },
             { key: "users", label: "Users", href: tabHref("users") },
+            { key: "groups", label: "Groups", href: tabHref("groups") },
           ]}
         />
       </div>
@@ -96,6 +99,10 @@ export default async function PermissionsPage({ searchParams }: PageProps<"/perm
             groups={groups}
             boards={detail.boards}
           />
+        </Card>
+      ) : tab === "groups" ? (
+        <Card className="p-6">
+          <GroupsTab teamId={team.id} groups={groups} />
         </Card>
       ) : (
         <Card className="overflow-hidden">

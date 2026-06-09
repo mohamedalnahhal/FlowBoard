@@ -5,6 +5,7 @@ type Person = { id: string; display_name: string; username: string };
 type Team = {
   id: string;
   name: string;
+  description: string | null;
   workspace: { id: string; name: string } | null;
   member_count: number;
   board_count: number;

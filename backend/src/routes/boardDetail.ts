@@ -67,4 +67,22 @@ router.get(
   },
 );
 
+// ── DELETE /boards/:boardId ────────────────────────────────────────────────────
+router.delete(
+  '/:boardId',
+  checkPermission(ACTIONS.BOARD_DELETE, 'board', (req) => (req.params.boardId as string)),
+  async (req, res, next) => {
+    try {
+      const prisma = req.app.get('prisma') as PrismaClient;
+      const deleted = await prisma.board.deleteMany({
+        where: { id: (req.params.boardId as string) },
+      });
+      if (deleted.count === 0) return res.status(404).json({ error: 'Board not found' });
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 export default router;

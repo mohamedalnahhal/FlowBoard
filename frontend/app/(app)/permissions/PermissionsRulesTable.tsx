@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AvatarStack } from "@/components/ui/Avatar";
 import { Icon } from "@/components/ui/Icon";
-import { deletePermissionRuleAction, togglePermissionTypeAction } from "@/lib/permissions-actions";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { deletePermissionRuleAction, togglePermissionTypeAction, updatePermissionRuleAction } from "@/lib/permissions-actions";
 import { actionLabel, groupLabel } from "./action-labels";
 
 type Person = { id: string; display_name: string; username: string; email: string | null };
@@ -19,6 +21,89 @@ type Permission = {
   scope_type: "team" | "board" | "list" | "task";
   scope_id: string | null;
 };
+
+function EditRuleModal({
+  teamId,
+  permission,
+  onClose,
+}: {
+  teamId: string;
+  permission: Permission;
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const boundAction = updatePermissionRuleAction.bind(null, teamId, permission.id);
+  const [state, formAction, pending] = useActionState(boundAction, undefined);
+  const [type, setType] = useState<"ALLOW" | "DENY">(permission.type);
+  const wasSubmittingRef = useRef(false);
+
+  useEffect(() => {
+    if (pending) { wasSubmittingRef.current = true; return; }
+    if (wasSubmittingRef.current && !state?.error) {
+      wasSubmittingRef.current = false;
+      onClose();
+      router.refresh();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pending, state]);
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={`Edit Rule: ${actionLabel(permission.action)}`}
+      width="sm"
+      footer={
+        <>
+          <Button variant="ghost" type="button" onClick={onClose}>Cancel</Button>
+          <Button form="edit-rule-form" type="submit" disabled={pending}>
+            {pending ? "Saving…" : "Save"}
+          </Button>
+        </>
+      }
+    >
+      <form
+        id="edit-rule-form"
+        action={formAction}
+        className="flex flex-col gap-4"
+      >
+        <input type="hidden" name="type" value={type} />
+        <div className="flex flex-col gap-1.5">
+          <span className="font-label-md text-label-md text-on-surface-variant">Type</span>
+          <div className="flex p-1 bg-surface-container-low rounded-lg border border-outline-variant w-fit">
+            <button
+              type="button"
+              onClick={() => setType("ALLOW")}
+              className={`px-5 py-1.5 rounded-md font-label-md text-label-md flex items-center gap-2 transition-colors ${type === "ALLOW" ? "bg-surface-container-lowest shadow-sm border border-outline-variant text-primary" : "text-on-surface-variant hover:text-on-surface"}`}
+            >
+              <Icon name="check_circle" className="text-[16px]" /> Permit
+            </button>
+            <button
+              type="button"
+              onClick={() => setType("DENY")}
+              className={`px-5 py-1.5 rounded-md font-label-md text-label-md flex items-center gap-2 transition-colors ${type === "DENY" ? "bg-surface-container-lowest shadow-sm border border-outline-variant text-error" : "text-on-surface-variant hover:text-on-surface"}`}
+            >
+              <Icon name="cancel" className="text-[16px]" /> Deny
+            </button>
+          </div>
+        </div>
+        <label className="flex flex-col gap-1.5">
+          <span className="font-label-md text-label-md text-on-surface-variant">Priority</span>
+          <input
+            name="priority"
+            type="number"
+            min={0}
+            defaultValue={permission.priority}
+            className="px-3 py-2 border border-outline-variant rounded-md font-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          />
+        </label>
+        {state?.error && (
+          <p className="font-body-md text-[12px] text-error">{state.error}</p>
+        )}
+      </form>
+    </Modal>
+  );
+}
 
 function scopeLabel(permission: Permission, boards: Board[]) {
   if (permission.scope_type === "team") return "Team-wide";
@@ -46,6 +131,7 @@ export function PermissionsRulesTable({
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [editingPermission, setEditingPermission] = useState<Permission | null>(null);
 
   function handleToggle(permissionId: string, currentType: "ALLOW" | "DENY") {
     if (isPending) return;
@@ -160,16 +246,28 @@ export function PermissionsRulesTable({
                     </button>
                   </td>
                   <td className="px-6 py-4 text-right whitespace-nowrap">
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(permission.id)}
-                      disabled={isPending}
-                      className="w-8 h-8 rounded bg-error-container/20 text-error hover:bg-error hover:text-on-error transition-all duration-200 inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Delete Rule"
-                      aria-label={`Delete rule ${actionLabel(permission.action)}`}
-                    >
-                      <Icon name="delete" className="text-[20px]" />
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setEditingPermission(permission)}
+                        disabled={isPending}
+                        className="w-8 h-8 rounded bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest hover:text-on-surface transition-all duration-200 inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Edit Rule"
+                        aria-label={`Edit rule ${actionLabel(permission.action)}`}
+                      >
+                        <Icon name="edit" className="text-[18px]" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(permission.id)}
+                        disabled={isPending}
+                        className="w-8 h-8 rounded bg-error-container/20 text-error hover:bg-error hover:text-on-error transition-all duration-200 inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Delete Rule"
+                        aria-label={`Delete rule ${actionLabel(permission.action)}`}
+                      >
+                        <Icon name="delete" className="text-[20px]" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -182,6 +280,13 @@ export function PermissionsRulesTable({
           {permissions.length} {permissions.length === 1 ? "rule" : "rules"} configured for {teamName}
         </span>
       </div>
+      {editingPermission && (
+        <EditRuleModal
+          teamId={teamId}
+          permission={editingPermission}
+          onClose={() => setEditingPermission(null)}
+        />
+      )}
     </>
   );
 }

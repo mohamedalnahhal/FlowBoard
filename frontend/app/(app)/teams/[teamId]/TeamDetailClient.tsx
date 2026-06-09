@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
@@ -9,6 +9,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { updateTeamAction, addTeamMemberAction, removeTeamMemberAction } from "@/lib/team-actions";
+import { createBoardAction, deleteBoardAction } from "@/lib/board-actions";
 
 type Person = { id: string; display_name: string; username: string; email?: string };
 type Board = { id: string; name: string; status: string };
@@ -22,7 +23,7 @@ type TeamDetail = {
 
 type UserOption = { id: string; display_name: string; username: string; email?: string | null };
 
-const ROLE_LABELS: Record<number, string> = { 0: "Admin", 1: "Owner", 2: "Leader", 3: "Member" };
+const ROLE_LABELS: Record<number, string> = { 0: "Admin", 1: "Lead", 2: "Member", 3: "Viewer" };
 const ROLE_TONES: Record<number, "primary" | "secondary" | "neutral"> = { 0: "primary", 1: "primary", 2: "secondary", 3: "neutral" };
 
 function EditTeamNameModal({ team, onClose }: { team: TeamDetail; onClose: () => void }) {
@@ -192,6 +193,38 @@ export function TeamDetailClient({
   const [removeError, setRemoveError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  // Board management
+  const [addingBoard, setAddingBoard] = useState(false);
+  const [boardError, setBoardError] = useState<string | null>(null);
+  const [deletingBoardId, setDeletingBoardId] = useState<string | null>(null);
+  const boundCreateBoard = createBoardAction.bind(null, team.id);
+  const [boardState, boardFormAction, boardPending] = useActionState(boundCreateBoard, undefined);
+  const boardFormRef = useRef<HTMLFormElement>(null);
+  const boardWasSubmittingRef = useRef(false);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (boardPending) { boardWasSubmittingRef.current = true; return; }
+    if (boardWasSubmittingRef.current && !boardState?.error && addingBoard) {
+      boardWasSubmittingRef.current = false;
+      boardFormRef.current?.reset();
+      setAddingBoard(false);
+      router.refresh();
+    }
+  }, [boardPending, boardState, addingBoard]);
+
+  function handleDeleteBoard(boardId: string, boardName: string) {
+    if (!window.confirm(`Delete board "${boardName}"? This cannot be undone.`)) return;
+    setDeletingBoardId(boardId);
+    setBoardError(null);
+    startTransition(async () => {
+      const result = await deleteBoardAction(team.id, boardId);
+      setDeletingBoardId(null);
+      if (result?.error) setBoardError(result.error);
+      else router.refresh();
+    });
+  }
+
   function handleRemove(userId: string) {
     setRemovingId(userId);
     setRemoveError(null);
@@ -241,34 +274,85 @@ export function TeamDetailClient({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Boards */}
           <section>
-            <h2 className="font-title-lg text-title-lg text-on-surface mb-4 flex items-center gap-2">
-              <Icon name="dashboard" className="text-[20px] text-on-surface-variant" />
-              Boards
-              <Badge tone="neutral">{team.boards.length}</Badge>
-            </h2>
-            {team.boards.length === 0 ? (
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-title-lg text-title-lg text-on-surface flex items-center gap-2">
+                <Icon name="dashboard" className="text-[20px] text-on-surface-variant" />
+                Boards
+                <Badge tone="neutral">{team.boards.length}</Badge>
+              </h2>
+              <Button
+                size="sm"
+                variant="secondary"
+                icon={<Icon name="add" className="text-[16px]" />}
+                onClick={() => { setAddingBoard(true); setBoardError(null); }}
+              >
+                Add
+              </Button>
+            </div>
+            {boardError && (
+              <div className="flex items-center gap-2 mb-3 p-2 bg-error-container/20 rounded-lg text-error font-body-md text-[13px]">
+                <Icon name="error" className="text-[16px] shrink-0" /> {boardError}
+                <button type="button" onClick={() => setBoardError(null)} className="ml-auto">
+                  <Icon name="close" className="text-[14px]" />
+                </button>
+              </div>
+            )}
+            {addingBoard && (
+              <form
+                ref={boardFormRef}
+                action={boardFormAction}
+                className="flex flex-col gap-2 mb-4 p-3 bg-surface-container-low border border-outline-variant rounded-lg"
+              >
+                <input
+                  name="name"
+                  autoFocus
+                  required
+                  placeholder="Board name…"
+                  className="w-full px-3 py-2 border border-outline-variant rounded-md font-body-md text-on-surface bg-surface-container-lowest placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
+                {boardState?.error && <p className="font-body-md text-[12px] text-error">{boardState.error}</p>}
+                <div className="flex items-center gap-2">
+                  <Button type="submit" size="sm" disabled={boardPending}>
+                    {boardPending ? "Creating…" : "Create"}
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setAddingBoard(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            )}
+            {team.boards.length === 0 && !addingBoard ? (
               <p className="font-body-md text-body-md text-on-surface-variant">No boards yet.</p>
             ) : (
               <div className="flex flex-col gap-3">
                 {team.boards.map((board) => (
-                  <Link
+                  <div
                     key={board.id}
-                    href={`/boards/${board.id}`}
-                    className="flex items-center gap-3 p-4 bg-surface-container-lowest border border-outline-variant rounded-xl hover:shadow-md hover:border-primary/30 transition-all group"
+                    className={`flex items-center gap-3 p-4 bg-surface-container-lowest border border-outline-variant rounded-xl transition-all group ${deletingBoardId === board.id ? "opacity-50" : ""}`}
                   >
-                    <div className="w-9 h-9 rounded-lg bg-primary-fixed flex items-center justify-center shrink-0">
-                      <Icon name="dashboard" className="text-on-primary-fixed-variant text-[18px]" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-label-md text-label-md text-on-surface font-semibold truncate group-hover:text-primary transition-colors">
-                        {board.name}
-                      </p>
-                      <p className="font-label-sm text-label-sm text-on-surface-variant capitalize">
-                        {board.status.toLowerCase().replace("_", " ")}
-                      </p>
-                    </div>
-                    <Icon name="chevron_right" className="text-on-surface-variant group-hover:text-primary transition-colors shrink-0" />
-                  </Link>
+                    <Link href={`/boards/${board.id}`} className="flex items-center gap-3 flex-1 min-w-0 hover:text-primary transition-colors">
+                      <div className="w-9 h-9 rounded-lg bg-primary-fixed flex items-center justify-center shrink-0">
+                        <Icon name="dashboard" className="text-on-primary-fixed-variant text-[18px]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-label-md text-label-md text-on-surface font-semibold truncate group-hover:text-primary transition-colors">
+                          {board.name}
+                        </p>
+                        <p className="font-label-sm text-label-sm text-on-surface-variant capitalize">
+                          {board.status.toLowerCase().replace("_", " ")}
+                        </p>
+                      </div>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteBoard(board.id, board.name)}
+                      disabled={deletingBoardId === board.id || isPending}
+                      className="text-on-surface-variant hover:text-error p-1.5 rounded-md hover:bg-error-container/30 transition-colors disabled:opacity-40 shrink-0"
+                      title="Delete board"
+                    >
+                      <Icon name="delete" className="text-[16px]" />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}

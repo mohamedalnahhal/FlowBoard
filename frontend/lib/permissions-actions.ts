@@ -53,6 +53,28 @@ export async function togglePermissionTypeAction(teamId: string, permissionId: s
   }
 }
 
+export async function updatePermissionRuleAction(
+  teamId: string,
+  permissionId: string,
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const type = formData.get("type")?.toString();
+  const priority = formData.get("priority")?.toString();
+  const description = formData.get("description")?.toString() || undefined;
+  try {
+    await api.patch(`/teams/${teamId}/permissions/${permissionId}`, {
+      type,
+      priority: priority ? Number.parseInt(priority, 10) : undefined,
+      description,
+    });
+    revalidatePath("/permissions");
+    return undefined;
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to update permission rule." };
+  }
+}
+
 export async function updateUserGroupsAction(
   teamId: string,
   userId: string,

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { api, getCurrentUser } from "@/lib/api";
+import { getActiveTeamId } from "@/lib/active-team";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { TopHeader } from "@/components/shell/TopHeader";
 
@@ -12,13 +13,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const [workspaces, teams, notifications] = await Promise.all([
+  const [workspaces, teams, notifications, storedActiveTeamId] = await Promise.all([
     api.get<Workspace[]>("/workspaces").catch(() => [] as Workspace[]),
     api.get<Team[]>("/teams/mine").catch(() => [] as Team[]),
     api.get<Notification[]>("/dashboard/notifications").catch(() => [] as Notification[]),
+    getActiveTeamId(),
   ]);
 
   const currentWorkspaceId = workspaces[0]?.id ?? "";
+
+  // Use stored active team if it's still in the list, otherwise fall back to first team
+  const activeTeamId =
+    storedActiveTeamId && teams.some((t) => t.id === storedActiveTeamId)
+      ? storedActiveTeamId
+      : teams[0]?.id;
 
   return (
     <div className="flex min-h-screen">
@@ -26,12 +34,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         workspaces={workspaces}
         currentWorkspaceId={currentWorkspaceId}
         teams={teams.map((t) => ({ id: t.id, name: t.name, boards: t.boards }))}
-        user={{ id: user.id, display_name: user.display_name, username: user.username }}
+        user={{ id: user.id, display_name: user.display_name, username: user.username, role: user.role }}
       />
       <div className="flex-1 min-w-0 flex flex-col md:ml-sidebar-width min-h-screen">
         <TopHeader
           teams={teams.map((t) => ({ id: t.id, name: t.name }))}
           notifications={notifications}
+          activeTeamId={activeTeamId}
         />
         <main className="flex-1 p-4 md:p-8 overflow-y-auto max-w-container-max mx-auto w-full">
           {children}

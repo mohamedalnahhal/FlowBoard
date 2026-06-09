@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
@@ -14,6 +13,7 @@ type Person = { id: string; display_name: string; username: string };
 type Team = {
   id: string;
   name: string;
+  description: string | null;
   workspace: { id: string; name: string } | null;
   member_count: number;
   board_count: number;
@@ -28,6 +28,45 @@ const TEAM_TINTS = [
   "bg-surface-container-highest text-on-surface",
 ];
 
+function TeamCardMenu({ teamId, onClose }: { teamId: string; onClose: () => void }) {
+  const router = useRouter();
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={menuRef}
+      className="absolute right-0 top-full mt-1 z-50 min-w-[160px] bg-surface-container-lowest border border-outline-variant rounded-lg shadow-lg py-1"
+    >
+      <button
+        type="button"
+        onClick={() => { router.push(`/teams/${teamId}`); onClose(); }}
+        className="w-full flex items-center gap-2 px-3 py-2 text-left font-body-md text-on-surface hover:bg-surface-container-low transition-colors"
+      >
+        <Icon name="visibility" className="text-[16px] text-on-surface-variant" />
+        View Team
+      </button>
+      <button
+        type="button"
+        onClick={() => { router.push(`/teams/${teamId}`); onClose(); }}
+        className="w-full flex items-center gap-2 px-3 py-2 text-left font-body-md text-on-surface hover:bg-surface-container-low transition-colors"
+      >
+        <Icon name="group" className="text-[16px] text-on-surface-variant" />
+        Manage Members
+      </button>
+    </div>
+  );
+}
+
 export function TeamsClient({
   teams,
   workspaceId,
@@ -37,9 +76,9 @@ export function TeamsClient({
   workspaceId: string;
   initialQuery?: string;
 }) {
-  const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const [createOpen, setCreateOpen] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const [state, formAction, pending] = useActionState(createTeamAction, undefined);
   const formRef = useRef<HTMLFormElement>(null);
@@ -107,18 +146,23 @@ export function TeamsClient({
                     </Badge>
                   </div>
                 </div>
-                <Link
-                  href={`/teams/${team.id}`}
-                  className="text-on-surface-variant hover:text-on-surface transition-colors p-1"
-                  aria-label="Team details"
-                >
-                  <Icon name="more_vert" />
-                </Link>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setOpenMenuId(openMenuId === team.id ? null : team.id)}
+                    className="text-on-surface-variant hover:text-on-surface transition-colors p-1 rounded-md hover:bg-surface-container-high"
+                    aria-label="Team options"
+                  >
+                    <Icon name="more_vert" />
+                  </button>
+                  {openMenuId === team.id && (
+                    <TeamCardMenu teamId={team.id} onClose={() => setOpenMenuId(null)} />
+                  )}
+                </div>
               </div>
 
               <p className="font-body-md text-body-md text-on-surface-variant min-h-[40px]">
-                Part of {team.workspace?.name ?? "—"} · {team.board_count}{" "}
-                {team.board_count === 1 ? "board" : "boards"}
+                {team.description ?? "No available description"}
               </p>
 
               <div className="pt-3 border-t border-outline-variant flex justify-between items-center mt-auto">
@@ -130,13 +174,6 @@ export function TeamsClient({
                 </div>
                 <AvatarStack people={team.members} max={3} />
               </div>
-
-              <Link
-                href={`/teams/${team.id}`}
-                className="w-full mt-1 py-2.5 border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-low transition-colors text-center"
-              >
-                Manage Team
-              </Link>
             </Card>
           ))}
         </div>

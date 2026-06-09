@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { api, getCurrentUser } from "@/lib/api";
+import { getActiveTeamId } from "@/lib/active-team";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
-import { Button } from "@/components/ui/Button";
 import { MiniCalendar } from "./MiniCalendar";
 
 type Workspace = { id: string; name: string };
@@ -35,21 +35,22 @@ function formatEventTime(iso: string) {
 export default async function DashboardPage() {
   const user = await getCurrentUser();
 
-  const [workspaces, teams] = await Promise.all([
+  const [workspaces, teams, activeTeamId] = await Promise.all([
     api.get<Workspace[]>("/workspaces"),
     api.get<Team[]>("/teams/mine"),
+    getActiveTeamId(),
   ]);
 
   const workspace = workspaces[0];
-  const team = teams[0];
+  const activeTeam = teams.find((t) => t.id === activeTeamId) ?? teams[0];
 
   const [announcements, favorites, events, myTasks] = await Promise.all([
     workspace
       ? api.get<Announcement[]>(`/dashboard/announcements?workspace_id=${workspace.id}`).catch(() => [])
       : Promise.resolve([] as Announcement[]),
     api.get<FavoriteBoard[]>("/dashboard/favorites").catch(() => []),
-    team
-      ? api.get<CalendarEvent[]>(`/dashboard/calendar-events?team_id=${team.id}`).catch(() => [])
+    activeTeam
+      ? api.get<CalendarEvent[]>(`/dashboard/calendar-events?team_id=${activeTeam.id}`).catch(() => [])
       : Promise.resolve([] as CalendarEvent[]),
     api.get<{ count: number }>("/dashboard/my-tasks-count").catch(() => ({ count: 0 })),
   ]);
@@ -65,7 +66,7 @@ export default async function DashboardPage() {
     <>
       <div className="mb-6 py-4">
         <h1 className="font-display text-headline-lg text-on-surface mb-2">Good morning, {firstName}</h1>
-        <p className="font-body-md text-on-surface-variant">{team?.name ?? workspace?.name ?? "Welcome to FlowBoard"}</p>
+        <p className="font-body-md text-on-surface-variant">{activeTeam?.name ?? workspace?.name ?? "Welcome to FlowBoard"}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

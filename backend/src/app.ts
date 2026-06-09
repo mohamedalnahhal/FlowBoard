@@ -15,6 +15,7 @@ import groupsRouter from './routes/groups.js';
 import boardsRouter from './routes/boards.js';
 import boardDetailRouter from './routes/boardDetail.js';
 import tasksRouter from './routes/tasks.js';
+import searchRouter from './routes/search.js';
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use('/users', usersRouter);
 app.use('/dashboard', dashboardRouter);
 app.use('/boards', boardDetailRouter);
 app.use('/tasks', tasksRouter);
+app.use('/search', searchRouter);
 
 app.use('/teams/:teamId/permissions', permissionsRouter);
 app.use('/teams/:teamId/groups', groupsRouter);

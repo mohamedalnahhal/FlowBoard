@@ -1,18 +1,31 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useTransition, useRef, useEffect, useCallback } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "../ui/Icon";
 import { markNotificationReadAction, markAllNotificationsReadAction } from "@/lib/notification-actions";
+import { setActiveTeamAction } from "@/lib/active-team";
 
 type Team = { id: string; name: string };
 type Notification = { id: string; message: string; link: string | null; is_read: boolean; created_at: string };
 
+type SearchBoard = { id: string; name: string; status: string };
+type SearchTask = { id: string; title: string; list: { board: { id: string } } };
+type SearchResults = { boards: SearchBoard[]; tasks: SearchTask[] };
+
 type TopHeaderProps = {
   teams?: Team[];
   notifications?: Notification[];
+  activeTeamId?: string;
 };
+
+const WORKSPACE_PATHS = ["/teams", "/users", "/workspace"];
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+
+function isWorkspacePath(pathname: string) {
+  return WORKSPACE_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
 
 function formatRelative(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -24,22 +37,87 @@ function formatRelative(iso: string) {
   return `${Math.floor(hr / 24)}d ago`;
 }
 
-export function TopHeader({ teams = [], notifications: initialNotifications = [] }: TopHeaderProps) {
+export function TopHeader({ teams = [], notifications: initialNotifications = [], activeTeamId }: TopHeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [teamOpen, setTeamOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResults | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isPending, startTransition] = useTransition();
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const activeTeam = teams[0];
+  const activeTeam = teams.find((t) => t.id === activeTeamId) ?? teams[0];
   const unread = notifications.filter((n) => !n.is_read).length;
+
+  const showTeamSwitcher = teams.length > 0 && !isWorkspacePath(pathname);
+
+  // Close search dropdown on outside click
+  useEffect(() => {
+    function handleMouseDown(e: MouseEvent) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, []);
+
+  const runSearch = useCallback(async (q: string) => {
+    if (!q.trim()) {
+      setSearchResults(null);
+      setSearchOpen(false);
+      return;
+    }
+    setSearchLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/search?q=${encodeURIComponent(q)}`, {
+        credentials: "include",
+      });
+      if (res.ok) {
+        const data: SearchResults = await res.json();
+        setSearchResults({
+          boards: (data.boards ?? []).slice(0, 5),
+          tasks: (data.tasks ?? []).slice(0, 5),
+        });
+        setSearchOpen(true);
+      }
+    } catch {
+      // silently ignore search errors
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
+  function handleQueryChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = e.target.value;
+    setQuery(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => runSearch(val), 300);
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     const q = query.trim();
-    router.push(q ? `/boards?q=${encodeURIComponent(q)}` : "/boards");
+    if (q) runSearch(q);
+  }
+
+  function handleResultClick() {
+    setSearchOpen(false);
     setQuery("");
+    setSearchResults(null);
+  }
+
+  function handleSelectTeam(teamId: string) {
+    setTeamOpen(false);
+    startTransition(async () => {
+      await setActiveTeamAction(teamId);
+      router.refresh();
+    });
   }
 
   function handleMarkRead(notificationId: string) {
@@ -66,21 +144,75 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
 
       {/* Search */}
       <form onSubmit={handleSearch} className="flex-1 max-w-[672px] hidden md:flex items-center">
-        <div className="relative w-full">
-          <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]" />
+        <div className="relative w-full" ref={searchContainerRef}>
+          <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] z-10" />
+          {searchLoading && (
+            <Icon name="progress_activity" className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] animate-spin z-10" />
+          )}
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={handleQueryChange}
+            onFocus={() => { if (searchResults) setSearchOpen(true); }}
             placeholder="Search boards, tasks, teams..."
             className="w-full pl-10 pr-4 py-2 rounded-full border border-outline-variant bg-surface-container-lowest text-label-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           />
+
+          {/* Search results dropdown */}
+          {searchOpen && searchResults && (
+            <div className="absolute left-0 top-full mt-2 w-full bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg z-50 overflow-hidden">
+              {searchResults.boards.length === 0 && searchResults.tasks.length === 0 ? (
+                <p className="px-4 py-3 font-body-md text-body-md text-on-surface-variant">
+                  No results for &apos;{query}&apos;
+                </p>
+              ) : (
+                <>
+                  {searchResults.boards.length > 0 && (
+                    <div>
+                      <p className="px-4 py-2 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-[10px] border-b border-outline-variant/50">
+                        Boards
+                      </p>
+                      {searchResults.boards.map((board) => (
+                        <Link
+                          key={board.id}
+                          href={`/boards/${board.id}`}
+                          onClick={handleResultClick}
+                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-container-low transition-colors"
+                        >
+                          <Icon name="dashboard" className="text-[16px] text-on-surface-variant shrink-0" />
+                          <span className="font-label-md text-label-md text-on-surface truncate">{board.name}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                  {searchResults.tasks.length > 0 && (
+                    <div className={searchResults.boards.length > 0 ? "border-t border-outline-variant/50" : ""}>
+                      <p className="px-4 py-2 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-[10px] border-b border-outline-variant/50">
+                        Tasks
+                      </p>
+                      {searchResults.tasks.map((task) => (
+                        <Link
+                          key={task.id}
+                          href={`/boards/${task.list.board.id}/tasks/${task.id}`}
+                          onClick={handleResultClick}
+                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-container-low transition-colors"
+                        >
+                          <Icon name="task_alt" className="text-[16px] text-on-surface-variant shrink-0" />
+                          <span className="font-label-md text-label-md text-on-surface truncate">{task.title}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
       </form>
 
       <div className="flex items-center gap-3">
 
-        {/* Team selector */}
-        {teams.length > 0 && (
+        {/* Team selector — hidden on workspace-scoped pages */}
+        {showTeamSwitcher && (
           <div className="relative hidden sm:block">
             <button
               type="button"
@@ -99,17 +231,20 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
                     Your Teams
                   </p>
                   {teams.map((team) => (
-                    <Link
+                    <button
                       key={team.id}
-                      href={`/teams/${team.id}`}
-                      onClick={() => setTeamOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-surface-container-low transition-colors font-label-md text-label-md text-on-surface"
+                      type="button"
+                      onClick={() => handleSelectTeam(team.id)}
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-container-low transition-colors font-label-md text-label-md text-on-surface text-left"
                     >
                       <div className="w-6 h-6 rounded bg-primary-fixed flex items-center justify-center text-[10px] font-bold text-on-primary-fixed-variant shrink-0">
                         {team.name[0]}
                       </div>
-                      {team.name}
-                    </Link>
+                      <span className="flex-1 truncate">{team.name}</span>
+                      {team.id === activeTeam?.id && (
+                        <Icon name="check" className="text-primary text-[16px] shrink-0" />
+                      )}
+                    </button>
                   ))}
                   <div className="border-t border-outline-variant/50">
                     <Link

@@ -45,3 +45,16 @@ export async function updateUserAction(userId: string, _prevState: ActionState, 
   revalidatePath("/users");
   return { success: "User updated successfully." };
 }
+
+export async function removeUserFromWorkspaceAction(
+  workspaceId: string,
+  userId: string,
+): Promise<{ error?: string } | undefined> {
+  try {
+    await api.delete(`/workspaces/${workspaceId}/members/${userId}`);
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to remove user." };
+  }
+  revalidatePath("/users");
+  return undefined;
+}

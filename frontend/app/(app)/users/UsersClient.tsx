@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
-import { createUserAction, updateUserAction } from "@/lib/user-actions";
+import { createUserAction, updateUserAction, removeUserFromWorkspaceAction } from "@/lib/user-actions";
 
 type Team = { id: string; name: string };
 type UserRow = {
@@ -190,18 +190,35 @@ export function UsersClient({
   q,
   role,
   page,
+  workspaceId,
 }: {
   users: UserRow[];
   pagination: Pagination;
   q: string;
   role: string;
   page: number;
+  workspaceId: string;
 }) {
   const router = useRouter();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editUser, setEditUser] = useState<UserRow | null>(null);
   const [searchValue, setSearchValue] = useState(q);
   const [roleFilter, setRoleFilter] = useState(role);
+  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
+  const [removeError, setRemoveError] = useState<string | null>(null);
+  const [, startRemoveTransition] = useTransition();
+
+  function handleRemoveUser(user: UserRow) {
+    if (!window.confirm(`Remove ${user.display_name} from the workspace? They will lose access to all teams.`)) return;
+    setRemovingUserId(user.id);
+    setRemoveError(null);
+    startRemoveTransition(async () => {
+      const result = await removeUserFromWorkspaceAction(workspaceId, user.id);
+      setRemovingUserId(null);
+      if (result?.error) setRemoveError(result.error);
+      else router.refresh();
+    });
+  }
 
   const start = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.page_size + 1;
   const end = Math.min(pagination.page * pagination.page_size, pagination.total);
@@ -265,6 +282,15 @@ export function UsersClient({
         </div>
       </form>
 
+      {removeError && (
+        <div className="flex items-center gap-2 mb-4 p-3 bg-error-container rounded-lg text-on-error-container font-body-md text-[13px]">
+          <Icon name="error" className="text-[16px] shrink-0" /> {removeError}
+          <button type="button" onClick={() => setRemoveError(null)} className="ml-auto">
+            <Icon name="close" className="text-[16px]" />
+          </button>
+        </div>
+      )}
+
       <div className="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[800px]">
@@ -317,15 +343,30 @@ export function UsersClient({
                     {formatDate(user.created_at)}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => setEditUser(user)}
-                      className="text-on-surface-variant hover:text-on-surface p-1.5 rounded-md hover:bg-surface-container-high transition-colors"
-                      aria-label="Edit user"
-                      title="Edit user"
-                    >
-                      <Icon name="edit" className="text-[18px]" />
-                    </button>
+                    <div className={`flex items-center justify-end gap-1 ${removingUserId === user.id ? "opacity-50" : ""}`}>
+                      <button
+                        type="button"
+                        onClick={() => setEditUser(user)}
+                        className="text-on-surface-variant hover:text-on-surface p-1.5 rounded-md hover:bg-surface-container-high transition-colors"
+                        aria-label="Edit user"
+                        title="Edit user"
+                        disabled={removingUserId === user.id}
+                      >
+                        <Icon name="edit" className="text-[18px]" />
+                      </button>
+                      {workspaceId && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveUser(user)}
+                          className="text-on-surface-variant hover:text-error p-1.5 rounded-md hover:bg-error-container/30 transition-colors"
+                          aria-label="Remove from workspace"
+                          title="Remove from workspace"
+                          disabled={removingUserId === user.id}
+                        >
+                          <Icon name="person_remove" className="text-[18px]" />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

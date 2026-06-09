@@ -28,7 +28,7 @@ type TaskDetail = {
   end_date: string | null;
   list: { id: string; name: string; board_id: string; board: { id: string; name: string; team_id: string } };
   creator: Person;
-  task_members: { user: Person }[];
+  task_members: { user: Person; role: number }[];
   task_labels: { label: Label }[];
   task_attachments: { attachment: { id: string; type: string; name: string; url: string } }[];
   checklist: { id: string; checklist_items: ChecklistItem[] } | null;

@@ -91,3 +91,48 @@ export async function deleteLabelAction(
   revalidatePath(`/boards/${boardId}`);
   return undefined;
 }
+
+export async function deleteBoardAction(teamId: string, boardId: string): Promise<ActionState> {
+  try {
+    await api.delete(`/teams/${teamId}/boards/${boardId}`);
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to delete board." };
+  }
+  revalidatePath(`/teams/${teamId}`);
+  revalidatePath(`/boards`);
+  return undefined;
+}
+
+export async function createBoardAction(
+  teamId: string,
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const name = formData.get("name")?.toString().trim();
+  if (!name) return { error: "Please enter a board name." };
+  try {
+    await api.post(`/teams/${teamId}/boards`, { name, status: "ACTIVE" });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to create board." };
+  }
+  revalidatePath(`/teams/${teamId}`);
+  revalidatePath(`/boards`);
+  return undefined;
+}
+
+export async function createBoardFromTeamAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const name = formData.get("name")?.toString().trim();
+  const teamId = formData.get("team_id")?.toString();
+  if (!name) return { error: "Please enter a board name." };
+  if (!teamId) return { error: "Please select a team." };
+  try {
+    await api.post(`/teams/${teamId}/boards`, { name, status: "ACTIVE" });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to create board." };
+  }
+  revalidatePath(`/boards`);
+  return undefined;
+}

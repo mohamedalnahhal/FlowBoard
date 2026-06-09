@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
-import { Avatar, AvatarStack } from "@/components/ui/Avatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import {
@@ -40,7 +40,7 @@ type TaskDetail = {
   end_date: string | null;
   list: { id: string; name: string; board_id: string; board: { id: string; name: string; team_id: string } };
   creator: Person;
-  task_members: { user: Person }[];
+  task_members: { user: Person; role: number }[];
   task_labels: { label: Label }[];
   task_attachments: { attachment: { id: string; type: string; name: string; url: string } }[];
   checklist: { id: string; checklist_items: ChecklistItem[] } | null;
@@ -310,10 +310,17 @@ export function TaskDetailModal({
               </div>
               <div>
                 <h4 className="font-label-sm text-label-sm text-on-surface-variant mb-2 uppercase tracking-wide">Assigned To</h4>
-                <div className="flex items-center gap-2">
-                  {task.task_members.length > 0 ? (
-                    <AvatarStack people={task.task_members.map((m) => m.user)} max={5} />
-                  ) : (
+                <div className="flex flex-wrap gap-2">
+                  {task.task_members.map(({ user, role }) => (
+                    <div key={user.id} className="flex items-center gap-1.5 bg-surface-container-low px-2 py-1 rounded-lg border border-outline-variant/50">
+                      <Avatar person={user} size="xs" />
+                      <span className="font-label-sm text-label-sm text-on-surface">{user.display_name}</span>
+                      <span className="font-label-sm text-[10px] text-on-surface-variant">
+                        {role === 1 ? "Lead" : "Contributor"}
+                      </span>
+                    </div>
+                  ))}
+                  {task.task_members.length === 0 && (
                     <span className="font-label-md text-label-md text-on-surface-variant">Unassigned</span>
                   )}
                   <button
