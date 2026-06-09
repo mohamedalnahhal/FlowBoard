@@ -131,7 +131,15 @@ function CommentEntry({ comment }: { comment: Comment }) {
   );
 }
 
-export function TaskDetailModal({ boardId, task }: { boardId: string; task: TaskDetail }) {
+export function TaskDetailModal({
+  boardId,
+  task,
+  currentUserId,
+}: {
+  boardId: string;
+  task: TaskDetail;
+  currentUserId: string | null;
+}) {
   const router = useRouter();
   const close = () => router.push(`/boards/${boardId}`);
 
@@ -266,10 +274,14 @@ export function TaskDetailModal({ boardId, task }: { boardId: string; task: Task
                     {task.list.name}
                   </Link>
                 </span>
-                <span className="text-outline-variant">•</span>
-                <span className="flex items-center gap-1">
-                  <Icon name="visibility" className="text-[16px]" /> Watching
-                </span>
+                {currentUserId && task.task_members.some((m) => m.user.id === currentUserId) && (
+                  <>
+                    <span className="text-outline-variant">•</span>
+                    <span className="flex items-center gap-1 text-primary">
+                      <Icon name="visibility" className="text-[16px]" /> Watching
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>

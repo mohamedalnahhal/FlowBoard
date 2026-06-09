@@ -3,6 +3,7 @@ import { api, ApiError } from "@/lib/api";
 import { Icon } from "@/components/ui/Icon";
 import { AvatarStack } from "@/components/ui/Avatar";
 import { KanbanBoard } from "./KanbanBoard";
+import { BoardHeaderActions } from "./BoardHeaderActions";
 
 type Person = { id: string; display_name: string; username: string };
 type Label = { id: string; name: string; color: string };
@@ -58,12 +59,13 @@ export default async function BoardPage({ params }: PageProps<"/boards/[boardId]
               {board.team.name}
             </span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {members.length > 0 && <AvatarStack people={members} max={4} />}
-            <button className="flex items-center gap-2 px-3 py-1.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-secondary hover:bg-surface-container-low transition-colors font-label-md text-label-md">
-              <Icon name="filter_list" className="text-[18px]" />
-              Filter
-            </button>
+            <BoardHeaderActions
+              teamId={board.team.id}
+              boardId={board.id}
+              labels={board.labels}
+            />
           </div>
         </div>
 

@@ -1,20 +1,25 @@
 import { api } from "@/lib/api";
 import { BoardsClient } from "./BoardsClient";
 
-type TeamWithBoards = {
+type BoardListed = {
   id: string;
   name: string;
-  boards: { id: string; name: string; status: string }[];
+  status: string;
+  team: { id: string; name: string };
 };
 
 export default async function BoardsPage() {
-  const teams = await api.get<TeamWithBoards[]>("/teams/mine").catch(() => [] as TeamWithBoards[]);
+  const boards = await api.get<BoardListed[]>("/boards").catch(() => [] as BoardListed[]);
 
-  const allBoards = teams.flatMap((t) =>
-    (t.boards ?? []).map((b) => ({ ...b, teamName: t.name, teamId: t.id })),
-  );
+  const allBoards = boards.map((b) => ({
+    ...b,
+    teamName: b.team.name,
+    teamId:   b.team.id,
+  }));
 
-  const teamList = teams.map((t) => ({ id: t.id, name: t.name }));
+  const teamMap = new Map<string, { id: string; name: string }>();
+  for (const b of boards) teamMap.set(b.team.id, b.team);
+  const teams = Array.from(teamMap.values());
 
-  return <BoardsClient boards={allBoards} teams={teamList} />;
+  return <BoardsClient boards={allBoards} teams={teams} />;
 }

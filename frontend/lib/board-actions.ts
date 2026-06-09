@@ -55,3 +55,39 @@ export async function moveTaskAction(teamId: string, boardId: string, taskId: st
   await api.patch(`/teams/${teamId}/boards/${boardId}/tasks/${taskId}/move`, { list_id: listId, position });
   revalidatePath(`/boards/${boardId}`);
 }
+
+export async function createLabelAction(
+  teamId: string,
+  boardId: string,
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const name  = formData.get("name")?.toString().trim();
+  const color = formData.get("color")?.toString().trim();
+  if (!name)  return { error: "Label name is required." };
+  if (!color) return { error: "Label color is required." };
+
+  try {
+    await api.post(`/teams/${teamId}/boards/${boardId}/labels`, { name, color });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to create label." };
+  }
+
+  revalidatePath(`/boards/${boardId}`);
+  return undefined;
+}
+
+export async function deleteLabelAction(
+  teamId: string,
+  boardId: string,
+  labelId: string,
+): Promise<ActionState> {
+  try {
+    await api.delete(`/teams/${teamId}/boards/${boardId}/labels/${labelId}`);
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to delete label." };
+  }
+
+  revalidatePath(`/boards/${boardId}`);
+  return undefined;
+}

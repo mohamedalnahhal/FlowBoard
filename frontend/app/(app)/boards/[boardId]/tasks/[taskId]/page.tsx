@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, getCurrentUser } from "@/lib/api";
 import { TaskDetailModal } from "./TaskDetailModal";
 
 type Person = { id: string; display_name: string; username: string };
@@ -39,13 +39,13 @@ type TaskDetail = {
 export default async function TaskDetailPage({ params }: PageProps<"/boards/[boardId]/tasks/[taskId]">) {
   const { boardId, taskId } = await params;
 
-  let task: TaskDetail;
-  try {
-    task = await api.get<TaskDetail>(`/tasks/${taskId}`);
-  } catch (err) {
-    if (err instanceof ApiError && (err.status === 404 || err.status === 403)) notFound();
-    throw err;
-  }
+  const [task, currentUser] = await Promise.all([
+    api.get<TaskDetail>(`/tasks/${taskId}`).catch((err: unknown) => {
+      if (err instanceof ApiError && (err.status === 404 || err.status === 403)) notFound();
+      throw err;
+    }),
+    getCurrentUser(),
+  ]);
 
-  return <TaskDetailModal boardId={boardId} task={task} />;
+  return <TaskDetailModal boardId={boardId} task={task} currentUserId={currentUser?.id ?? null} />;
 }

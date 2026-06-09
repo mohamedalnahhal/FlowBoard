@@ -704,7 +704,27 @@ async function main() {
     prisma.permission.upsert({
       where: { id: '00000000-0000-0000-0012-000000000055' },
       update: {},
-      create: { id: '00000000-0000-0000-0012-000000000055', action: 'task:edit',   type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can edit tasks' },
+      create: { id: '00000000-0000-0000-0012-000000000055', action: 'task:edit',          type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can edit tasks' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000056' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000056', action: 'board:manage_lists',  type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can manage lists' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000057' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000057', action: 'board:manage_lists',  type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can manage lists' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000058' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000058', action: 'board:manage_labels', type: PermissionType.ALLOW, priority: 5, group_id: feAllGroup.id, description: 'Frontend members can manage labels' },
+    }),
+    prisma.permission.upsert({
+      where: { id: '00000000-0000-0000-0012-000000000059' },
+      update: {},
+      create: { id: '00000000-0000-0000-0012-000000000059', action: 'board:manage_labels', type: PermissionType.ALLOW, priority: 5, group_id: beAllGroup.id, description: 'Backend members can manage labels' },
     }),
   ]);
   console.log('✓ Permissions');
