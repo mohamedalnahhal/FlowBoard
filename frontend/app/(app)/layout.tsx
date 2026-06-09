@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { api, getCurrentUser } from "@/lib/api";
 import { getActiveTeamId } from "@/lib/active-team";
+import { resolveActiveWorkspace } from "@/lib/active-workspace";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { TopHeader } from "@/components/shell/TopHeader";
 
@@ -20,7 +21,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     getActiveTeamId(),
   ]);
 
-  const currentWorkspaceId = workspaces[0]?.id ?? "";
+  const currentWorkspaceId = (await resolveActiveWorkspace(workspaces))?.id ?? "";
 
   // Use stored active team if it's still in the list, otherwise fall back to first team
   const activeTeamId =

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { api, getCurrentUser } from "@/lib/api";
 import { getActiveTeamId } from "@/lib/active-team";
+import { resolveActiveWorkspace } from "@/lib/active-workspace";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { MiniCalendar } from "./MiniCalendar";
@@ -41,7 +42,7 @@ export default async function DashboardPage() {
     getActiveTeamId(),
   ]);
 
-  const workspace = workspaces[0];
+  const workspace = await resolveActiveWorkspace(workspaces);
   const activeTeam = teams.find((t) => t.id === activeTeamId) ?? teams[0];
 
   const [announcements, favorites, events, myTasks] = await Promise.all([

@@ -6,9 +6,9 @@ import Link from "next/link";
 type Person = { id: string; display_name: string; username: string };
 type ActivityItem = {
   id: string;
-  activity: string;
+  activity: string | { from?: string; to?: string } | null;
   type: string;
-  created_at: string;
+  created_at: string | null;
   user: Person;
   task: {
     id: string;
@@ -34,16 +34,33 @@ const TYPE_ICON: Record<string, { icon: string; color: string }> = {
   COMMENT_ADDED:    { icon: "chat_bubble",     color: "text-[#137333]" },
   CHECKLIST_TOGGLED:{ icon: "check_box",       color: "text-tertiary" },
   STATUS_CHANGED:   { icon: "published_with_changes", color: "text-secondary" },
+  STATUS_CHANGE:    { icon: "published_with_changes", color: "text-secondary" },
   LABEL_ADDED:      { icon: "label",           color: "text-tertiary" },
   ATTACHMENT_ADDED: { icon: "attach_file",     color: "text-on-surface-variant" },
 };
 
 function getTypeStyle(type: string) {
-  return TYPE_ICON[type] ?? { icon: "history", color: "text-on-surface-variant" };
+  return TYPE_ICON[type?.toUpperCase()] ?? { icon: "history", color: "text-on-surface-variant" };
 }
 
-function formatRelative(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
+// `activity` is a JSON column: either a ready-made string or a structured
+// detail like { from, to } for status changes. Normalize to display text.
+function describeActivity(item: ActivityItem): string {
+  const a = item.activity;
+  if (typeof a === "string") return a;
+  if (a && typeof a === "object") {
+    const { from, to } = a;
+    if (from && to) return `changed status from ${from} to ${to}`;
+    if (to) return `set status to ${to}`;
+  }
+  return "updated the task";
+}
+
+function formatRelative(iso: string | null) {
+  if (!iso) return "";
+  const time = new Date(iso).getTime();
+  if (Number.isNaN(time)) return "";
+  const diff = Date.now() - time;
   const min = Math.floor(diff / 60000);
   if (min < 1) return "just now";
   if (min < 60) return `${min}m ago`;
@@ -57,14 +74,16 @@ function formatRelative(iso: string) {
 function groupByDate(items: ActivityItem[]): [string, ActivityItem[]][] {
   const groups = new Map<string, ActivityItem[]>();
   for (const item of items) {
-    const d = new Date(item.created_at);
+    const d = item.created_at ? new Date(item.created_at) : null;
+    const valid = d && !Number.isNaN(d.getTime());
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     let key: string;
-    if (d.toDateString() === today.toDateString()) key = "Today";
-    else if (d.toDateString() === yesterday.toDateString()) key = "Yesterday";
-    else key = d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+    if (!valid) key = "Recent";
+    else if (d!.toDateString() === today.toDateString()) key = "Today";
+    else if (d!.toDateString() === yesterday.toDateString()) key = "Yesterday";
+    else key = d!.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(item);
   }
@@ -141,7 +160,7 @@ export default async function ActivityPage({ searchParams }: PageProps<"/activit
                         <div className="flex items-center gap-2 flex-wrap">
                           <Avatar person={item.user} size="xs" />
                           <span className="font-label-md text-label-md text-on-surface font-semibold">{item.user.display_name}</span>
-                          <span className="font-body-md text-body-md text-on-surface-variant">{item.activity}</span>
+                          <span className="font-body-md text-body-md text-on-surface-variant">{describeActivity(item)}</span>
                         </div>
                         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                           <Link

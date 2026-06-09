@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, useActionState } from "react";
 import { Icon } from "../ui/Icon";
 import { Avatar } from "../ui/Avatar";
 import { createWorkspaceAction } from "@/lib/workspace-actions";
+import { setActiveWorkspaceAction } from "@/lib/active-workspace";
 
 type Board = { id: string; name: string; status: string };
 type Team = { id: string; name: string; boards?: Board[] };
@@ -158,7 +159,12 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user }: Sidebar
                   <button
                     key={ws.id}
                     type="button"
-                    onClick={() => { setWsOpen(false); router.push("/"); }}
+                    onClick={async () => {
+                      setWsOpen(false);
+                      await setActiveWorkspaceAction(ws.id);
+                      router.push("/");
+                      router.refresh();
+                    }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 hover:bg-surface-container-low transition-colors font-label-md text-label-md text-on-surface text-left ${ws.id === currentWs?.id ? "bg-primary-fixed/10" : ""}`}
                   >
                     <div className="w-6 h-6 rounded bg-primary-fixed flex items-center justify-center font-bold text-[10px] text-on-primary-fixed-variant shrink-0">

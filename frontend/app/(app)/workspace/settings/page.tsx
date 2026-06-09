@@ -1,4 +1,5 @@
 import { api, getCurrentUser } from "@/lib/api";
+import { resolveActiveWorkspace } from "@/lib/active-workspace";
 import { WorkspaceSettingsClient } from "./WorkspaceSettingsClient";
 
 type Workspace = { id: string; name: string; created_at: string };
@@ -9,7 +10,7 @@ export default async function WorkspaceSettingsPage() {
     api.get<Workspace[]>("/workspaces").catch(() => [] as Workspace[]),
   ]);
 
-  const workspace = workspaces[0] ?? null;
+  const workspace = (await resolveActiveWorkspace(workspaces)) ?? null;
 
   return (
     <WorkspaceSettingsClient

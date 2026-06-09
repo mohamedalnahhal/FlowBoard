@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { resolveActiveWorkspace } from "@/lib/active-workspace";
 import { UsersClient } from "./UsersClient";
 
 type Team = { id: string; name: string };
@@ -33,7 +34,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/users">) {
     api.get<{ id: string; name: string }[]>("/workspaces").catch(() => []),
   ]);
 
-  const workspaceId = workspaces[0]?.id ?? "";
+  const workspaceId = (await resolveActiveWorkspace(workspaces))?.id ?? "";
 
   return <UsersClient users={users} pagination={pagination} q={q} role={role} page={page} workspaceId={workspaceId} />;
 }

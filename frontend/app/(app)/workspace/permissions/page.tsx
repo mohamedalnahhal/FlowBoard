@@ -1,4 +1,5 @@
 import { api, getCurrentUser } from "@/lib/api";
+import { resolveActiveWorkspace } from "@/lib/active-workspace";
 import { WorkspacePermissionsClient } from "./WorkspacePermissionsClient";
 
 type WorkspaceMember = {
@@ -15,7 +16,7 @@ export default async function WorkspacePermissionsPage() {
     api.get<{ id: string; name: string }[]>("/workspaces").catch(() => [] as { id: string; name: string }[]),
   ]);
 
-  const workspace = workspaces[0];
+  const workspace = await resolveActiveWorkspace(workspaces);
   const members = workspace
     ? await api
         .get<WorkspaceMember[]>(`/workspaces/${workspace.id}/permissions`)
