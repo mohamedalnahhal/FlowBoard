@@ -1,19 +1,20 @@
-import { Icon } from "@/components/ui/Icon";
-import Link from "next/link";
+import { api, getCurrentUser } from "@/lib/api";
+import { WorkspaceSettingsClient } from "./WorkspaceSettingsClient";
 
-export default function WorkspaceSettingsPage() {
+type Workspace = { id: string; name: string; created_at: string };
+
+export default async function WorkspaceSettingsPage() {
+  const [user, workspaces] = await Promise.all([
+    getCurrentUser(),
+    api.get<Workspace[]>("/workspaces").catch(() => [] as Workspace[]),
+  ]);
+
+  const workspace = workspaces[0] ?? null;
+
   return (
-    <div className="flex flex-col items-center justify-center gap-6 py-24 text-center">
-      <div className="w-20 h-20 rounded-full bg-surface-container-high flex items-center justify-center">
-        <Icon name="tune" className="text-[40px] text-on-surface-variant" />
-      </div>
-      <div>
-        <h1 className="font-headline-lg text-headline-lg text-on-surface mb-2">Workspace Settings</h1>
-        <p className="font-body-lg text-body-lg text-on-surface-variant">This page is not implemented yet.</p>
-      </div>
-      <Link href="/" className="px-4 py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity">
-        Back to Home
-      </Link>
-    </div>
+    <WorkspaceSettingsClient
+      workspace={workspace}
+      currentUserRole={user?.role ?? 99}
+    />
   );
 }
