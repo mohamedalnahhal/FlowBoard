@@ -1,7 +1,7 @@
 "use server";
 import { cookies } from "next/headers";
 
-export const ACTIVE_TEAM_COOKIE = "active_team";
+const ACTIVE_TEAM_COOKIE = "active_team";
 
 export async function setActiveTeamAction(teamId: string) {
   const jar = await cookies();
