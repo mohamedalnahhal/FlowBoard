@@ -1,5 +1,6 @@
 export const ACTIONS = {
   // Workspace
+  WORKSPACE_CREATE: 'workspace:create',
   WORKSPACE_VIEW:   'workspace:view',
   WORKSPACE_MANAGE: 'workspace:manage',
 

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { PrismaClient } from '@prisma/client';
-import { SYSTEM_ADMIN_ROLE } from '../core/permissions/constants.js';
+import { SYSTEM_ADMIN_ROLE, ROLES } from '../core/permissions/constants.js';
 
 const router = Router();
 
@@ -65,6 +65,15 @@ router.post('/', async (req, res, next) => {
     if (!userId) return;
 
     const prisma = req.app.get('prisma') as PrismaClient;
+
+    // Only System Admins, Workspace Owners, and Workspace Admins may create workspaces.
+    const requestingUser = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+    if (!requestingUser || requestingUser.role > ROLES.SYSTEM.WORKSPACE_ADMIN) {
+      return res.status(403).json({
+        error: 'Only Workspace Owners and Admins can create workspaces.',
+      });
+    }
+
     const { name } = req.body ?? {};
     if (!name) return res.status(400).json({ error: 'name is required' });
 

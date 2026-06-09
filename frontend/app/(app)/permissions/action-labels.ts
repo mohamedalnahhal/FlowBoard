@@ -1,4 +1,5 @@
 export const ACTION_LABELS: Record<string, string> = {
+  "workspace:create": "Create Workspace",
   "workspace:view": "View Workspace",
   "workspace:manage": "Manage Workspace",
   "team:view": "View Team",
