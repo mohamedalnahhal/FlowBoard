@@ -209,6 +209,18 @@ router.post(
       const { type, name, url } = req.body ?? {};
       if (!type || !name || !url) return res.status(400).json({ error: 'type, name and url are required' });
 
+      // Attachment URLs are rendered as links in the UI — only allow http(s)
+      // to rule out javascript: and similar schemes.
+      let parsed: URL;
+      try {
+        parsed = new URL(String(url));
+      } catch {
+        return res.status(400).json({ error: 'url must be a valid URL' });
+      }
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        return res.status(400).json({ error: 'url must use http or https' });
+      }
+
       const attachment = await prisma.attachment.create({ data: { type, name, url } });
       await prisma.taskAttachment.create({
         data: { task_id: (req.params.taskId as string)!, attachment_id: attachment.id },

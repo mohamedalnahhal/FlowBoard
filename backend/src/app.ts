@@ -19,8 +19,13 @@ import searchRouter from './routes/search.js';
 
 const app = express();
 
+const SESSION_SECRET = process.env.SESSION_SECRET ?? 'dev-secret-change-me';
+if (process.env.NODE_ENV === 'production' && SESSION_SECRET === 'dev-secret-change-me') {
+  throw new Error('SESSION_SECRET must be set in production — refusing to start with the dev default.');
+}
+
 app.use(express.json());
-app.use(cookieParser(process.env.SESSION_SECRET ?? 'dev-secret-change-me'));
+app.use(cookieParser(SESSION_SECRET));
 
 app.set('prisma', prisma);
 
@@ -53,6 +58,10 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   }
   if (err.code === 'P2002') {
     res.status(409).json({ error: 'Duplicate record' });
+    return;
+  }
+  if (err.code === 'P2003') {
+    res.status(400).json({ error: 'Related record not found' });
     return;
   }
 

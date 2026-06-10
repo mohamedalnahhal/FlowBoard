@@ -11,7 +11,7 @@ type Team = { id: string; name: string };
 type Notification = { id: string; message: string; link: string | null; is_read: boolean; created_at: string };
 
 type SearchBoard = { id: string; name: string; status: string };
-type SearchTask = { id: string; title: string; list: { board: { id: string } } };
+type SearchTask = { id: string; name: string; list: { board: { id: string } } };
 type SearchResults = { boards: SearchBoard[]; tasks: SearchTask[] };
 
 type TopHeaderProps = {
@@ -21,7 +21,6 @@ type TopHeaderProps = {
 };
 
 const WORKSPACE_PATHS = ["/teams", "/users", "/workspace"];
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 function isWorkspacePath(pathname: string) {
   return WORKSPACE_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -75,9 +74,7 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
     }
     setSearchLoading(true);
     try {
-      const res = await fetch(`${API_URL}/search?q=${encodeURIComponent(q)}`, {
-        credentials: "include",
-      });
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
       if (res.ok) {
         const data: SearchResults = await res.json();
         setSearchResults({
@@ -197,7 +194,7 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
                           className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-container-low transition-colors"
                         >
                           <Icon name="task_alt" className="text-[16px] text-on-surface-variant shrink-0" />
-                          <span className="font-label-md text-label-md text-on-surface truncate">{task.title}</span>
+                          <span className="font-label-md text-label-md text-on-surface truncate">{task.name}</span>
                         </Link>
                       ))}
                     </div>

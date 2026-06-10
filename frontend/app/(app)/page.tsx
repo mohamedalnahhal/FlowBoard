@@ -185,7 +185,7 @@ export default async function DashboardPage() {
               <p className="font-body-md text-[13px] text-on-surface-variant">Nothing scheduled.</p>
             ) : (
               <div className="space-y-4">
-                {upcoming.map((event, i) => (
+                {upcoming.map((event) => (
                   <div
                     key={event.id}
                     className="flex gap-3 relative before:content-[''] before:absolute before:left-[5px] before:top-4 before:bottom-[-16px] before:w-[2px] before:bg-outline-variant/30 last:before:hidden"

@@ -23,8 +23,8 @@ export function Avatar({ person, size = "sm" }: { person: Person; size?: keyof t
   const dimensions = SIZES[size];
 
   if (person.avatar_url) {
-    // eslint-disable-next-line @next/next/no-img-element
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={person.avatar_url}
         alt={person.display_name}

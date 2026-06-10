@@ -6,7 +6,6 @@ import { CreateRuleModal } from "./CreateRuleModal";
 import { UserPermissionsModal } from "./UserPermissionsModal";
 import { PermissionsRulesTable } from "./PermissionsRulesTable";
 import { GroupsTab } from "./GroupsTab";
-import { groupLabel } from "./action-labels";
 
 type Team = { id: string; name: string };
 type Person = { id: string; display_name: string; username: string; email: string | null };
@@ -71,7 +70,7 @@ export default async function PermissionsPage({ searchParams }: PageProps<"/perm
   }
 
   // For users tab, pre-fetch each user's permissions
-  let userPermissionsMap: Record<string, UserPermission[]> = {};
+  const userPermissionsMap: Record<string, UserPermission[]> = {};
   if (tab === "users") {
     const results = await Promise.allSettled(
       detail.user_teams.map(async ({ user }) => {

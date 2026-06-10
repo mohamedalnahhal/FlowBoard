@@ -1,16 +1,9 @@
 import { Router } from 'express';
 import type { PrismaClient } from '@prisma/client';
 import { SYSTEM_ADMIN_ROLE, ROLES } from '../core/permissions/constants.js';
+import { requireAuth, getUserRole, isSystemAdmin, isWorkspaceAdmin, isWorkspaceMember } from '../lib/auth.js';
 
 const router = Router();
-
-async function requireAuth(req: import('express').Request, res: import('express').Response): Promise<string | null> {
-  if (!req.user?.id) {
-    res.status(401).json({ error: 'Unauthenticated' });
-    return null;
-  }
-  return req.user.id;
-}
 
 // ── GET /workspaces ────────────────────────────────────────────────────────────
 // Workspaces the current user belongs to (via team membership), or all if system admin.
@@ -42,8 +35,16 @@ router.get('/:workspaceId', async (req, res, next) => {
     if (!userId) return;
 
     const prisma = req.app.get('prisma') as PrismaClient;
+    const workspaceId = req.params.workspaceId as string;
+
+    // Only members of the workspace (or system admins) may view it.
+    const role = await getUserRole(prisma, userId);
+    if (!isSystemAdmin(role) && !(await isWorkspaceMember(prisma, userId, workspaceId))) {
+      return res.status(403).json({ error: 'You are not a member of this workspace' });
+    }
+
     const workspace = await prisma.workspace.findUnique({
-      where:   { id: (req.params.workspaceId as string) },
+      where:   { id: workspaceId },
       include: {
         teams: {
           include: { _count: { select: { user_teams: true, boards: true } } },
@@ -151,10 +152,17 @@ router.get('/:workspaceId/members', async (req, res, next) => {
     if (!userId) return;
 
     const prisma = req.app.get('prisma') as PrismaClient;
+    const workspaceId = req.params.workspaceId as string;
+
+    // Only members of the workspace (or system admins) may list its members.
+    const role = await getUserRole(prisma, userId);
+    if (!isSystemAdmin(role) && !(await isWorkspaceMember(prisma, userId, workspaceId))) {
+      return res.status(403).json({ error: 'You are not a member of this workspace' });
+    }
 
     // Fetch all UserTeam rows for teams in this workspace
     const userTeams = await prisma.userTeam.findMany({
-      where: { team: { workspace_id: (req.params.workspaceId as string) } },
+      where: { team: { workspace_id: workspaceId } },
       include: {
         user: { select: { id: true, display_name: true, username: true, email: true, role: true } },
         team: { select: { id: true, name: true } },
@@ -210,14 +218,16 @@ router.delete('/:workspaceId/members/:targetUserId', async (req, res, next) => {
 
     const prisma = req.app.get('prisma') as PrismaClient;
 
-    // Requester must be a member of the workspace
-    const requesterMembership = await prisma.userTeam.findFirst({
-      where: { user_id: requesterId, team: { workspace_id: workspaceId } },
-    });
-    const requesterUser = await prisma.user.findUnique({ where: { id: requesterId }, select: { role: true } });
-
-    if (requesterUser?.role !== SYSTEM_ADMIN_ROLE && !requesterMembership) {
-      return res.status(403).json({ error: 'You are not a member of this workspace' });
+    // Removing members is restricted to workspace owners/admins (or system
+    // admins) who are themselves members of the workspace.
+    const requesterRole = await getUserRole(prisma, requesterId);
+    if (!isSystemAdmin(requesterRole)) {
+      if (!isWorkspaceAdmin(requesterRole)) {
+        return res.status(403).json({ error: 'Insufficient permissions to remove workspace members' });
+      }
+      if (!(await isWorkspaceMember(prisma, requesterId, workspaceId))) {
+        return res.status(403).json({ error: 'You are not a member of this workspace' });
+      }
     }
 
     const deleted = await prisma.userTeam.deleteMany({
@@ -242,11 +252,11 @@ router.get('/:workspaceId/permissions', async (req, res, next) => {
     if (!userId) return;
     const prisma = req.app.get('prisma') as PrismaClient;
 
-    // Check requester is a workspace member
-    const membership = await prisma.userTeam.findFirst({
-      where: { user_id: userId, team: { workspace_id: (req.params.workspaceId as string) } },
-    });
-    if (!membership) return res.status(403).json({ error: 'Not a member of this workspace' });
+    // Check requester is a workspace member (system admins are exempt)
+    const role = await getUserRole(prisma, userId);
+    if (!isSystemAdmin(role) && !(await isWorkspaceMember(prisma, userId, (req.params.workspaceId as string)))) {
+      return res.status(403).json({ error: 'Not a member of this workspace' });
+    }
 
     // Get all unique members across all teams in workspace
     const teams = await prisma.team.findMany({

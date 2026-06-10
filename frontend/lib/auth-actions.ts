@@ -2,9 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { SESSION_COOKIE } from "./api";
-
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:3010";
+import { BACKEND_URL, SESSION_COOKIE } from "./api";
 
 function parseSetCookie(setCookie: string) {
   const [pair, ...attrParts] = setCookie.split(";").map((part) => part.trim());

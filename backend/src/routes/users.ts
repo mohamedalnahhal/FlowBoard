@@ -1,16 +1,9 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import type { PrismaClient, Prisma } from '@prisma/client';
+import { requireAuth, getUserRole, isWorkspaceAdmin } from '../lib/auth.js';
 
 const router = Router();
-
-async function requireAuth(req: import('express').Request, res: import('express').Response): Promise<string | null> {
-  if (!req.user?.id) {
-    res.status(401).json({ error: 'Unauthenticated' });
-    return null;
-  }
-  return req.user.id;
-}
 
 // ── GET /users ─────────────────────────────────────────────────────────────────
 // Users Management — search + role + team filters, paginated.
@@ -101,10 +94,27 @@ router.post('/', async (req, res, next) => {
     if (!userId) return;
 
     const prisma = req.app.get('prisma') as PrismaClient;
+
+    // Only workspace owners/admins (and system admins) may create users.
+    const requesterRole = await getUserRole(prisma, userId);
+    if (!isWorkspaceAdmin(requesterRole)) {
+      return res.status(403).json({ error: 'Insufficient permissions to create users' });
+    }
+
     const { display_name, username, email, phone_number, password, role = 3 } = req.body ?? {};
 
     if (!display_name || !username || !password) {
       return res.status(400).json({ error: 'display_name, username and password are required' });
+    }
+    if (String(password).length < 6) {
+      return res.status(400).json({ error: 'password must be at least 6 characters' });
+    }
+    if (!Number.isInteger(role) || role < 0 || role > 4) {
+      return res.status(400).json({ error: 'role must be an integer between 0 and 4' });
+    }
+    // A requester cannot create a user more privileged than themselves.
+    if (role < (requesterRole ?? 4)) {
+      return res.status(403).json({ error: 'Cannot create a user with a higher role than your own' });
     }
 
     const hashed = await bcrypt.hash(password, 10);
@@ -136,8 +146,12 @@ router.patch('/:userId/role', async (req, res, next) => {
 
     const { userId } = req.params as { userId: string };
     const { role, sync_permissions = true, revoke_extra = false } = req.body ?? {};
-    if (role === undefined || typeof role !== 'number') {
-      return res.status(400).json({ error: 'role (number) is required' });
+    if (role === undefined || typeof role !== 'number' || !Number.isInteger(role) || role < 0 || role > 4) {
+      return res.status(400).json({ error: 'role must be an integer between 0 and 4' });
+    }
+    // A requester cannot grant a role more privileged than their own.
+    if (role < requester.role) {
+      return res.status(403).json({ error: 'Cannot assign a role higher than your own' });
     }
 
     // Map workspace role → team role for default permissions
@@ -219,13 +233,23 @@ router.patch('/:userId/role', async (req, res, next) => {
 });
 
 // ── PATCH /users/:userId ───────────────────────────────────────────────────────
+// Profile fields only — role changes must go through PATCH /users/:userId/role.
 router.patch('/:userId', async (req, res, next) => {
   try {
     const userId = await requireAuth(req, res);
     if (!userId) return;
 
     const prisma = req.app.get('prisma') as PrismaClient;
-    const { display_name, email, phone_number, role } = req.body ?? {};
+
+    // Only workspace owners/admins (and system admins) may edit other users.
+    if (req.params.userId !== userId) {
+      const requesterRole = await getUserRole(prisma, userId);
+      if (!isWorkspaceAdmin(requesterRole)) {
+        return res.status(403).json({ error: 'Insufficient permissions to edit other users' });
+      }
+    }
+
+    const { display_name, email, phone_number } = req.body ?? {};
 
     const updated = await prisma.user.updateMany({
       where: { id: (req.params.userId as string) },
@@ -233,7 +257,6 @@ router.patch('/:userId', async (req, res, next) => {
         ...(display_name !== undefined && { display_name }),
         ...(email        !== undefined && { email }),
         ...(phone_number !== undefined && { phone_number }),
-        ...(role         !== undefined && { role }),
       },
     });
 

@@ -90,7 +90,7 @@ export function UserPermissionsModal({
       setShowGrantForm(false);
       startTransition(() => router.refresh());
     }
-  }, [grantPending, grantState]);
+  }, [grantPending, grantState, router, startTransition]);
 
   useEffect(() => {
     if (groupsPending) { wasUpdatingGroupsRef.current = true; return; }
@@ -98,7 +98,7 @@ export function UserPermissionsModal({
       wasUpdatingGroupsRef.current = false;
       startTransition(() => router.refresh());
     }
-  }, [groupsPending, groupsState]);
+  }, [groupsPending, groupsState, router, startTransition]);
 
   const personalPerms = userPermissions.filter(isPersonalRule);
   const inheritedPerms = userPermissions.filter((p) => !isPersonalRule(p));

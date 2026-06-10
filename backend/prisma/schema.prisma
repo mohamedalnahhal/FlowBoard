@@ -31,7 +31,7 @@ enum PermissionType {
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   display_name String
-  username     String
+  username     String   @unique
   email        String?
   phone_number String?
   password     String

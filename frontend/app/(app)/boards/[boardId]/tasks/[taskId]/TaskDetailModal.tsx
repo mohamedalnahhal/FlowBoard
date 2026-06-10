@@ -283,7 +283,12 @@ export function TaskDetailModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
       <button type="button" aria-label="Close task details" className="absolute inset-0 bg-on-background/40 backdrop-blur-sm" onClick={close} />
-      <div className="relative bg-surface-container-lowest rounded-xl shadow-2xl w-full max-w-[1000px] max-h-[90vh] flex flex-col overflow-hidden border border-outline-variant">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={task.name}
+        className="relative bg-surface-container-lowest rounded-xl shadow-2xl w-full max-w-[1000px] max-h-[90vh] flex flex-col overflow-hidden border border-outline-variant"
+      >
         {/* Header */}
         <div className="flex justify-between items-start p-6 border-b border-surface-variant bg-surface-bright shrink-0">
           <div className="flex gap-4 items-start min-w-0">

@@ -1,15 +1,9 @@
 import { Router } from 'express';
 import type { PrismaClient } from '@prisma/client';
+import { requireAuth, getUserRole, isWorkspaceAdmin, isWorkspaceMember } from '../lib/auth.js';
+import { ROLES } from '../core/permissions/constants.js';
 
 const router = Router();
-
-async function requireAuth(req: import('express').Request, res: import('express').Response): Promise<string | null> {
-  if (!req.user?.id) {
-    res.status(401).json({ error: 'Unauthenticated' });
-    return null;
-  }
-  return req.user.id;
-}
 
 // Returns true if the user is a workspace admin (role ≤ 2) or a direct team member.
 async function canAccessTeam(prisma: PrismaClient, userId: string, teamId: string): Promise<boolean> {
@@ -18,6 +12,15 @@ async function canAccessTeam(prisma: PrismaClient, userId: string, teamId: strin
     prisma.userTeam.findUnique({ where: { user_id_team_id: { user_id: userId, team_id: teamId } } }),
   ]);
   return (user?.role ?? 99) <= 2 || membership !== null;
+}
+
+// Returns true if the user is a workspace admin (role ≤ 2) or the team's lead.
+async function canManageTeam(prisma: PrismaClient, userId: string, teamId: string): Promise<boolean> {
+  const [user, membership] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { role: true } }),
+    prisma.userTeam.findUnique({ where: { user_id_team_id: { user_id: userId, team_id: teamId } } }),
+  ]);
+  return (user?.role ?? 99) <= 2 || membership?.role === ROLES.TEAM.LEAD;
 }
 
 // ── GET /teams/mine ────────────────────────────────────────────────────────────
@@ -57,8 +60,14 @@ router.get('/', async (req, res, next) => {
     const prisma = req.app.get('prisma') as PrismaClient;
     const { workspace_id } = req.query as Record<string, string | undefined>;
 
+    // Non-admin users only see teams in workspaces they belong to.
+    const role = await getUserRole(prisma, userId);
+    const visibility = isWorkspaceAdmin(role)
+      ? {}
+      : { workspace: { teams: { some: { user_teams: { some: { user_id: userId } } } } } };
+
     const teams = await prisma.team.findMany({
-      where: { ...(workspace_id && { workspace_id }) },
+      where: { ...visibility, ...(workspace_id && { workspace_id }) },
       include: {
         workspace: { select: { id: true, name: true } },
         _count:    { select: { user_teams: true, boards: true } },
@@ -96,6 +105,12 @@ router.post('/', async (req, res, next) => {
     const { name, workspace_id } = req.body ?? {};
     if (!name || !workspace_id) {
       return res.status(400).json({ error: 'name and workspace_id are required' });
+    }
+
+    // Creating a team requires being a workspace admin or a member of the workspace.
+    const role = await getUserRole(prisma, userId);
+    if (!isWorkspaceAdmin(role) && !(await isWorkspaceMember(prisma, userId, workspace_id))) {
+      return res.status(403).json({ error: 'You are not a member of this workspace' });
     }
 
     const team = await prisma.$transaction(async (tx) => {
@@ -180,7 +195,7 @@ router.patch('/:teamId', async (req, res, next) => {
     const prisma = req.app.get('prisma') as PrismaClient;
     const teamId = req.params.teamId as string;
 
-    if (!(await canAccessTeam(prisma, userId, teamId))) {
+    if (!(await canManageTeam(prisma, userId, teamId))) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
@@ -206,7 +221,7 @@ router.post('/:teamId/members', async (req, res, next) => {
     const prisma = req.app.get('prisma') as PrismaClient;
     const teamId = req.params.teamId as string;
 
-    if (!(await canAccessTeam(prisma, userId, teamId))) {
+    if (!(await canManageTeam(prisma, userId, teamId))) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
@@ -235,13 +250,14 @@ router.delete('/:teamId/members/:userId', async (req, res, next) => {
     const prisma = req.app.get('prisma') as PrismaClient;
     const teamId = req.params.teamId as string;
 
-    if (!(await canAccessTeam(prisma, userId, teamId))) {
+    if (!(await canManageTeam(prisma, userId, teamId))) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    await prisma.userTeam.deleteMany({
+    const deleted = await prisma.userTeam.deleteMany({
       where: { user_id: (req.params.userId as string), team_id: teamId },
     });
+    if (deleted.count === 0) return res.status(404).json({ error: 'User is not a member of this team' });
     res.status(204).send();
   } catch (err) {
     next(err);

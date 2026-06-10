@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:3010";
+export const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:3010";
 export const SESSION_COOKIE = "taskboard_session";
 
 export class ApiError extends Error {
