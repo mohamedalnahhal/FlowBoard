@@ -284,6 +284,19 @@ router.patch(
       const prisma = req.app.get('prisma') as PrismaClient;
       const { list_id, position } = req.body ?? {};
       if (!list_id) return res.status(400).json({ error: 'list_id is required' });
+      if (position !== undefined && !Number.isInteger(position)) {
+        return res.status(400).json({ error: 'position must be an integer' });
+      }
+
+      // The target list must belong to the board in the URL — otherwise a task
+      // could be moved into a board the permission check never covered.
+      const targetList = await prisma.list.findFirst({
+        where:  { id: list_id, board_id: (req.params.boardId as string) },
+        select: { id: true },
+      });
+      if (!targetList) {
+        return res.status(400).json({ error: 'Target list does not belong to this board' });
+      }
 
       const task = await prisma.task.updateMany({
         where: { id: (req.params.taskId as string) },

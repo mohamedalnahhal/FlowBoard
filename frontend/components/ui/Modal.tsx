@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon";
+
+const noopSubscribe = () => () => {};
+// false during SSR, true on the client — without setState-in-effect cascades.
+function useMounted() {
+  return useSyncExternalStore(noopSubscribe, () => true, () => false);
+}
 
 type ModalProps = {
   open: boolean;
@@ -21,12 +27,7 @@ const WIDTHS = {
 };
 
 export function Modal({ open, onClose, title, children, footer, width = "md" }: ModalProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
+  const mounted = useMounted();
 
   useEffect(() => {
     if (!open) return;
@@ -52,6 +53,9 @@ export function Modal({ open, onClose, title, children, footer, width = "md" }: 
         onClick={onClose}
       />
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className={`relative bg-surface-container-lowest rounded-xl shadow-xl border border-outline-variant/60 w-full ${WIDTHS[width]} max-h-[90vh] flex flex-col overflow-hidden`}
       >
         {title && (

@@ -1,15 +1,8 @@
 import { Router } from 'express';
 import type { PrismaClient } from '@prisma/client';
+import { requireAuth, getUserRole, isSystemAdmin, isWorkspaceMember, isTeamMember } from '../lib/auth.js';
 
 const router = Router();
-
-async function requireAuth(req: import('express').Request, res: import('express').Response): Promise<string | null> {
-  if (!req.user?.id) {
-    res.status(401).json({ error: 'Unauthenticated' });
-    return null;
-  }
-  return req.user.id;
-}
 
 // ── GET /dashboard/my-tasks-count ──────────────────────────────────────────────
 router.get('/my-tasks-count', async (req, res, next) => {
@@ -44,6 +37,11 @@ router.get('/announcements', async (req, res, next) => {
     const { workspace_id } = req.query as Record<string, string | undefined>;
     if (!workspace_id) return res.status(400).json({ error: 'workspace_id is required' });
 
+    const role = await getUserRole(prisma, userId);
+    if (!isSystemAdmin(role) && !(await isWorkspaceMember(prisma, userId, workspace_id))) {
+      return res.status(403).json({ error: 'You are not a member of this workspace' });
+    }
+
     const announcements = await prisma.announcement.findMany({
       where:   { workspace_id },
       include: { author: { select: { id: true, display_name: true, username: true } } },
@@ -66,6 +64,11 @@ router.get('/calendar-events', async (req, res, next) => {
     const prisma = req.app.get('prisma') as PrismaClient;
     const { team_id, from, to } = req.query as Record<string, string | undefined>;
     if (!team_id) return res.status(400).json({ error: 'team_id is required' });
+
+    const role = await getUserRole(prisma, userId);
+    if (!isSystemAdmin(role) && !(await isTeamMember(prisma, userId, team_id))) {
+      return res.status(403).json({ error: 'You are not a member of this team' });
+    }
 
     const events = await prisma.calendarEvent.findMany({
       where: {
@@ -114,6 +117,14 @@ router.post('/favorites', async (req, res, next) => {
     const prisma = req.app.get('prisma') as PrismaClient;
     const { board_id } = req.body ?? {};
     if (!board_id) return res.status(400).json({ error: 'board_id is required' });
+
+    // The user must be able to reach the board through team membership.
+    const board = await prisma.board.findUnique({ where: { id: board_id }, select: { team_id: true } });
+    if (!board) return res.status(404).json({ error: 'Board not found' });
+    const role = await getUserRole(prisma, userId);
+    if (!isSystemAdmin(role) && !(await isTeamMember(prisma, userId, board.team_id))) {
+      return res.status(403).json({ error: 'You are not a member of this board’s team' });
+    }
 
     const favorite = await prisma.favorite.upsert({
       where:  { user_id_board_id: { user_id: userId, board_id } },
@@ -212,6 +223,10 @@ router.get('/activity', async (req, res, next) => {
 
     let teamIds: string[];
     if (team_id) {
+      const role = await getUserRole(prisma, userId);
+      if (!isSystemAdmin(role) && !(await isTeamMember(prisma, userId, team_id))) {
+        return res.status(403).json({ error: 'You are not a member of this team' });
+      }
       teamIds = [team_id];
     } else {
       const memberships = await prisma.userTeam.findMany({

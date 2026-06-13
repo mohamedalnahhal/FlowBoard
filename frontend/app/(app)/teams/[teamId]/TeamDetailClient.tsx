@@ -202,7 +202,6 @@ export function TeamDetailClient({
   const boardFormRef = useRef<HTMLFormElement>(null);
   const boardWasSubmittingRef = useRef(false);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (boardPending) { boardWasSubmittingRef.current = true; return; }
     if (boardWasSubmittingRef.current && !boardState?.error && addingBoard) {
@@ -211,7 +210,7 @@ export function TeamDetailClient({
       setAddingBoard(false);
       router.refresh();
     }
-  }, [boardPending, boardState, addingBoard]);
+  }, [boardPending, boardState, addingBoard, router]);
 
   function handleDeleteBoard(boardId: string, boardName: string) {
     if (!window.confirm(`Delete board "${boardName}"? This cannot be undone.`)) return;

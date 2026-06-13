@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect, useRef, useActionState } from "react";
+import { useState, useEffect, useRef, useActionState, useSyncExternalStore } from "react";
 import { Icon } from "../ui/Icon";
 import { Avatar } from "../ui/Avatar";
 import { createWorkspaceAction } from "@/lib/workspace-actions";
@@ -31,6 +31,17 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+const noopSubscribe = () => () => {};
+// Reads the persisted collapsed flag after hydration (false during SSR)
+// without a setState-in-effect cascade.
+function useStoredCollapsed() {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => localStorage.getItem("sidebar_collapsed") === "true",
+    () => false,
+  );
+}
+
 type SidebarProps = {
   workspaces: Workspace[];
   currentWorkspaceId: string;
@@ -44,19 +55,16 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user }: Sidebar
   const [wsOpen, setWsOpen] = useState(false);
   const [createWsOpen, setCreateWsOpen] = useState(false);
   const [expandedBoards, setExpandedBoards] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+
+  // Persisted value (post-hydration) unless the user toggled it this session.
+  const storedCollapsed = useStoredCollapsed();
+  const [collapsedOverride, setCollapsedOverride] = useState<boolean | null>(null);
+  const collapsed = collapsedOverride ?? storedCollapsed;
+  const setCollapsed = (update: (prev: boolean) => boolean) => setCollapsedOverride(update(collapsed));
 
   const [createWsState, createWsFormAction, createWsPending] = useActionState(createWorkspaceAction, undefined);
   const createWsFormRef = useRef<HTMLFormElement>(null);
   const wasCreatingWsRef = useRef(false);
-
-  // Read collapsed state from localStorage on mount (avoids SSR mismatch)
-  useEffect(() => {
-    const stored = localStorage.getItem("sidebar_collapsed");
-    if (stored === "true") {
-      setCollapsed(true);
-    }
-  }, []);
 
   // Sync collapsed state to CSS variable and localStorage
   useEffect(() => {
@@ -100,7 +108,7 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user }: Sidebar
           {!collapsed && (
             <div className="flex items-center gap-2">
               <Icon name="flowsheet" className="text-primary text-[28px]" filled />
-              <h1 className="font-display text-headline-md font-bold text-primary">TaskHub</h1>
+              <h1 className="font-display text-headline-md font-bold text-primary">FlowBoard</h1>
             </div>
           )}
           <button

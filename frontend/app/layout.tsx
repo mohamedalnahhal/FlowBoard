@@ -9,7 +9,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "FlowBoard",
+  title: {
+    default: "FlowBoard",
+    template: "%s | FlowBoard",
+  },
   description: "Plan, track, and ship work together.",
 };
 

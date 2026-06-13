@@ -13,13 +13,13 @@ type Board = { id: string; name: string; status: string; teamName: string; teamI
 const STATUS_LABELS: Record<string, string> = {
   ACTIVE: "Active",
   ARCHIVED: "Archived",
-  ON_HOLD: "On Hold",
+  CLOSED: "Closed",
 };
 
 const STATUS_DOTS: Record<string, string> = {
   ACTIVE: "bg-[#137333]",
   ARCHIVED: "bg-on-surface-variant",
-  ON_HOLD: "bg-[#b45309]",
+  CLOSED: "bg-[#b45309]",
 };
 
 export function BoardsClient({ boards, teams }: { boards: Board[]; teams: { id: string; name: string }[] }) {
@@ -40,8 +40,7 @@ export function BoardsClient({ boards, teams }: { boards: Board[]; teams: { id: 
       setCreateOpen(false);
       router.refresh();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createPending, createState, createOpen]);
+  }, [createPending, createState, createOpen, router]);
 
   const filtered = boards.filter((b) => {
     const matchesSearch =
@@ -102,7 +101,7 @@ export function BoardsClient({ boards, teams }: { boards: Board[]; teams: { id: 
           <option value="all">All Statuses</option>
           <option value="ACTIVE">Active</option>
           <option value="ARCHIVED">Archived</option>
-          <option value="ON_HOLD">On Hold</option>
+          <option value="CLOSED">Closed</option>
         </select>
         {teams.length > 1 && (
           <select
