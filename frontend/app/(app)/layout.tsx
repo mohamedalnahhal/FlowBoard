@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { api, getCurrentUser } from "@/lib/api";
-import { getActiveTeamId } from "@/lib/active-team";
-import { resolveActiveWorkspace, resolveDashboardTarget } from "@/lib/active-workspace";
+import { getActiveTeamId, getDefaultTeamId } from "@/lib/active-team";
+import { getDefaultWorkspaceId, resolveActiveWorkspace, resolveDashboardTarget } from "@/lib/active-workspace";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { TopHeader } from "@/components/shell/TopHeader";
 
@@ -14,20 +14,22 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const [workspaces, teams, notifications, storedActiveTeamId] = await Promise.all([
+  const [workspaces, teams, notifications, storedActiveTeamId, defaultTeamId, defaultWorkspaceId] = await Promise.all([
     api.get<Workspace[]>("/workspaces").catch(() => [] as Workspace[]),
     api.get<Team[]>("/teams/mine").catch(() => [] as Team[]),
     api.get<Notification[]>("/dashboard/notifications").catch(() => [] as Notification[]),
     getActiveTeamId(),
+    getDefaultTeamId(),
+    getDefaultWorkspaceId(),
   ]);
 
   const currentWorkspaceId = (await resolveActiveWorkspace(workspaces))?.id ?? "";
 
-  // Use stored active team if it's still in the list, otherwise fall back to first team
+  // Active team if still valid, otherwise the chosen default, otherwise the first.
   const activeTeamId =
-    storedActiveTeamId && teams.some((t) => t.id === storedActiveTeamId)
-      ? storedActiveTeamId
-      : teams[0]?.id;
+    (storedActiveTeamId && teams.some((t) => t.id === storedActiveTeamId) && storedActiveTeamId) ||
+    (defaultTeamId && teams.some((t) => t.id === defaultTeamId) && defaultTeamId) ||
+    teams[0]?.id;
 
   const dashboardTarget = await resolveDashboardTarget(workspaces, teams);
   const dashboardHref = dashboardTarget
@@ -43,6 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         user={{ id: user.id, display_name: user.display_name, username: user.username, role: user.role }}
         dashboardHref={dashboardHref}
         activeTeamId={activeTeamId}
+        defaultWorkspaceId={defaultWorkspaceId}
         scope={dashboardTarget ?? undefined}
       />
       <div className="flex-1 min-w-0 flex flex-col md:ml-sidebar-width min-h-screen">
@@ -50,6 +53,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           teams={teams.map((t) => ({ id: t.id, name: t.name, workspace: t.workspace }))}
           notifications={notifications}
           activeTeamId={activeTeamId}
+          defaultTeamId={defaultTeamId}
           currentWorkspaceId={currentWorkspaceId}
         />
         <main className="flex-1 p-4 md:p-8 overflow-y-auto max-w-container-max mx-auto w-full">

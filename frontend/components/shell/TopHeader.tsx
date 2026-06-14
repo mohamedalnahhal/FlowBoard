@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "../ui/Icon";
 import { markNotificationReadAction, markAllNotificationsReadAction } from "@/lib/notification-actions";
-import { setActiveTeamAction } from "@/lib/active-team";
+import { setActiveTeamAction, setDefaultTeamAction } from "@/lib/active-team";
 import { setActiveWorkspaceAction } from "@/lib/active-workspace";
 import { parseScopedPath } from "@/lib/dashboard-path";
 
@@ -20,6 +20,7 @@ type TopHeaderProps = {
   teams?: Team[];
   notifications?: Notification[];
   activeTeamId?: string;
+  defaultTeamId?: string;
   currentWorkspaceId?: string;
 };
 
@@ -39,7 +40,7 @@ function formatRelative(iso: string) {
   return `${Math.floor(hr / 24)}d ago`;
 }
 
-export function TopHeader({ teams = [], notifications: initialNotifications = [], activeTeamId, currentWorkspaceId }: TopHeaderProps) {
+export function TopHeader({ teams = [], notifications: initialNotifications = [], activeTeamId, defaultTeamId, currentWorkspaceId }: TopHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [teamOpen, setTeamOpen] = useState(false);
@@ -132,6 +133,13 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
       } else {
         router.refresh();
       }
+    });
+  }
+
+  function handleSetDefaultTeam(teamId: string, isDefault: boolean) {
+    startTransition(async () => {
+      await setDefaultTeamAction(isDefault ? "" : teamId);
+      router.refresh();
     });
   }
 
@@ -245,22 +253,36 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
                   <p className="px-4 py-2 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider border-b border-outline-variant/50 text-[10px]">
                     Your Teams
                   </p>
-                  {visibleTeams.map((team) => (
-                    <button
-                      key={team.id}
-                      type="button"
-                      onClick={() => handleSelectTeam(team)}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-container-low transition-colors font-label-md text-label-md text-on-surface text-left"
-                    >
-                      <div className="w-6 h-6 rounded bg-primary-fixed flex items-center justify-center text-[10px] font-bold text-on-primary-fixed-variant shrink-0">
-                        {team.name[0]}
+                  {visibleTeams.map((team) => {
+                    const isDefault = team.id === defaultTeamId;
+                    return (
+                      <div key={team.id} className="flex items-center">
+                        <button
+                          type="button"
+                          onClick={() => handleSelectTeam(team)}
+                          className="flex-1 min-w-0 flex items-center gap-3 px-4 py-3 hover:bg-surface-container-low transition-colors font-label-md text-label-md text-on-surface text-left"
+                        >
+                          <div className="w-6 h-6 rounded bg-primary-fixed flex items-center justify-center text-[10px] font-bold text-on-primary-fixed-variant shrink-0">
+                            {team.name[0]}
+                          </div>
+                          <span className="flex-1 truncate">{team.name}</span>
+                          {team.id === activeTeam?.id && (
+                            <Icon name="check" className="text-primary text-[16px] shrink-0" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSetDefaultTeam(team.id, isDefault)}
+                          disabled={isPending}
+                          className={`px-3 py-3 shrink-0 transition-colors ${isDefault ? "text-tertiary-container" : "text-outline hover:text-on-surface"}`}
+                          title={isDefault ? "Remove as default team" : "Set as default team"}
+                          aria-label={isDefault ? "Remove as default team" : "Set as default team"}
+                        >
+                          <Icon name={isDefault ? "star" : "star_border"} filled={isDefault} className="text-[16px]" />
+                        </button>
                       </div>
-                      <span className="flex-1 truncate">{team.name}</span>
-                      {team.id === activeTeam?.id && (
-                        <Icon name="check" className="text-primary text-[16px] shrink-0" />
-                      )}
-                    </button>
-                  ))}
+                    );
+                  })}
                   <div className="border-t border-outline-variant/50">
                     <Link
                       href="/teams"

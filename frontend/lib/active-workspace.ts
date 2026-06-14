@@ -1,8 +1,9 @@
 "use server";
 import { cookies } from "next/headers";
-import { getActiveTeamId } from "./active-team";
+import { getActiveTeamId, getDefaultTeamId } from "./active-team";
 
 const ACTIVE_WORKSPACE_COOKIE = "active_workspace";
+const DEFAULT_WORKSPACE_COOKIE = "default_workspace";
 
 export async function setActiveWorkspaceAction(workspaceId: string) {
   const jar = await cookies();
@@ -19,15 +20,40 @@ export async function getActiveWorkspaceId(): Promise<string | undefined> {
   return jar.get(ACTIVE_WORKSPACE_COOKIE)?.value;
 }
 
-// Resolves the workspace the user is currently acting in: the stored choice if
-// it's still in the list, otherwise the first workspace.
+// The user's preferred workspace — used as the fallback when none is actively
+// selected. Passing an empty id clears it.
+export async function setDefaultWorkspaceAction(workspaceId: string) {
+  const jar = await cookies();
+  if (!workspaceId) {
+    jar.delete(DEFAULT_WORKSPACE_COOKIE);
+    return;
+  }
+  jar.set(DEFAULT_WORKSPACE_COOKIE, workspaceId, {
+    path:     "/",
+    httpOnly: false,
+    sameSite: "lax",
+    maxAge:   60 * 60 * 24 * 365, // 1 year
+  });
+}
+
+export async function getDefaultWorkspaceId(): Promise<string | undefined> {
+  const jar = await cookies();
+  return jar.get(DEFAULT_WORKSPACE_COOKIE)?.value;
+}
+
+// Resolves the workspace the user is currently acting in: the actively selected
+// one, otherwise their chosen default, otherwise the first workspace.
 export async function resolveActiveWorkspace<T extends { id: string }>(workspaces: T[]): Promise<T | undefined> {
-  const stored = await getActiveWorkspaceId();
-  return workspaces.find((w) => w.id === stored) ?? workspaces[0];
+  const [active, def] = await Promise.all([getActiveWorkspaceId(), getDefaultWorkspaceId()]);
+  return (
+    workspaces.find((w) => w.id === active) ??
+    workspaces.find((w) => w.id === def) ??
+    workspaces[0]
+  );
 }
 
 // Resolves the workspace_id/team_id pair the dashboard route should point to:
-// the active workspace, and within it the active team (or its first team).
+// the active (or default) workspace, and within it the active (or default) team.
 export async function resolveDashboardTarget(
   workspaces: { id: string }[],
   teams: { id: string; workspace: { id: string } | null }[],
@@ -38,8 +64,11 @@ export async function resolveDashboardTarget(
   const teamsInWorkspace = teams.filter((t) => t.workspace?.id === workspace.id);
   if (teamsInWorkspace.length === 0) return null;
 
-  const storedTeamId = await getActiveTeamId();
-  const team = teamsInWorkspace.find((t) => t.id === storedTeamId) ?? teamsInWorkspace[0];
+  const [storedTeamId, defaultTeamId] = await Promise.all([getActiveTeamId(), getDefaultTeamId()]);
+  const team =
+    teamsInWorkspace.find((t) => t.id === storedTeamId) ??
+    teamsInWorkspace.find((t) => t.id === defaultTeamId) ??
+    teamsInWorkspace[0];
 
   return { workspaceId: workspace.id, teamId: team.id };
 }

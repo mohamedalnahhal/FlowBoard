@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useActionState, useSyncExternalStore } fro
 import { Icon } from "../ui/Icon";
 import { Avatar } from "../ui/Avatar";
 import { createWorkspaceAction } from "@/lib/workspace-actions";
-import { setActiveWorkspaceAction } from "@/lib/active-workspace";
+import { setActiveWorkspaceAction, setDefaultWorkspaceAction } from "@/lib/active-workspace";
 import { parseScopedPath } from "@/lib/dashboard-path";
 
 type Board = { id: string; name: string; status: string };
@@ -53,10 +53,11 @@ type SidebarProps = {
   user: { id: string; display_name: string; username: string; role: number };
   dashboardHref: string;
   activeTeamId?: string;
+  defaultWorkspaceId?: string;
   scope?: { workspaceId: string; teamId: string };
 };
 
-export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboardHref, activeTeamId, scope }: SidebarProps) {
+export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboardHref, activeTeamId, defaultWorkspaceId, scope }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [wsOpen, setWsOpen] = useState(false);
@@ -115,6 +116,11 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboard
   const allBoards = activeTeamForBoards?.boards ?? [];
 
   const isWorkspaceAdmin = user.role <= 2;
+
+  async function handleSetDefaultWorkspace(workspaceId: string, isDefault: boolean) {
+    await setDefaultWorkspaceAction(isDefault ? "" : workspaceId);
+    router.refresh();
+  }
 
   return (
     <nav
@@ -181,25 +187,41 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboard
                 <p className="px-3 py-2 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider border-b border-outline-variant/50 text-[10px]">
                   Workspaces
                 </p>
-                {workspaces.map((ws) => (
-                  <button
-                    key={ws.id}
-                    type="button"
-                    onClick={async () => {
-                      setWsOpen(false);
-                      await setActiveWorkspaceAction(ws.id);
-                      router.push("/");
-                      router.refresh();
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 hover:bg-surface-container-low transition-colors font-label-md text-label-md text-on-surface text-left ${ws.id === currentWs?.id ? "bg-primary-fixed/10" : ""}`}
-                  >
-                    <div className="w-6 h-6 rounded bg-primary-fixed flex items-center justify-center font-bold text-[10px] text-on-primary-fixed-variant shrink-0">
-                      {ws.name[0]?.toUpperCase()}
+                {workspaces.map((ws) => {
+                  const isDefault = ws.id === defaultWorkspaceId;
+                  return (
+                    <div
+                      key={ws.id}
+                      className={`flex items-center ${ws.id === currentWs?.id ? "bg-primary-fixed/10" : ""}`}
+                    >
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setWsOpen(false);
+                          await setActiveWorkspaceAction(ws.id);
+                          router.push("/");
+                          router.refresh();
+                        }}
+                        className="flex-1 min-w-0 flex items-center gap-3 px-3 py-2.5 hover:bg-surface-container-low transition-colors font-label-md text-label-md text-on-surface text-left"
+                      >
+                        <div className="w-6 h-6 rounded bg-primary-fixed flex items-center justify-center font-bold text-[10px] text-on-primary-fixed-variant shrink-0">
+                          {ws.name[0]?.toUpperCase()}
+                        </div>
+                        <span className="truncate">{ws.name}</span>
+                        {ws.id === currentWs?.id && <Icon name="check" className="ml-auto text-primary text-[16px] shrink-0" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSetDefaultWorkspace(ws.id, isDefault)}
+                        className={`px-2.5 py-2.5 shrink-0 transition-colors ${isDefault ? "text-tertiary-container" : "text-outline hover:text-on-surface"}`}
+                        title={isDefault ? "Remove as default workspace" : "Set as default workspace"}
+                        aria-label={isDefault ? "Remove as default workspace" : "Set as default workspace"}
+                      >
+                        <Icon name={isDefault ? "star" : "star_border"} filled={isDefault} className="text-[16px]" />
+                      </button>
                     </div>
-                    <span className="truncate">{ws.name}</span>
-                    {ws.id === currentWs?.id && <Icon name="check" className="ml-auto text-primary text-[16px] shrink-0" />}
-                  </button>
-                ))}
+                  );
+                })}
                 <div className="border-t border-outline-variant/50">
                   <button
                     type="button"
