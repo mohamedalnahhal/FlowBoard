@@ -12,6 +12,7 @@ type Comment = {
   created_at: string;
   user: Person;
   replies: Comment[];
+  reactions: { emoji: string; user_id: string }[];
 };
 type HistoryEntry = {
   id: string;

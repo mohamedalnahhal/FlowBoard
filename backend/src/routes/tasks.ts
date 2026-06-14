@@ -27,10 +27,14 @@ router.get(
             where:   { parent_comment_id: null },
             orderBy: { created_at: 'asc' },
             include: {
-              user: { select: { id: true, display_name: true, username: true } },
+              user:      { select: { id: true, display_name: true, username: true } },
+              reactions: { select: { emoji: true, user_id: true } },
               replies: {
                 orderBy: { created_at: 'asc' },
-                include: { user: { select: { id: true, display_name: true, username: true } } },
+                include: {
+                  user:      { select: { id: true, display_name: true, username: true } },
+                  reactions: { select: { emoji: true, user_id: true } },
+                },
               },
             },
           },
@@ -111,6 +115,51 @@ router.delete(
         where: { id: (req.params.commentId as string), task_id: (req.params.taskId as string), user_id: req.user!.id },
       });
       res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ── POST /tasks/:taskId/comments/:commentId/reactions ─────────────────────────
+// Toggles the current user's emoji reaction on a comment (adds it, or removes
+// it if they had already reacted with that emoji).
+const ALLOWED_REACTIONS = new Set(['👍', '❤️', '😄', '🎉', '🚀', '👀']);
+
+router.post(
+  '/:taskId/comments/:commentId/reactions',
+  checkPermission(ACTIONS.COMMENT_CREATE, 'task', (req) => (req.params.taskId as string), { inherit: true }),
+  async (req, res, next) => {
+    try {
+      const prisma = req.app.get('prisma') as PrismaClient;
+      const { emoji } = req.body ?? {};
+      const taskId = req.params.taskId as string;
+      const commentId = req.params.commentId as string;
+
+      if (!emoji || !ALLOWED_REACTIONS.has(emoji)) {
+        return res.status(400).json({ error: `emoji must be one of: ${[...ALLOWED_REACTIONS].join(' ')}` });
+      }
+
+      // The comment must belong to the task in the URL.
+      const comment = await prisma.taskComment.findFirst({
+        where:  { id: commentId, task_id: taskId },
+        select: { id: true },
+      });
+      if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+      const userId = req.user!.id!;
+      const existing = await prisma.commentReaction.findUnique({
+        where: { comment_id_user_id_emoji: { comment_id: commentId, user_id: userId, emoji } },
+        select: { id: true },
+      });
+
+      if (existing) {
+        await prisma.commentReaction.delete({ where: { id: existing.id } });
+        return res.json({ toggled: 'removed', emoji });
+      }
+
+      await prisma.commentReaction.create({ data: { comment_id: commentId, user_id: userId, emoji } });
+      return res.status(201).json({ toggled: 'added', emoji });
     } catch (err) {
       next(err);
     }

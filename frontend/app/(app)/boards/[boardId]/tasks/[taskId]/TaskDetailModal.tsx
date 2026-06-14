@@ -12,13 +12,18 @@ import {
   addCommentAction,
   addTaskMemberAction,
   removeTaskMemberAction,
+  replyToCommentAction,
   toggleChecklistItemAction,
+  toggleCommentReactionAction,
   updateTaskDescriptionAction,
 } from "@/lib/task-actions";
+
+const REACTION_EMOJIS = ["👍", "❤️", "😄", "🎉", "🚀", "👀"];
 
 type Person = { id: string; display_name: string; username: string };
 type Label = { id: string; name: string; color: string };
 type ChecklistItem = { id: string; name: string; status: boolean };
+type Reaction = { emoji: string; user_id: string };
 type Comment = {
   id: string;
   content: string;
@@ -26,6 +31,7 @@ type Comment = {
   created_at: string;
   user: Person;
   replies?: Comment[];
+  reactions?: Reaction[];
 };
 type HistoryEntry = {
   id: string;
@@ -119,12 +125,58 @@ function ActivityEntry({ entry }: { entry: HistoryEntry }) {
   );
 }
 
-function CommentEntry({ comment }: { comment: Comment }) {
+type CommentEntryProps = {
+  comment: Comment;
+  boardId: string;
+  taskId: string;
+  currentUserId: string | null;
+  canReply: boolean;
+};
+
+function CommentEntry({ comment, boardId, taskId, currentUserId, canReply }: CommentEntryProps) {
+  const router = useRouter();
   const replies = comment.replies ?? [];
+  const [replying, setReplying] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  // Aggregate reactions by emoji (only those actually used), flagging the ones
+  // the current user added so their chips can be highlighted.
+  const reactions = comment.reactions ?? [];
+  const grouped = REACTION_EMOJIS
+    .map((emoji) => {
+      const users = reactions.filter((r) => r.emoji === emoji);
+      return { emoji, count: users.length, mine: !!currentUserId && users.some((r) => r.user_id === currentUserId) };
+    })
+    .filter((g) => g.count > 0);
+
+  function react(emoji: string) {
+    setPickerOpen(false);
+    startTransition(async () => {
+      await toggleCommentReactionAction(boardId, taskId, comment.id, emoji);
+      router.refresh();
+    });
+  }
+
+  function submitReply(e: React.FormEvent) {
+    e.preventDefault();
+    const text = replyText.trim();
+    if (!text) return;
+    startTransition(async () => {
+      const res = await replyToCommentAction(boardId, taskId, comment.id, text);
+      if (!res?.error) {
+        setReplyText("");
+        setReplying(false);
+        router.refresh();
+      }
+    });
+  }
+
   return (
     <div className="flex gap-3">
       <Avatar person={comment.user} size="sm" />
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span className="font-semibold font-label-md text-label-md text-on-surface">{comment.user.display_name}</span>
           <span className="font-label-sm text-label-sm text-on-surface-variant">
@@ -132,29 +184,98 @@ function CommentEntry({ comment }: { comment: Comment }) {
             {comment.is_edited ? " · edited" : ""}
           </span>
         </div>
-        <div className="bg-surface-container-lowest border border-outline-variant p-3 rounded-lg rounded-tl-none font-body-md text-body-md text-on-surface shadow-sm">
+        <div className="bg-surface-container-lowest border border-outline-variant p-3 rounded-lg rounded-tl-none font-body-md text-body-md text-on-surface shadow-sm whitespace-pre-wrap break-words">
           {comment.content}
         </div>
+
+        {grouped.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {grouped.map((g) => (
+              <button
+                key={g.emoji}
+                type="button"
+                onClick={() => react(g.emoji)}
+                disabled={isPending}
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[12px] transition-colors disabled:opacity-50 ${g.mine ? "border-primary bg-primary-fixed/30 text-primary" : "border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low"}`}
+                title={g.mine ? "Remove reaction" : "React"}
+              >
+                <span className="leading-none">{g.emoji}</span>
+                <span className="font-medium">{g.count}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="flex gap-4 mt-2">
-          <button
-            type="button"
-            title="Coming soon"
-            className="font-label-sm text-label-sm text-on-surface-variant underline cursor-default opacity-60"
-          >
-            Reply
-          </button>
-          <button
-            type="button"
-            title="Coming soon"
-            className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1 cursor-default opacity-60"
-          >
-            <Icon name="mood" className="text-[14px]" /> React
-          </button>
+          {canReply && (
+            <button
+              type="button"
+              onClick={() => setReplying((v) => !v)}
+              className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary hover:underline transition-colors"
+            >
+              Reply
+            </button>
+          )}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setPickerOpen((v) => !v)}
+              className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary flex items-center gap-1 transition-colors"
+            >
+              <Icon name="mood" className="text-[14px]" /> React
+            </button>
+            {pickerOpen && (
+              <>
+                <button type="button" className="fixed inset-0 z-10" onClick={() => setPickerOpen(false)} aria-label="Close" />
+                <div className="absolute left-0 top-full mt-1 z-20 flex gap-0.5 p-1.5 bg-surface-container-lowest border border-outline-variant rounded-full shadow-lg">
+                  {REACTION_EMOJIS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => react(emoji)}
+                      className="w-7 h-7 rounded-full hover:bg-surface-container-high transition-colors text-[16px] leading-none"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
+
+        {replying && (
+          <form onSubmit={submitReply} className="mt-2 flex flex-col gap-2">
+            <textarea
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              autoFocus
+              rows={2}
+              placeholder={`Reply to ${comment.user.display_name}…`}
+              className="w-full bg-surface border border-outline-variant rounded-lg p-2.5 text-body-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" type="button" onClick={() => { setReplying(false); setReplyText(""); }}>
+                Cancel
+              </Button>
+              <Button size="sm" type="submit" disabled={isPending || !replyText.trim()}>
+                {isPending ? "Posting…" : "Reply"}
+              </Button>
+            </div>
+          </form>
+        )}
+
         {replies.length > 0 && (
           <div className="mt-3 ml-4 space-y-3 border-l border-outline-variant pl-4">
             {replies.map((reply) => (
-              <CommentEntry key={reply.id} comment={reply} />
+              <CommentEntry
+                key={reply.id}
+                comment={reply}
+                boardId={boardId}
+                taskId={taskId}
+                currentUserId={currentUserId}
+                canReply={false}
+              />
             ))}
           </div>
         )}
@@ -641,7 +762,14 @@ export function TaskDetailModal({
                 item.kind === "history" ? (
                   <ActivityEntry key={item.key} entry={item.entry} />
                 ) : (
-                  <CommentEntry key={item.key} comment={item.entry} />
+                  <CommentEntry
+                    key={item.key}
+                    comment={item.entry}
+                    boardId={boardId}
+                    taskId={task.id}
+                    currentUserId={currentUserId}
+                    canReply
+                  />
                 ),
               )}
             </div>

@@ -40,6 +40,41 @@ export async function addCommentAction(
   return undefined;
 }
 
+export async function replyToCommentAction(
+  boardId: string,
+  taskId: string,
+  parentCommentId: string,
+  content: string,
+): Promise<ActionState> {
+  const trimmed = content.trim();
+  if (!trimmed) return { error: "Please write a reply first." };
+
+  try {
+    await api.post(`/tasks/${taskId}/comments`, { content: trimmed, parent_comment_id: parentCommentId });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to post reply." };
+  }
+
+  revalidatePath(`/boards/${boardId}/tasks/${taskId}`);
+  return undefined;
+}
+
+export async function toggleCommentReactionAction(
+  boardId: string,
+  taskId: string,
+  commentId: string,
+  emoji: string,
+): Promise<ActionState> {
+  try {
+    await api.post(`/tasks/${taskId}/comments/${commentId}/reactions`, { emoji });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to update reaction." };
+  }
+
+  revalidatePath(`/boards/${boardId}/tasks/${taskId}`);
+  return undefined;
+}
+
 export async function addChecklistItemAction(
   boardId: string,
   taskId: string,

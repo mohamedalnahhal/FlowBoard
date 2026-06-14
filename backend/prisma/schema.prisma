@@ -39,11 +39,12 @@ model User {
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
 
-  user_groups    UserGroup[]
-  user_teams     UserTeam[]
-  task_members   TaskMember[]
-  task_history   TaskHistory[]
-  task_comments  TaskComment[]
+  user_groups       UserGroup[]
+  user_teams        UserTeam[]
+  task_members      TaskMember[]
+  task_history      TaskHistory[]
+  task_comments     TaskComment[]
+  comment_reactions CommentReaction[]
   created_tasks  Task[]         @relation("TaskCreatedBy")
   announcements  Announcement[]
   favorites      Favorite[]
@@ -270,12 +271,27 @@ model TaskComment {
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 
-  task           Task         @relation(fields: [task_id], references: [id])
-  user           User         @relation(fields: [user_id], references: [id])
-  parent_comment TaskComment?  @relation("CommentReplies", fields: [parent_comment_id], references: [id])
-  replies        TaskComment[] @relation("CommentReplies")
+  task           Task              @relation(fields: [task_id], references: [id])
+  user           User              @relation(fields: [user_id], references: [id])
+  parent_comment TaskComment?      @relation("CommentReplies", fields: [parent_comment_id], references: [id])
+  replies        TaskComment[]     @relation("CommentReplies")
+  reactions      CommentReaction[]
 
   @@map("task_comments")
+}
+
+model CommentReaction {
+  id         String   @id @default(uuid()) @db.Uuid
+  comment_id String   @db.Uuid
+  user_id    String   @db.Uuid
+  emoji      String
+  created_at DateTime @default(now())
+
+  comment TaskComment @relation(fields: [comment_id], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [user_id], references: [id])
+
+  @@unique([comment_id, user_id, emoji])
+  @@map("comment_reactions")
 }
 
 model TaskHistory {
