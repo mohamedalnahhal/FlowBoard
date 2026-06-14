@@ -6,8 +6,10 @@ import { AvatarStack } from "@/components/ui/Avatar";
 import { Icon } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { Select } from "@/components/ui/Field";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { deletePermissionRuleAction, togglePermissionTypeAction, updatePermissionRuleAction } from "@/lib/permissions-actions";
-import { actionLabel, groupLabel } from "./action-labels";
+import { actionDescription, actionLabel, groupLabel } from "./action-labels";
 
 type Person = { id: string; display_name: string; username: string; email: string | null };
 type Group = { id: string; name?: string | null; all_members: boolean; user_groups: { user: Person }[] };
@@ -25,16 +27,21 @@ type Permission = {
 function EditRuleModal({
   teamId,
   permission,
+  groups,
+  boards,
   onClose,
 }: {
   teamId: string;
   permission: Permission;
+  groups: Group[];
+  boards: Board[];
   onClose: () => void;
 }) {
   const router = useRouter();
   const boundAction = updatePermissionRuleAction.bind(null, teamId, permission.id);
   const [state, formAction, pending] = useActionState(boundAction, undefined);
   const [type, setType] = useState<"ALLOW" | "DENY">(permission.type);
+  const [scopeType, setScopeType] = useState(permission.scope_type);
   const wasSubmittingRef = useRef(false);
 
   useEffect(() => {
@@ -68,6 +75,15 @@ function EditRuleModal({
         className="flex flex-col gap-4"
       >
         <input type="hidden" name="type" value={type} />
+
+        <div className="flex items-start gap-2 p-3 rounded-md bg-surface-container-low border border-outline-variant/60">
+          <Icon name="info" className="text-[18px] text-primary shrink-0 mt-0.5" />
+          <div className="flex flex-col">
+            <span className="font-label-md text-label-md text-on-surface font-semibold">{actionLabel(permission.action)}</span>
+            <span className="font-body-md text-[12px] text-on-surface-variant">{actionDescription(permission.action)}</span>
+          </div>
+        </div>
+
         <div className="flex flex-col gap-1.5">
           <span className="font-label-md text-label-md text-on-surface-variant">Type</span>
           <div className="flex p-1 bg-surface-container-low rounded-lg border border-outline-variant w-fit">
@@ -87,6 +103,57 @@ function EditRuleModal({
             </button>
           </div>
         </div>
+
+        <Select
+          label="Subject"
+          name="group_id"
+          defaultValue={permission.group.id}
+          required
+          hint="The group this rule applies to."
+        >
+          {groups.map((group) => (
+            <option key={group.id} value={group.id}>
+              {groupLabel(group)}
+            </option>
+          ))}
+        </Select>
+
+        <Select
+          label="Scope"
+          name="scope_type"
+          value={scopeType}
+          onChange={(e) => setScopeType(e.target.value as Permission["scope_type"])}
+        >
+          <option value="team">Team-wide (All Resources)</option>
+          <option value="board">Specific Board</option>
+          {(scopeType === "list" || scopeType === "task") && (
+            <option value={scopeType}>Specific {scopeType === "list" ? "List" : "Task"}</option>
+          )}
+        </Select>
+
+        {scopeType === "board" ? (
+          <Select
+            label="Target Board"
+            name="scope_id"
+            defaultValue={permission.scope_type === "board" ? permission.scope_id ?? "" : ""}
+            required
+          >
+            <option value="" disabled>
+              Select a board…
+            </option>
+            {boards.map((board) => (
+              <option key={board.id} value={board.id}>
+                {board.name}
+              </option>
+            ))}
+          </Select>
+        ) : (
+          // Preserve the original target for list/task scopes the form can't edit.
+          (scopeType === "list" || scopeType === "task") && (
+            <input type="hidden" name="scope_id" value={permission.scope_id ?? ""} />
+          )
+        )}
+
         <label className="flex flex-col gap-1.5">
           <span className="font-label-md text-label-md text-on-surface-variant">Priority</span>
           <input
@@ -206,7 +273,10 @@ export function PermissionsRulesTable({
                 >
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="font-semibold text-on-surface">{actionLabel(permission.action)}</span>
+                      <span className="font-semibold text-on-surface inline-flex items-center gap-1.5">
+                        {actionLabel(permission.action)}
+                        <InfoTooltip text={actionDescription(permission.action)} />
+                      </span>
                       <span className="text-on-surface-variant text-label-sm">Priority {permission.priority}</span>
                     </div>
                   </td>
@@ -284,6 +354,8 @@ export function PermissionsRulesTable({
         <EditRuleModal
           teamId={teamId}
           permission={editingPermission}
+          groups={groups}
+          boards={boards}
           onClose={() => setEditingPermission(null)}
         />
       )}

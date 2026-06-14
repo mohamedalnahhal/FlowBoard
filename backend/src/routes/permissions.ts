@@ -153,14 +153,16 @@ router.get(
 );
 
 // ── PATCH /teams/:teamId/permissions/:permissionId ────────────────────────────
-// Update a permission rule (priority, type, description only — scope/action are immutable).
+// Update a permission rule. type, priority, description, the subject group, and
+// the scope (scope_type/scope_id) can all be changed; action is immutable.
 router.patch(
   '/:permissionId',
   checkPermission(ACTIONS.TEAM_MANAGE_MEMBERS, 'team', (req) => (req.params.teamId as string)),
   async (req, res, next) => {
     try {
       const prisma = req.app.get('prisma') as PrismaClient;
-      const { type, priority, description } = req.body ?? {};
+      const teamId = req.params.teamId as string;
+      const { type, priority, description, group_id, scope_type, scope_id } = req.body ?? {};
 
       const errors: string[] = [];
       if (type !== undefined && !VALID_TYPES.has(type)) {
@@ -169,17 +171,45 @@ router.patch(
       if (priority !== undefined && (!Number.isInteger(priority) || priority < 0)) {
         errors.push('priority must be a non-negative integer');
       }
+      if (scope_type !== undefined && !VALID_SCOPE_TYPES.has(scope_type)) {
+        errors.push(`scope_type must be one of: ${[...VALID_SCOPE_TYPES].join(', ')}`);
+      }
+      if (
+        scope_type !== undefined &&
+        scope_type !== SCOPE_TYPES.TEAM &&
+        scope_type !== SCOPE_TYPES.WORKSPACE &&
+        !scope_id
+      ) {
+        errors.push('scope_id is required for board/list/task scoped rules');
+      }
       if (errors.length) return res.status(400).json({ error: 'Validation failed', details: errors });
+
+      // The new subject group, if provided, must belong to this team.
+      if (group_id !== undefined) {
+        const group = await prisma.group.findFirst({ where: { id: group_id, team_id: teamId } });
+        if (!group) return res.status(404).json({ error: 'Group not found in this team' });
+      }
+
+      // When the scope changes, reset all scope columns and set the new one
+      // (team-wide leaves them all null).
+      let scopeData: Record<string, string | null> | undefined;
+      if (scope_type !== undefined) {
+        const column = scopeColumnFor(scope_type as ScopeType);
+        scopeData = { board_id: null, list_id: null, task_id: null };
+        if (column) scopeData[column] = scope_id;
+      }
 
       const updated = await prisma.permission.updateMany({
         where: {
           id:    (req.params.permissionId as string),
-          group: { team_id: (req.params.teamId as string) },
+          group: { team_id: teamId },
         },
         data: {
           ...(type        !== undefined && { type }),
           ...(priority    !== undefined && { priority }),
           ...(description !== undefined && { description }),
+          ...(group_id    !== undefined && { group_id }),
+          ...(scopeData   !== undefined && scopeData),
         },
       });
 

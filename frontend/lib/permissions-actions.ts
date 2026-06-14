@@ -62,11 +62,18 @@ export async function updatePermissionRuleAction(
   const type = formData.get("type")?.toString();
   const priority = formData.get("priority")?.toString();
   const description = formData.get("description")?.toString() || undefined;
+  const group_id = formData.get("group_id")?.toString() || undefined;
+  const scope_type = formData.get("scope_type")?.toString() || undefined;
+  // For team-wide scope there is no target id; null clears any existing scope.
+  const scope_id = scope_type && scope_type !== "team" ? formData.get("scope_id")?.toString() || undefined : null;
   try {
     await api.patch(`/teams/${teamId}/permissions/${permissionId}`, {
       type,
       priority: priority ? Number.parseInt(priority, 10) : undefined,
       description,
+      group_id,
+      scope_type,
+      scope_id,
     });
     revalidatePath("/[workspaceId]/[teamId]/permissions", "page");
     return undefined;
