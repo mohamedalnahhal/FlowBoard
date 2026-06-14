@@ -62,6 +62,21 @@ function attachmentVisual(type: string) {
 }
 
 function ActivityEntry({ entry }: { entry: HistoryEntry }) {
+  if (entry.type === "task_moved" && "from" in entry.activity && "to" in entry.activity) {
+    return (
+      <div className="flex gap-3">
+        <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
+          <Icon name="drag_pan" className="text-[16px] text-on-surface-variant" />
+        </div>
+        <p className="font-body-md text-body-md text-on-surface">
+          <span className="font-semibold">{entry.user.display_name}</span> moved this task from{" "}
+          <span className="font-medium text-on-surface-variant">{String(entry.activity.from)}</span> to{" "}
+          <span className="font-medium underline">{String(entry.activity.to)}</span>
+        </p>
+      </div>
+    );
+  }
+
   if (entry.type === "status_change" && "from" in entry.activity && "to" in entry.activity) {
     return (
       <div className="flex gap-3">

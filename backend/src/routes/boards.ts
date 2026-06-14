@@ -292,13 +292,22 @@ router.patch(
       // could be moved into a board the permission check never covered.
       const targetList = await prisma.list.findFirst({
         where:  { id: list_id, board_id: (req.params.boardId as string) },
-        select: { id: true },
+        select: { id: true, name: true },
       });
       if (!targetList) {
         return res.status(400).json({ error: 'Target list does not belong to this board' });
       }
 
-      const task = await prisma.task.updateMany({
+      // Capture the originating list so we can record the move in activity.
+      const current = await prisma.task.findUnique({
+        where:  { id: (req.params.taskId as string) },
+        select: { list_id: true, list: { select: { name: true } } },
+      });
+      if (!current) return res.status(404).json({ error: 'Task not found' });
+
+      const movedLists = current.list_id !== list_id;
+
+      await prisma.task.update({
         where: { id: (req.params.taskId as string) },
         data:  {
           list_id,
@@ -306,7 +315,19 @@ router.patch(
         },
       });
 
-      if (task.count === 0) return res.status(404).json({ error: 'Task not found' });
+      // Only a list-to-list move is an activity event; reordering within a
+      // list is not.
+      if (movedLists) {
+        await prisma.taskHistory.create({
+          data: {
+            task_id:  (req.params.taskId as string)!,
+            user_id:  req.user!.id!,
+            type:     'task_moved',
+            activity: { from: current.list.name, to: targetList.name },
+          },
+        });
+      }
+
       res.json({ updated: true });
     } catch (err) {
       next(err);

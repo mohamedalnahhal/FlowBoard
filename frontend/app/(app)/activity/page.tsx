@@ -50,6 +50,10 @@ function describeActivity(item: ActivityItem): string {
   if (typeof a === "string") return a;
   if (a && typeof a === "object") {
     const { from, to } = a;
+    if (item.type?.toUpperCase() === "TASK_MOVED") {
+      if (from && to) return `moved this task from ${from} to ${to}`;
+      if (to) return `moved this task to ${to}`;
+    }
     if (from && to) return `changed status from ${from} to ${to}`;
     if (to) return `set status to ${to}`;
   }
