@@ -37,6 +37,38 @@ export async function updateTaskDueDateAction(
   return undefined;
 }
 
+export async function applyTaskLabelAction(
+  teamId: string,
+  boardId: string,
+  taskId: string,
+  labelId: string,
+): Promise<ActionState> {
+  try {
+    await api.post(`/teams/${teamId}/boards/${boardId}/tasks/${taskId}/labels`, { label_id: labelId });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to add label." };
+  }
+  revalidatePath(`/boards/${boardId}/tasks/${taskId}`);
+  revalidatePath(`/boards/${boardId}`);
+  return undefined;
+}
+
+export async function removeTaskLabelAction(
+  teamId: string,
+  boardId: string,
+  taskId: string,
+  labelId: string,
+): Promise<ActionState> {
+  try {
+    await api.delete(`/teams/${teamId}/boards/${boardId}/tasks/${taskId}/labels/${labelId}`);
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to remove label." };
+  }
+  revalidatePath(`/boards/${boardId}/tasks/${taskId}`);
+  revalidatePath(`/boards/${boardId}`);
+  return undefined;
+}
+
 export async function addCommentAction(
   boardId: string,
   taskId: string,

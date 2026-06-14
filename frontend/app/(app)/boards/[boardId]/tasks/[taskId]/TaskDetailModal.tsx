@@ -10,6 +10,8 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import {
   addChecklistItemAction,
   addCommentAction,
+  applyTaskLabelAction,
+  removeTaskLabelAction,
   addTaskMemberAction,
   removeTaskMemberAction,
   replyToCommentAction,
@@ -302,11 +304,13 @@ export function TaskDetailModal({
   task,
   currentUserId,
   teamMembers = [],
+  boardLabels = [],
 }: {
   boardId: string;
   task: TaskDetail;
   currentUserId: string | null;
   teamMembers?: TeamMember[];
+  boardLabels?: Label[];
 }) {
   const router = useRouter();
   const close = () => router.push(`/boards/${boardId}`);
@@ -403,6 +407,25 @@ export function TaskDetailModal({
     }
   }
 
+  // Labels — apply/remove board labels on this task. The backend enforces
+  // label:apply, so users without permission get the error surfaced.
+  const appliedLabelIds = new Set(task.task_labels.map((tl) => tl.label.id));
+  const [labelMenuOpen, setLabelMenuOpen] = useState(false);
+  const [labelError, setLabelError] = useState<string | null>(null);
+  const [labelPending, startLabelTransition] = useTransition();
+
+  function toggleLabel(labelId: string) {
+    const applied = appliedLabelIds.has(labelId);
+    setLabelError(null);
+    startLabelTransition(async () => {
+      const result = applied
+        ? await removeTaskLabelAction(task.list.board.team_id, boardId, task.id, labelId)
+        : await applyTaskLabelAction(task.list.board.team_id, boardId, task.id, labelId);
+      if (result?.error) setLabelError(result.error);
+      else router.refresh();
+    });
+  }
+
   // Member assignment
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignRole, setAssignRole] = useState(1);
@@ -482,19 +505,71 @@ export function TaskDetailModal({
           <div className="flex gap-4 items-start min-w-0">
             <Icon name="task_alt" className="text-primary text-[28px] mt-1" />
             <div className="min-w-0">
-              {task.task_labels.length > 0 && (
-                <div className="flex gap-2 mb-2 flex-wrap">
-                  {task.task_labels.map(({ label }) => (
-                    <span
-                      key={label.id}
-                      className="px-2 py-1 rounded-full font-label-sm text-label-sm uppercase tracking-wider"
-                      style={{ backgroundColor: `${label.color}26`, color: label.color }}
+              <div className="flex gap-2 mb-2 flex-wrap items-center">
+                {task.task_labels.map(({ label }) => (
+                  <span
+                    key={label.id}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-full font-label-sm text-label-sm uppercase tracking-wider"
+                    style={{ backgroundColor: `${label.color}26`, color: label.color }}
+                  >
+                    {label.name}
+                    <button
+                      type="button"
+                      onClick={() => toggleLabel(label.id)}
+                      disabled={labelPending}
+                      className="opacity-60 hover:opacity-100 transition-opacity disabled:opacity-40"
+                      title="Remove label"
+                      aria-label={`Remove label ${label.name}`}
                     >
-                      {label.name}
-                    </span>
-                  ))}
+                      <Icon name="close" className="text-[12px]" />
+                    </button>
+                  </span>
+                ))}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setLabelMenuOpen((v) => !v)}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-full border border-dashed border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary/40 transition-colors font-label-sm text-label-sm"
+                  >
+                    <Icon name="add" className="text-[14px]" /> Label
+                  </button>
+                  {labelMenuOpen && (
+                    <>
+                      <button type="button" className="fixed inset-0 z-10" onClick={() => setLabelMenuOpen(false)} aria-label="Close" />
+                      <div className="absolute left-0 top-full mt-1 z-20 w-60 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg overflow-hidden">
+                        <p className="px-3 py-2 font-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider border-b border-outline-variant/50">
+                          Labels
+                        </p>
+                        {boardLabels.length === 0 ? (
+                          <p className="px-3 py-3 font-body-md text-[12px] text-on-surface-variant">
+                            No labels on this board yet. Create them from the board&rsquo;s “Labels” menu.
+                          </p>
+                        ) : (
+                          <div className="max-h-60 overflow-y-auto py-1">
+                            {boardLabels.map((label) => {
+                              const applied = appliedLabelIds.has(label.id);
+                              return (
+                                <button
+                                  key={label.id}
+                                  type="button"
+                                  onClick={() => toggleLabel(label.id)}
+                                  disabled={labelPending}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-surface-container-low transition-colors text-left disabled:opacity-50"
+                                >
+                                  <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: label.color }} />
+                                  <span className="flex-1 truncate font-label-md text-label-md text-on-surface">{label.name}</span>
+                                  {applied && <Icon name="check" className="text-primary text-[16px] shrink-0" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
-              )}
+              </div>
+              {labelError && <p className="font-body-md text-[12px] text-error mb-2">{labelError}</p>}
               <h2 className="font-headline-lg text-headline-lg text-on-surface truncate">{task.name}</h2>
               <div className="font-label-md text-label-md text-on-surface-variant mt-1 flex items-center gap-2 flex-wrap">
                 <span>

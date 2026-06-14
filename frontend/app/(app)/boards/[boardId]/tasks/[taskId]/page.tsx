@@ -49,7 +49,7 @@ export default async function TaskDetailPage({ params }: PageProps<"/boards/[boa
       throw err;
     }),
     getCurrentUser(),
-    api.get<{ team: { user_teams: { user: TeamMember }[] } }>(`/boards/${boardId}`)
+    api.get<{ team: { user_teams: { user: TeamMember }[] }; labels: Label[] }>(`/boards/${boardId}`)
       .catch(() => null),
   ]);
 
@@ -61,6 +61,7 @@ export default async function TaskDetailPage({ params }: PageProps<"/boards/[boa
       task={task}
       currentUserId={currentUser?.id ?? null}
       teamMembers={teamMembers}
+      boardLabels={boardData?.labels ?? []}
     />
   );
 }
