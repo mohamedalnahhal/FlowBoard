@@ -1,5 +1,5 @@
 import type { PrismaClient, Permission } from '@prisma/client';
-import { PERMISSION_TYPES, SCOPE_TYPES, SYSTEM_ADMIN_ROLE, type ScopeType } from './constants.js';
+import { PERMISSION_TYPES, ROLES, SCOPE_TYPES, SYSTEM_ADMIN_ROLE, type ScopeType } from './constants.js';
 
 export interface PermissionResult {
   allowed: boolean;
@@ -49,6 +49,11 @@ export async function resolvePermission(
     return { allowed: false, reason: 'Resource not found or has no team context' };
   }
 
+  // Workspace owners have full control within workspaces they belong to.
+  if (user.role === ROLES.SYSTEM.WORKSPACE_OWNER && await ownsWorkspaceContaining(prisma, userId, teamId)) {
+    return { allowed: true, reason: 'Workspace owner' };
+  }
+
   const isMember = await prisma.userTeam.findUnique({
     where: { user_id_team_id: { user_id: userId, team_id: teamId } },
   });
@@ -96,6 +101,11 @@ export async function resolvePermissionWithInheritance(
   }
 
   const teamId = chain[chain.length - 1]!.scopeId;
+
+  // Workspace owners have full control within workspaces they belong to.
+  if (user.role === ROLES.SYSTEM.WORKSPACE_OWNER && await ownsWorkspaceContaining(prisma, userId, teamId)) {
+    return { allowed: true, reason: 'Workspace owner' };
+  }
 
   const isMember = await prisma.userTeam.findUnique({
     where: { user_id_team_id: { user_id: userId, team_id: teamId } },
@@ -231,6 +241,26 @@ export async function resolveUserGroups(prisma: PrismaClient, userId: string, te
       ...allMember.map((g) => g.id),
     ]),
   ];
+}
+
+/**
+ * True if the user owns the workspace that contains the given team — i.e. they
+ * are a WORKSPACE_OWNER (checked by the caller) and belong to some team inside
+ * that workspace. Used to grant owners full control over their own workspace
+ * without an explicit permission rule.
+ */
+async function ownsWorkspaceContaining(prisma: PrismaClient, userId: string, teamId: string): Promise<boolean> {
+  const team = await prisma.team.findUnique({
+    where:  { id: teamId },
+    select: { workspace_id: true },
+  });
+  if (!team) return false;
+
+  const membership = await prisma.userTeam.findFirst({
+    where:  { user_id: userId, team: { workspace_id: team.workspace_id } },
+    select: { user_id: true },
+  });
+  return membership !== null;
 }
 
 /**
