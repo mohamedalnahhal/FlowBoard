@@ -35,7 +35,7 @@ router.get(
             },
           },
           task_history: {
-            orderBy: { id: 'desc' },
+            orderBy: { created_at: 'desc' },
             take: 30,
             include: { user: { select: { id: true, display_name: true, username: true } } },
           },
@@ -321,7 +321,7 @@ router.get(
       const prisma = req.app.get('prisma') as PrismaClient;
       const history = await prisma.taskHistory.findMany({
         where:   { task_id: (req.params.taskId as string) },
-        orderBy: { id: 'desc' },
+        orderBy: { created_at: 'desc' },
         include: { user: { select: { id: true, display_name: true, username: true } } },
       });
       res.json(history);

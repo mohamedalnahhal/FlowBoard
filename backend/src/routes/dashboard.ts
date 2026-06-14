@@ -258,7 +258,7 @@ router.get('/activity', async (req, res, next) => {
           },
         },
       },
-      orderBy: { id: 'desc' },
+      orderBy: { created_at: 'desc' },
       take,
     });
 

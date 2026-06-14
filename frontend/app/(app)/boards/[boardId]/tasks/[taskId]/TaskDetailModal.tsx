@@ -32,6 +32,7 @@ type HistoryEntry = {
   type: string;
   activity: { from?: string; to?: string; user?: string; item?: string; fields?: string[] };
   user: Person;
+  created_at: string;
 };
 type TaskDetail = {
   id: string;
@@ -307,7 +308,7 @@ export function TaskDetailModal({
   const activityFeed = [
     ...task.task_history.map((h) => ({ kind: "history" as const, key: `h-${h.id}`, entry: h })),
     ...task.task_comments.map((c) => ({ kind: "comment" as const, key: `c-${c.id}`, entry: c })),
-  ];
+  ].sort((a, b) => new Date(a.entry.created_at).getTime() - new Date(b.entry.created_at).getTime());
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">

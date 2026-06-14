@@ -18,6 +18,7 @@ type HistoryEntry = {
   type: string;
   activity: { from?: string; to?: string } | Record<string, unknown>;
   user: Person;
+  created_at: string;
 };
 type TaskDetail = {
   id: string;
