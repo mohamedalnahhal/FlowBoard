@@ -1,29 +1,23 @@
 import { api } from "@/lib/api";
+import { resolveActiveTeam } from "@/lib/active-team";
 import { BoardsClient } from "./BoardsClient";
 
-type BoardListed = {
+type Team = {
   id: string;
   name: string;
-  status: string;
-  team: { id: string; name: string };
+  boards?: { id: string; name: string; status: string }[];
 };
 
 export default async function BoardsPage() {
-  const [boards, myTeams] = await Promise.all([
-    api.get<BoardListed[]>("/boards").catch(() => [] as BoardListed[]),
-    api.get<{ id: string; name: string }[]>("/teams/mine").catch(() => [] as { id: string; name: string }[]),
-  ]);
+  const teams = await api.get<Team[]>("/teams/mine").catch(() => [] as Team[]);
 
-  const allBoards = boards.map((b) => ({
+  const activeTeam = await resolveActiveTeam(teams);
+
+  const boards = (activeTeam?.boards ?? []).map((b) => ({
     ...b,
-    teamName: b.team.name,
-    teamId:   b.team.id,
+    teamName: activeTeam!.name,
+    teamId:   activeTeam!.id,
   }));
 
-  const teamMap = new Map<string, { id: string; name: string }>();
-  for (const t of myTeams) teamMap.set(t.id, t);
-  for (const b of boards) if (!teamMap.has(b.team.id)) teamMap.set(b.team.id, b.team);
-  const teams = Array.from(teamMap.values());
-
-  return <BoardsClient boards={allBoards} teams={teams} />;
+  return <BoardsClient boards={boards} teams={activeTeam ? [{ id: activeTeam.id, name: activeTeam.name }] : []} />;
 }

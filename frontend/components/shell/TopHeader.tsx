@@ -6,8 +6,10 @@ import Link from "next/link";
 import { Icon } from "../ui/Icon";
 import { markNotificationReadAction, markAllNotificationsReadAction } from "@/lib/notification-actions";
 import { setActiveTeamAction } from "@/lib/active-team";
+import { setActiveWorkspaceAction } from "@/lib/active-workspace";
+import { parseDashboardPath } from "@/lib/dashboard-path";
 
-type Team = { id: string; name: string };
+type Team = { id: string; name: string; workspace: { id: string } | null };
 type Notification = { id: string; message: string; link: string | null; is_read: boolean; created_at: string };
 
 type SearchBoard = { id: string; name: string; status: string };
@@ -18,6 +20,7 @@ type TopHeaderProps = {
   teams?: Team[];
   notifications?: Notification[];
   activeTeamId?: string;
+  currentWorkspaceId?: string;
 };
 
 const WORKSPACE_PATHS = ["/teams", "/users", "/workspace"];
@@ -36,7 +39,7 @@ function formatRelative(iso: string) {
   return `${Math.floor(hr / 24)}d ago`;
 }
 
-export function TopHeader({ teams = [], notifications: initialNotifications = [], activeTeamId }: TopHeaderProps) {
+export function TopHeader({ teams = [], notifications: initialNotifications = [], activeTeamId, currentWorkspaceId }: TopHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [teamOpen, setTeamOpen] = useState(false);
@@ -50,10 +53,17 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const activeTeam = teams.find((t) => t.id === activeTeamId) ?? teams[0];
+  const dashboardPath = parseDashboardPath(pathname);
+
+  // Only offer teams from the current workspace — taken from the URL when on
+  // a workspace/team-scoped page, otherwise the user's active workspace.
+  const effectiveWorkspaceId = dashboardPath?.workspaceId ?? currentWorkspaceId;
+  const visibleTeams = teams.filter((t) => t.workspace?.id === effectiveWorkspaceId);
+
+  const activeTeam = visibleTeams.find((t) => t.id === (dashboardPath?.teamId ?? activeTeamId)) ?? visibleTeams[0];
   const unread = notifications.filter((n) => !n.is_read).length;
 
-  const showTeamSwitcher = teams.length > 0 && !isWorkspacePath(pathname);
+  const showTeamSwitcher = visibleTeams.length > 0 && !isWorkspacePath(pathname);
 
   // Close search dropdown on outside click
   useEffect(() => {
@@ -109,11 +119,17 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
     setSearchResults(null);
   }
 
-  function handleSelectTeam(teamId: string) {
+  function handleSelectTeam(team: Team) {
     setTeamOpen(false);
     startTransition(async () => {
-      await setActiveTeamAction(teamId);
-      router.refresh();
+      await setActiveTeamAction(team.id);
+      if (team.workspace) await setActiveWorkspaceAction(team.workspace.id);
+
+      if (dashboardPath && team.workspace) {
+        router.push(`/${team.workspace.id}/${team.id}${dashboardPath.rest}`);
+      } else {
+        router.refresh();
+      }
     });
   }
 
@@ -227,11 +243,11 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
                   <p className="px-4 py-2 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider border-b border-outline-variant/50 text-[10px]">
                     Your Teams
                   </p>
-                  {teams.map((team) => (
+                  {visibleTeams.map((team) => (
                     <button
                       key={team.id}
                       type="button"
-                      onClick={() => handleSelectTeam(team.id)}
+                      onClick={() => handleSelectTeam(team)}
                       className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-container-low transition-colors font-label-md text-label-md text-on-surface text-left"
                     >
                       <div className="w-6 h-6 rounded bg-primary-fixed flex items-center justify-center text-[10px] font-bold text-on-primary-fixed-variant shrink-0">

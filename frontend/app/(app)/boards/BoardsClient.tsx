@@ -172,7 +172,7 @@ export function BoardsClient({ boards, teams }: { boards: Board[]; teams: { id: 
             <select
               name="team_id"
               required
-              defaultValue=""
+              defaultValue={teams.length === 1 ? teams[0].id : ""}
               className="px-3 py-2 border border-outline-variant rounded-md font-body-md text-on-surface bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             >
               <option value="" disabled>Select a team…</option>

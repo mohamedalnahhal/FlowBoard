@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { api, getCurrentUser } from "@/lib/api";
 import { getActiveTeamId } from "@/lib/active-team";
-import { resolveActiveWorkspace } from "@/lib/active-workspace";
+import { resolveActiveWorkspace, resolveDashboardTarget } from "@/lib/active-workspace";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { TopHeader } from "@/components/shell/TopHeader";
 
@@ -29,6 +29,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       ? storedActiveTeamId
       : teams[0]?.id;
 
+  const dashboardTarget = await resolveDashboardTarget(workspaces, teams);
+  const dashboardHref = dashboardTarget
+    ? `/${dashboardTarget.workspaceId}/${dashboardTarget.teamId}/dashboard`
+    : "/boards";
+
   return (
     <div className="flex min-h-screen">
       <Sidebar
@@ -36,12 +41,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         currentWorkspaceId={currentWorkspaceId}
         teams={teams.map((t) => ({ id: t.id, name: t.name, boards: t.boards }))}
         user={{ id: user.id, display_name: user.display_name, username: user.username, role: user.role }}
+        dashboardHref={dashboardHref}
+        activeTeamId={activeTeamId}
       />
       <div className="flex-1 min-w-0 flex flex-col md:ml-sidebar-width min-h-screen">
         <TopHeader
-          teams={teams.map((t) => ({ id: t.id, name: t.name }))}
+          teams={teams.map((t) => ({ id: t.id, name: t.name, workspace: t.workspace }))}
           notifications={notifications}
           activeTeamId={activeTeamId}
+          currentWorkspaceId={currentWorkspaceId}
         />
         <main className="flex-1 p-4 md:p-8 overflow-y-auto max-w-container-max mx-auto w-full">
           {children}

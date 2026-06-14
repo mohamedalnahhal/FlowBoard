@@ -17,3 +17,10 @@ export async function getActiveTeamId(): Promise<string | undefined> {
   const jar = await cookies();
   return jar.get(ACTIVE_TEAM_COOKIE)?.value;
 }
+
+// Resolves the team the user is currently acting in: the stored choice if
+// it's still in the list, otherwise the first team.
+export async function resolveActiveTeam<T extends { id: string }>(teams: T[]): Promise<T | undefined> {
+  const stored = await getActiveTeamId();
+  return teams.find((t) => t.id === stored) ?? teams[0];
+}

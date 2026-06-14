@@ -7,13 +7,13 @@ import { Icon } from "../ui/Icon";
 import { Avatar } from "../ui/Avatar";
 import { createWorkspaceAction } from "@/lib/workspace-actions";
 import { setActiveWorkspaceAction } from "@/lib/active-workspace";
+import { parseDashboardPath } from "@/lib/dashboard-path";
 
 type Board = { id: string; name: string; status: string };
 type Team = { id: string; name: string; boards?: Board[] };
 type Workspace = { id: string; name: string };
 
 const NAV_ITEMS = [
-  { label: "Home", href: "/", icon: "home" },
   { label: "Boards", href: "/boards", icon: "dashboard" },
   { label: "Calendar", href: "/calendar", icon: "calendar_today" },
   { label: "Announcements", href: "/announcements", icon: "campaign" },
@@ -27,7 +27,6 @@ const WORKSPACE_ITEMS = [
 ];
 
 function isActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -47,9 +46,11 @@ type SidebarProps = {
   currentWorkspaceId: string;
   teams: Team[];
   user: { id: string; display_name: string; username: string; role: number };
+  dashboardHref: string;
+  activeTeamId?: string;
 };
 
-export function Sidebar({ workspaces, currentWorkspaceId, teams, user }: SidebarProps) {
+export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboardHref, activeTeamId }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [wsOpen, setWsOpen] = useState(false);
@@ -92,9 +93,13 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user }: Sidebar
     .split(/\s+/).filter(Boolean).slice(0, 2)
     .map((w) => w[0]?.toUpperCase()).join("") ?? "W";
 
-  const allBoards = teams.flatMap((t) =>
-    (t.boards ?? []).map((b) => ({ ...b, teamName: t.name, teamId: t.id }))
-  );
+  const dashboardPath = parseDashboardPath(pathname);
+  const onDashboard = dashboardPath !== null;
+
+  // Only show boards for the current team — taken from the URL when on a
+  // workspace/team-scoped page, otherwise the user's active team.
+  const activeTeamForBoards = teams.find((t) => t.id === (dashboardPath?.teamId ?? activeTeamId));
+  const allBoards = activeTeamForBoards?.boards ?? [];
 
   const isWorkspaceAdmin = user.role <= 2;
 
@@ -234,6 +239,16 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user }: Sidebar
         {/* Nav */}
         <div className={`flex-1 overflow-y-auto ${collapsed ? "px-2" : "px-4"}`}>
           <ul className="space-y-1">
+            <li>
+              <Link
+                href={dashboardHref}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors duration-150 ${onDashboard ? "bg-primary-fixed text-on-primary-fixed-variant font-semibold" : "text-on-surface-variant hover:bg-surface-container-low"} ${collapsed ? "justify-center" : ""}`}
+                title={collapsed ? "Home" : undefined}
+              >
+                <Icon name="home" filled={onDashboard} />
+                {!collapsed && <span>Home</span>}
+              </Link>
+            </li>
             {NAV_ITEMS.map((item) => {
               const active = isActive(pathname, item.href);
               if (item.href === "/boards") {
