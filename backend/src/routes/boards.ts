@@ -25,7 +25,7 @@ export const BOARD_DETAIL_INCLUDE = {
   labels: true,
   lists: {
     orderBy: { created_at: 'asc' },
-    include: { tasks: { orderBy: { position: 'asc' }, select: TASK_CARD_SELECT } },
+    include: { tasks: { where: { archived: false }, orderBy: { position: 'asc' }, select: TASK_CARD_SELECT } },
   },
 } as const;
 
@@ -339,7 +339,7 @@ router.patch(
   async (req, res, next) => {
     try {
       const prisma = req.app.get('prisma') as PrismaClient;
-      const { name, description, status, start_date, end_date } = req.body ?? {};
+      const { name, description, status, start_date, end_date, archived } = req.body ?? {};
 
       // Read the current values so we can record what actually changed.
       const before = await prisma.task.findUnique({
@@ -356,6 +356,7 @@ router.patch(
           ...(status      !== undefined && { status }),
           ...(start_date  !== undefined && { start_date: start_date ? new Date(start_date) : null }),
           ...(end_date    !== undefined && { end_date: end_date ? new Date(end_date) : null }),
+          ...(archived    !== undefined && { archived: Boolean(archived) }),
         },
       });
 

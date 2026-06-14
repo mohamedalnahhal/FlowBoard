@@ -56,6 +56,21 @@ export async function moveTaskAction(teamId: string, boardId: string, taskId: st
   revalidatePath(`/boards/${boardId}`);
 }
 
+export async function archiveTaskAction(
+  teamId: string,
+  boardId: string,
+  taskId: string,
+  archived = true,
+): Promise<ActionState> {
+  try {
+    await api.patch(`/teams/${teamId}/boards/${boardId}/tasks/${taskId}`, { archived });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to archive task." };
+  }
+  revalidatePath(`/boards/${boardId}`);
+  return undefined;
+}
+
 export async function createLabelAction(
   teamId: string,
   boardId: string,

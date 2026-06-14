@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition, type DragEvent } from "react";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { AvatarStack } from "@/components/ui/Avatar";
-import { moveTaskAction } from "@/lib/board-actions";
+import { archiveTaskAction, moveTaskAction } from "@/lib/board-actions";
 import { AddListForm } from "./AddListForm";
 import { AddTaskForm } from "./AddTaskForm";
 
@@ -33,13 +33,16 @@ function TaskCard({
   boardId,
   task,
   onDragStart,
+  onArchive,
 }: {
   boardId: string;
   task: Task;
   onDragStart: (e: DragEvent<HTMLAnchorElement>, taskId: string) => void;
+  onArchive: (taskId: string) => void;
 }) {
   const checklistItems = task.checklist?.checklist_items ?? [];
   const dueDate = formatDate(task.end_date ?? task.start_date);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <Link
@@ -68,14 +71,35 @@ function TaskCard({
             Assigned by {task.creator.display_name}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={(e) => e.preventDefault()}
-          className="text-outline hover:text-on-surface shrink-0"
-          aria-label="Task actions"
-        >
-          <Icon name="more_vert" className="text-[18px]" />
-        </button>
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen((v) => !v); }}
+            className="text-outline hover:text-on-surface"
+            aria-label="Task actions"
+          >
+            <Icon name="more_vert" className="text-[18px]" />
+          </button>
+          {menuOpen && (
+            <>
+              <button
+                type="button"
+                className="fixed inset-0 z-10"
+                onClick={(e) => { e.preventDefault(); setMenuOpen(false); }}
+                aria-label="Close menu"
+              />
+              <div className="absolute right-0 top-full mt-1 z-20 w-40 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(false); onArchive(task.id); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-container-low transition-colors text-left font-label-md text-label-md text-on-surface"
+                >
+                  <Icon name="archive" className="text-[16px] text-on-surface-variant" /> Archive
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center justify-between pt-2 border-t border-surface-variant">
@@ -165,6 +189,19 @@ export function KanbanBoard({ teamId, boardId, lists }: { teamId: string; boardI
     });
   }
 
+  function handleArchive(taskId: string) {
+    const previousColumns = columns;
+    setMoveError(null);
+    // Optimistically drop the card; restore it if the server rejects.
+    setColumns((prev) => prev.map((list) => ({ ...list, tasks: list.tasks.filter((t) => t.id !== taskId) })));
+    archiveTaskAction(teamId, boardId, taskId).then((result) => {
+      if (result?.error) {
+        setColumns(previousColumns);
+        setMoveError(result.error);
+      }
+    });
+  }
+
   return (
     <div className="relative flex-1 min-w-0 flex flex-col">
       {moveError && (
@@ -194,7 +231,7 @@ export function KanbanBoard({ teamId, boardId, lists }: { teamId: string; boardI
 
           <div className="flex-1 overflow-y-auto space-y-3 pb-2 kanban-scroll pr-1 px-1">
             {list.tasks.map((task) => (
-              <TaskCard key={task.id} boardId={boardId} task={task} onDragStart={handleDragStart} />
+              <TaskCard key={task.id} boardId={boardId} task={task} onDragStart={handleDragStart} onArchive={handleArchive} />
             ))}
           </div>
 

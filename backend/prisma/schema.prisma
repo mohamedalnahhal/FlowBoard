@@ -221,6 +221,7 @@ model Task {
   end_date     DateTime?
   status       TaskStatus
   position     Int
+  archived     Boolean    @default(false)
   created_at   DateTime   @default(now())
   updated_at   DateTime   @updatedAt
 
