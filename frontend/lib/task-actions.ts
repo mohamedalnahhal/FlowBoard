@@ -21,6 +21,22 @@ export async function updateTaskDescriptionAction(
   return undefined;
 }
 
+export async function updateTaskDueDateAction(
+  teamId: string,
+  boardId: string,
+  taskId: string,
+  dueDate: string | null,
+): Promise<ActionState> {
+  try {
+    await api.patch(`/teams/${teamId}/boards/${boardId}/tasks/${taskId}`, { end_date: dueDate || null });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : "Failed to update due date." };
+  }
+  revalidatePath(`/boards/${boardId}/tasks/${taskId}`);
+  revalidatePath(`/boards/${boardId}`);
+  return undefined;
+}
+
 export async function addCommentAction(
   boardId: string,
   taskId: string,

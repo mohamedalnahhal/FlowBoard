@@ -16,6 +16,7 @@ import {
   toggleChecklistItemAction,
   toggleCommentReactionAction,
   updateTaskDescriptionAction,
+  updateTaskDueDateAction,
 } from "@/lib/task-actions";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😄", "🎉", "🚀", "👀"];
@@ -60,6 +61,16 @@ type TaskDetail = {
 function formatDateTime(iso: string | null) {
   if (!iso) return null;
   return new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+function formatDueDate(iso: string | null) {
+  if (!iso) return null;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+// yyyy-MM-dd for <input type="date">.
+function toDateInputValue(iso: string | null) {
+  return iso ? new Date(iso).toISOString().slice(0, 10) : "";
 }
 
 function attachmentVisual(type: string) {
@@ -366,6 +377,32 @@ export function TaskDetailModal({
     }
   }
 
+  // Due date editing — the backend enforces task:edit, so users without
+  // permission get a 403 surfaced as an error (same pattern as the description).
+  const [editingDue, setEditingDue] = useState(false);
+  const [dueValue, setDueValue] = useState("");
+  const [dueSaving, setDueSaving] = useState(false);
+  const [dueError, setDueError] = useState<string | null>(null);
+
+  function openDueEditor() {
+    setDueValue(toDateInputValue(task.end_date));
+    setDueError(null);
+    setEditingDue(true);
+  }
+
+  async function saveDue(nextValue: string | null) {
+    setDueSaving(true);
+    setDueError(null);
+    const result = await updateTaskDueDateAction(task.list.board.team_id, boardId, task.id, nextValue);
+    setDueSaving(false);
+    if (result?.error) {
+      setDueError(result.error);
+    } else {
+      setEditingDue(false);
+      startRefreshTransition(() => router.refresh());
+    }
+  }
+
   // Member assignment
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignRole, setAssignRole] = useState(1);
@@ -425,7 +462,7 @@ export function TaskDetailModal({
     }
   }, [checklistPending, checklistState, addingItem, router, startChecklistTransition, startRefreshTransition]);
 
-  const dueDate = formatDateTime(task.end_date ?? task.start_date);
+  const dueDate = formatDueDate(task.end_date);
   const activityFeed = [
     ...task.task_history.map((h) => ({ kind: "history" as const, key: `h-${h.id}`, entry: h })),
     ...task.task_comments.map((c) => ({ kind: "comment" as const, key: `c-${c.id}`, entry: c })),
@@ -584,15 +621,61 @@ export function TaskDetailModal({
                   )}
                 </div>
               </div>
-              {dueDate && (
-                <div>
-                  <h4 className="font-label-sm text-label-sm text-on-surface-variant mb-2 uppercase tracking-wide">Due Date</h4>
+              <div>
+                <h4 className="font-label-sm text-label-sm text-on-surface-variant mb-2 uppercase tracking-wide">Due Date</h4>
+                {editingDue ? (
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="date"
+                      value={dueValue}
+                      autoFocus
+                      onChange={(e) => setDueValue(e.target.value)}
+                      className="w-full px-3 py-1.5 bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                    />
+                    {dueError && <p className="font-body-md text-[12px] text-error">{dueError}</p>}
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" type="button" onClick={() => saveDue(dueValue || null)} disabled={dueSaving || !dueValue}>
+                        {dueSaving ? "Saving…" : "Save"}
+                      </Button>
+                      <Button size="sm" variant="ghost" type="button" onClick={() => setEditingDue(false)} disabled={dueSaving}>
+                        Cancel
+                      </Button>
+                      {task.end_date && (
+                        <button
+                          type="button"
+                          onClick={() => saveDue(null)}
+                          disabled={dueSaving}
+                          className="ml-auto font-label-sm text-label-sm text-error hover:underline disabled:opacity-50"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : dueDate ? (
                   <div className="flex items-center gap-2 bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant/50">
                     <Icon name="calendar_month" className="text-[18px] text-on-surface-variant" />
                     <span className="font-label-md text-label-md text-on-surface">{dueDate}</span>
+                    <button
+                      type="button"
+                      onClick={openDueEditor}
+                      className="ml-auto text-on-surface-variant hover:text-primary transition-colors"
+                      title="Edit due date"
+                      aria-label="Edit due date"
+                    >
+                      <Icon name="edit" className="text-[16px]" />
+                    </button>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <button
+                    type="button"
+                    onClick={openDueEditor}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-dashed border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary/40 transition-colors font-label-md text-label-md"
+                  >
+                    <Icon name="event" className="text-[18px]" /> Add due date
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Description */}
