@@ -27,14 +27,14 @@ export async function createPermissionRuleAction(
     return { error: err instanceof ApiError ? err.message : "Failed to create permission rule." };
   }
 
-  revalidatePath("/permissions");
+  revalidatePath("/[workspaceId]/[teamId]/permissions", "page");
   return undefined;
 }
 
 export async function deletePermissionRuleAction(teamId: string, permissionId: string): Promise<ActionState> {
   try {
     await api.delete(`/teams/${teamId}/permissions/${permissionId}`);
-    revalidatePath("/permissions");
+    revalidatePath("/[workspaceId]/[teamId]/permissions", "page");
     return undefined;
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : "Failed to delete permission rule." };
@@ -46,7 +46,7 @@ export async function togglePermissionTypeAction(teamId: string, permissionId: s
     await api.patch(`/teams/${teamId}/permissions/${permissionId}`, {
       type: currentType === "ALLOW" ? "DENY" : "ALLOW",
     });
-    revalidatePath("/permissions");
+    revalidatePath("/[workspaceId]/[teamId]/permissions", "page");
     return undefined;
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : "Failed to toggle permission type." };
@@ -68,7 +68,7 @@ export async function updatePermissionRuleAction(
       priority: priority ? Number.parseInt(priority, 10) : undefined,
       description,
     });
-    revalidatePath("/permissions");
+    revalidatePath("/[workspaceId]/[teamId]/permissions", "page");
     return undefined;
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : "Failed to update permission rule." };
@@ -94,7 +94,7 @@ export async function grantUserPermissionAction(
     return { error: err instanceof ApiError ? err.message : "Failed to grant permission." };
   }
 
-  revalidatePath("/permissions");
+  revalidatePath("/[workspaceId]/[teamId]/permissions", "page");
   return undefined;
 }
 
@@ -105,7 +105,7 @@ export async function revokeUserPermissionAction(
 ): Promise<ActionState> {
   try {
     await api.delete(`/teams/${teamId}/users/${userId}/permissions/${permissionId}`);
-    revalidatePath("/permissions");
+    revalidatePath("/[workspaceId]/[teamId]/permissions", "page");
     return undefined;
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : "Failed to revoke permission." };
@@ -137,6 +137,6 @@ export async function updateUserGroupsAction(
     return { error: err instanceof ApiError ? err.message : "Failed to update group memberships." };
   }
 
-  revalidatePath("/permissions");
+  revalidatePath("/[workspaceId]/[teamId]/permissions", "page");
   return undefined;
 }

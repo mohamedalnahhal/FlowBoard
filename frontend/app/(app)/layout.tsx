@@ -32,7 +32,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const dashboardTarget = await resolveDashboardTarget(workspaces, teams);
   const dashboardHref = dashboardTarget
     ? `/${dashboardTarget.workspaceId}/${dashboardTarget.teamId}/dashboard`
-    : "/boards";
+    : "/teams";
 
   return (
     <div className="flex min-h-screen">
@@ -43,6 +43,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         user={{ id: user.id, display_name: user.display_name, username: user.username, role: user.role }}
         dashboardHref={dashboardHref}
         activeTeamId={activeTeamId}
+        scope={dashboardTarget ?? undefined}
       />
       <div className="flex-1 min-w-0 flex flex-col md:ml-sidebar-width min-h-screen">
         <TopHeader

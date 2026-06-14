@@ -50,6 +50,8 @@ export default async function DashboardPage({
 
   if (!workspace || !activeTeam) notFound();
 
+  const scopeBase = `/${workspace.id}/${activeTeam.id}`;
+
   const [announcements, favorites, events, myTasks] = await Promise.all([
     api.get<Announcement[]>(`/dashboard/announcements?workspace_id=${workspace.id}`).catch(() => []),
     api.get<FavoriteBoard[]>(`/dashboard/favorites?team_id=${activeTeam.id}`).catch(() => []),
@@ -132,7 +134,7 @@ export default async function DashboardPage({
               ))}
             </div>
             <Link
-              href="/announcements"
+              href={`${scopeBase}/announcements`}
               className="p-3 border-t border-outline-variant/40 bg-surface-bright/50 flex justify-between items-center hover:bg-surface-container-low transition-colors"
             >
               <span className="font-label-md text-[13px] text-primary">View all announcements</span>
@@ -203,16 +205,16 @@ export default async function DashboardPage({
                 ))}
               </div>
             )}
-            <Link href="/calendar" className="inline-block mt-4 text-[12px] font-semibold text-primary hover:underline">
+            <Link href={`${scopeBase}/calendar`} className="inline-block mt-4 text-[12px] font-semibold text-primary hover:underline">
               View calendar
             </Link>
           </Card>
 
           <div className="flex flex-col gap-2">
-            <Link href="/boards" className="inline-flex items-center gap-2 w-full justify-start px-4 py-2 rounded-md border border-outline-variant bg-surface-container-lowest text-on-surface font-semibold text-label-md hover:bg-surface-container-low transition-colors shadow-sm">
+            <Link href={`${scopeBase}/boards`} className="inline-flex items-center gap-2 w-full justify-start px-4 py-2 rounded-md border border-outline-variant bg-surface-container-lowest text-on-surface font-semibold text-label-md hover:bg-surface-container-low transition-colors shadow-sm">
               <Icon name="add" className="text-outline" /> Create Board
             </Link>
-            <Link href="/boards" className="inline-flex items-center gap-2 w-full justify-start px-4 py-2 rounded-md border border-outline-variant bg-surface-container-lowest text-on-surface font-semibold text-label-md hover:bg-surface-container-low transition-colors shadow-sm">
+            <Link href={`${scopeBase}/boards`} className="inline-flex items-center gap-2 w-full justify-start px-4 py-2 rounded-md border border-outline-variant bg-surface-container-lowest text-on-surface font-semibold text-label-md hover:bg-surface-container-low transition-colors shadow-sm">
               <Icon name="add" className="text-outline" /> Create Task
             </Link>
             <Link href="/users" className="inline-flex items-center gap-2 w-full justify-start px-4 py-2 rounded-md border border-outline-variant bg-surface-container-lowest text-on-surface font-semibold text-label-md hover:bg-surface-container-low transition-colors shadow-sm">

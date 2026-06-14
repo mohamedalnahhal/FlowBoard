@@ -6,7 +6,7 @@ type Workspace = { id: string; name: string };
 type Team = { id: string; workspace: Workspace | null };
 
 // The root URL always redirects into the active workspace + active team's
-// dashboard (or to /boards if the user has no workspace/team yet).
+// dashboard (or to /teams if the user has no workspace/team yet).
 export default async function RootPage() {
   const [workspaces, teams] = await Promise.all([
     api.get<Workspace[]>("/workspaces").catch(() => [] as Workspace[]),
@@ -15,5 +15,5 @@ export default async function RootPage() {
 
   const target = await resolveDashboardTarget(workspaces, teams);
 
-  redirect(target ? `/${target.workspaceId}/${target.teamId}/dashboard` : "/boards");
+  redirect(target ? `/${target.workspaceId}/${target.teamId}/dashboard` : "/teams");
 }

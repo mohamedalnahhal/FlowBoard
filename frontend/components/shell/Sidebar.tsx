@@ -7,16 +7,16 @@ import { Icon } from "../ui/Icon";
 import { Avatar } from "../ui/Avatar";
 import { createWorkspaceAction } from "@/lib/workspace-actions";
 import { setActiveWorkspaceAction } from "@/lib/active-workspace";
-import { parseDashboardPath } from "@/lib/dashboard-path";
+import { parseScopedPath } from "@/lib/dashboard-path";
 
 type Board = { id: string; name: string; status: string };
 type Team = { id: string; name: string; boards?: Board[] };
 type Workspace = { id: string; name: string };
 
 const NAV_ITEMS = [
-  { label: "Boards", href: "/boards", icon: "dashboard" },
-  { label: "Calendar", href: "/calendar", icon: "calendar_today" },
-  { label: "Announcements", href: "/announcements", icon: "campaign" },
+  { label: "Boards", section: "boards", icon: "dashboard" },
+  { label: "Calendar", section: "calendar", icon: "calendar_today" },
+  { label: "Announcements", section: "announcements", icon: "campaign" },
 ];
 
 const WORKSPACE_ITEMS = [
@@ -28,6 +28,11 @@ const WORKSPACE_ITEMS = [
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+// Board detail pages stay at the global /boards/[boardId] path.
+function onBoardDetail(pathname: string) {
+  return pathname === "/boards" || pathname.startsWith("/boards/");
 }
 
 const noopSubscribe = () => () => {};
@@ -48,9 +53,10 @@ type SidebarProps = {
   user: { id: string; display_name: string; username: string; role: number };
   dashboardHref: string;
   activeTeamId?: string;
+  scope?: { workspaceId: string; teamId: string };
 };
 
-export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboardHref, activeTeamId }: SidebarProps) {
+export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboardHref, activeTeamId, scope }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [wsOpen, setWsOpen] = useState(false);
@@ -93,12 +99,19 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboard
     .split(/\s+/).filter(Boolean).slice(0, 2)
     .map((w) => w[0]?.toUpperCase()).join("") ?? "W";
 
-  const dashboardPath = parseDashboardPath(pathname);
-  const onDashboard = dashboardPath !== null;
+  // The workspace/team scope drives every section link. It comes from the URL
+  // when on a scoped page, otherwise from the user's active workspace + team.
+  const urlScope = parseScopedPath(pathname);
+  const scopeWs = urlScope?.workspaceId ?? scope?.workspaceId;
+  const scopeTeam = urlScope?.teamId ?? scope?.teamId;
+  const onDashboard = urlScope?.section === "dashboard";
+
+  const sectionHref = (section: string) =>
+    scopeWs && scopeTeam ? `/${scopeWs}/${scopeTeam}/${section}` : "/teams";
 
   // Only show boards for the current team — taken from the URL when on a
   // workspace/team-scoped page, otherwise the user's active team.
-  const activeTeamForBoards = teams.find((t) => t.id === (dashboardPath?.teamId ?? activeTeamId));
+  const activeTeamForBoards = teams.find((t) => t.id === (urlScope?.teamId ?? activeTeamId));
   const allBoards = activeTeamForBoards?.boards ?? [];
 
   const isWorkspaceAdmin = user.role <= 2;
@@ -250,13 +263,16 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboard
               </Link>
             </li>
             {NAV_ITEMS.map((item) => {
-              const active = isActive(pathname, item.href);
-              if (item.href === "/boards") {
+              const href = sectionHref(item.section);
+              const active =
+                urlScope?.section === item.section ||
+                (item.section === "boards" && onBoardDetail(pathname));
+              if (item.section === "boards") {
                 return (
-                  <li key={item.href}>
+                  <li key={item.section}>
                     <div className="flex items-center gap-1">
                       <Link
-                        href={item.href}
+                        href={href}
                         className={`flex-1 flex items-center gap-3 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors duration-150 ${active ? "bg-primary-fixed text-on-primary-fixed-variant font-semibold" : "text-on-surface-variant hover:bg-surface-container-low"} ${collapsed ? "justify-center" : ""}`}
                         title={collapsed ? item.label : undefined}
                       >
@@ -296,9 +312,9 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboard
                 );
               }
               return (
-                <li key={item.href}>
+                <li key={item.section}>
                   <Link
-                    href={item.href}
+                    href={href}
                     className={`flex items-center gap-3 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors duration-150 ${active ? "bg-primary-fixed text-on-primary-fixed-variant font-semibold" : "text-on-surface-variant hover:bg-surface-container-low"} ${collapsed ? "justify-center" : ""}`}
                     title={collapsed ? item.label : undefined}
                   >
@@ -317,11 +333,11 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboard
             <ul className="space-y-1">
               <li>
                 <Link
-                  href="/permissions"
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors duration-150 ${isActive(pathname, "/permissions") ? "bg-primary-fixed text-on-primary-fixed-variant font-semibold" : "text-on-surface-variant hover:bg-surface-container-low"} ${collapsed ? "justify-center" : ""}`}
+                  href={sectionHref("permissions")}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 font-label-md text-label-md transition-colors duration-150 ${urlScope?.section === "permissions" ? "bg-primary-fixed text-on-primary-fixed-variant font-semibold" : "text-on-surface-variant hover:bg-surface-container-low"} ${collapsed ? "justify-center" : ""}`}
                   title={collapsed ? "Team Permissions" : undefined}
                 >
-                  <Icon name="lock_person" filled={isActive(pathname, "/permissions")} />
+                  <Icon name="lock_person" filled={urlScope?.section === "permissions"} />
                   {!collapsed && <span>Team Permissions</span>}
                 </Link>
               </li>

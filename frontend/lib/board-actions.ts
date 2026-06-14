@@ -99,7 +99,7 @@ export async function deleteBoardAction(teamId: string, boardId: string): Promis
     return { error: err instanceof ApiError ? err.message : "Failed to delete board." };
   }
   revalidatePath(`/teams/${teamId}`);
-  revalidatePath(`/boards`);
+  revalidatePath("/[workspaceId]/[teamId]/boards", "page");
   return undefined;
 }
 
@@ -116,7 +116,7 @@ export async function createBoardAction(
     return { error: err instanceof ApiError ? err.message : "Failed to create board." };
   }
   revalidatePath(`/teams/${teamId}`);
-  revalidatePath(`/boards`);
+  revalidatePath("/[workspaceId]/[teamId]/boards", "page");
   return undefined;
 }
 
@@ -133,6 +133,6 @@ export async function createBoardFromTeamAction(
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : "Failed to create board." };
   }
-  revalidatePath(`/boards`);
+  revalidatePath("/[workspaceId]/[teamId]/boards", "page");
   return undefined;
 }

@@ -17,7 +17,7 @@ export async function createGroupAction(
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : "Failed to create group." };
   }
-  revalidatePath("/permissions");
+  revalidatePath("/[workspaceId]/[teamId]/permissions", "page");
   return undefined;
 }
 
@@ -30,6 +30,6 @@ export async function deleteGroupAction(
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : "Failed to delete group." };
   }
-  revalidatePath("/permissions");
+  revalidatePath("/[workspaceId]/[teamId]/permissions", "page");
   return undefined;
 }

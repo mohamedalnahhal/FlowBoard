@@ -7,7 +7,7 @@ import { Icon } from "../ui/Icon";
 import { markNotificationReadAction, markAllNotificationsReadAction } from "@/lib/notification-actions";
 import { setActiveTeamAction } from "@/lib/active-team";
 import { setActiveWorkspaceAction } from "@/lib/active-workspace";
-import { parseDashboardPath } from "@/lib/dashboard-path";
+import { parseScopedPath } from "@/lib/dashboard-path";
 
 type Team = { id: string; name: string; workspace: { id: string } | null };
 type Notification = { id: string; message: string; link: string | null; is_read: boolean; created_at: string };
@@ -53,14 +53,14 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const dashboardPath = parseDashboardPath(pathname);
+  const scoped = parseScopedPath(pathname);
 
   // Only offer teams from the current workspace — taken from the URL when on
   // a workspace/team-scoped page, otherwise the user's active workspace.
-  const effectiveWorkspaceId = dashboardPath?.workspaceId ?? currentWorkspaceId;
+  const effectiveWorkspaceId = scoped?.workspaceId ?? currentWorkspaceId;
   const visibleTeams = teams.filter((t) => t.workspace?.id === effectiveWorkspaceId);
 
-  const activeTeam = visibleTeams.find((t) => t.id === (dashboardPath?.teamId ?? activeTeamId)) ?? visibleTeams[0];
+  const activeTeam = visibleTeams.find((t) => t.id === (scoped?.teamId ?? activeTeamId)) ?? visibleTeams[0];
   const unread = notifications.filter((n) => !n.is_read).length;
 
   const showTeamSwitcher = visibleTeams.length > 0 && !isWorkspacePath(pathname);
@@ -125,12 +125,10 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
       await setActiveTeamAction(team.id);
       if (team.workspace) await setActiveWorkspaceAction(team.workspace.id);
 
-      if (dashboardPath && team.workspace) {
-        router.push(`/${team.workspace.id}/${team.id}${dashboardPath.rest}`);
-      } else if (pathname === "/boards") {
-        // /boards isn't URL-scoped, so put the team in a query param — a real
-        // navigation that reliably reloads the list (router.refresh() doesn't).
-        router.push(`/boards?team=${team.id}`);
+      if (scoped && team.workspace) {
+        // Switching teams is a real navigation into the same section under the
+        // new workspace/team — which reliably reloads (router.refresh() doesn't).
+        router.push(`/${team.workspace.id}/${team.id}${scoped.rest}`);
       } else {
         router.refresh();
       }

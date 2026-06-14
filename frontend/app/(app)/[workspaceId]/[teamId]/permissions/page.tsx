@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Tabs } from "@/components/ui/Tabs";
@@ -7,7 +8,7 @@ import { UserPermissionsModal } from "./UserPermissionsModal";
 import { PermissionsRulesTable } from "./PermissionsRulesTable";
 import { GroupsTab } from "./GroupsTab";
 
-type Team = { id: string; name: string };
+type Team = { id: string; name: string; workspace: { id: string } | null };
 type Person = { id: string; display_name: string; username: string; email: string | null };
 type Group = { id: string; name?: string | null; all_members: boolean; user_groups: { user: Person }[] };
 type Board = { id: string; name: string };
@@ -38,24 +39,23 @@ type TeamDetail = {
 
 const ROLE_LABELS: Record<number, string> = { 1: "Owner", 2: "Leader", 3: "Member" };
 
-export default async function PermissionsPage({ searchParams }: PageProps<"/permissions">) {
-  const sp = await searchParams;
+export default async function PermissionsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ workspaceId: string; teamId: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const [{ workspaceId, teamId }, sp] = await Promise.all([params, searchParams]);
   const rawTab = (sp.tab ?? "rules").toString();
   const tab: "rules" | "users" | "groups" = rawTab === "users" ? "users" : rawTab === "groups" ? "groups" : "rules";
 
+  // The team is taken straight from the URL.
   const teams = await api.get<Team[]>("/teams/mine");
-  const requestedTeamId = sp.team_id?.toString();
-  const team = teams.find((t) => t.id === requestedTeamId) ?? teams[0];
+  const team = teams.find((t) => t.id === teamId && t.workspace?.id === workspaceId);
+  if (!team) notFound();
 
-  if (!team) {
-    return (
-      <Card className="p-8 text-center">
-        <p className="font-body-md text-body-md text-on-surface-variant">You are not a member of any team yet.</p>
-      </Card>
-    );
-  }
-
-  const tabHref = (key: string) => `/permissions?team_id=${team.id}&tab=${key}`;
+  const tabHref = (key: string) => `/${workspaceId}/${teamId}/permissions?tab=${key}`;
 
   const [detail, groups] = await Promise.all([
     api.get<TeamDetail>(`/teams/${team.id}`),
