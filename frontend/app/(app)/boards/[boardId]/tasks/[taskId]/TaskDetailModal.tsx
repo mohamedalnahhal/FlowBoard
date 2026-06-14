@@ -836,7 +836,16 @@ export function TaskDetailModal({
               </div>
             )}
 
-            {/* Checklist */}
+            {/* Checklist — only shown once the task has one or the user adds it */}
+            {items.length === 0 && !addingItem ? (
+              <button
+                type="button"
+                onClick={() => setAddingItem(true)}
+                className="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-title-lg text-title-lg font-semibold"
+              >
+                <Icon name="checklist" className="text-[20px]" /> Add checklist
+              </button>
+            ) : (
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Icon name="checklist" className="text-on-surface-variant text-[20px]" />
@@ -904,6 +913,7 @@ export function TaskDetailModal({
                 )}
               </div>
             </div>
+            )}
           </div>
 
           {/* Right column — Activity & Comments */}
