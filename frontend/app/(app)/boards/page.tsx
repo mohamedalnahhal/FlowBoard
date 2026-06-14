@@ -8,10 +8,16 @@ type Team = {
   boards?: { id: string; name: string; status: string }[];
 };
 
-export default async function BoardsPage() {
+export default async function BoardsPage({ searchParams }: PageProps<"/boards">) {
+  const sp = await searchParams;
+  const requestedTeamId = sp.team?.toString();
+
   const teams = await api.get<Team[]>("/teams/mine").catch(() => [] as Team[]);
 
-  const activeTeam = await resolveActiveTeam(teams);
+  // The team in the URL wins (so switching teams is a real navigation that
+  // reliably reloads); otherwise fall back to the stored active team.
+  const activeTeam =
+    (requestedTeamId && teams.find((t) => t.id === requestedTeamId)) || (await resolveActiveTeam(teams));
 
   const boards = (activeTeam?.boards ?? []).map((b) => ({
     ...b,

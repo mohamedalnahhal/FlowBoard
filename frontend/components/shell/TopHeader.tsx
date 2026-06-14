@@ -127,6 +127,10 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
 
       if (dashboardPath && team.workspace) {
         router.push(`/${team.workspace.id}/${team.id}${dashboardPath.rest}`);
+      } else if (pathname === "/boards") {
+        // /boards isn't URL-scoped, so put the team in a query param — a real
+        // navigation that reliably reloads the list (router.refresh() doesn't).
+        router.push(`/boards?team=${team.id}`);
       } else {
         router.refresh();
       }
