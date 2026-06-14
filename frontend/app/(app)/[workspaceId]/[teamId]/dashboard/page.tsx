@@ -4,9 +4,17 @@ import { api, getCurrentUser } from "@/lib/api";
 import { Card } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/Icon";
 import { MiniCalendar } from "../../../MiniCalendar";
+import { StatsGrid, type StatOption } from "./StatsGrid";
 
 type Workspace = { id: string; name: string };
-type Team = { id: string; name: string; workspace: Workspace | null; my_role: number };
+type Team = {
+  id: string;
+  name: string;
+  workspace: Workspace | null;
+  my_role: number;
+  boards?: { id: string }[];
+};
+type Notification = { id: string; is_read: boolean };
 type Announcement = {
   id: string;
   title: string;
@@ -52,19 +60,29 @@ export default async function DashboardPage({
 
   const scopeBase = `/${workspace.id}/${activeTeam.id}`;
 
-  const [announcements, favorites, events, myTasks] = await Promise.all([
+  const [announcements, favorites, events, myTasks, notifications] = await Promise.all([
     api.get<Announcement[]>(`/dashboard/announcements?workspace_id=${workspace.id}`).catch(() => []),
     api.get<FavoriteBoard[]>(`/dashboard/favorites?team_id=${activeTeam.id}`).catch(() => []),
     api.get<CalendarEvent[]>(`/dashboard/calendar-events?team_id=${activeTeam.id}`).catch(() => []),
     api.get<{ count: number }>(`/dashboard/my-tasks-count?team_id=${activeTeam.id}`).catch(() => ({ count: 0 })),
+    api.get<Notification[]>(`/dashboard/notifications`).catch(() => []),
   ]);
 
   const firstName = user?.display_name.split(" ")[0] ?? "there";
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
-  const upcoming = events
-    .filter((e) => new Date(e.ends_at).getTime() >= now)
-    .slice(0, 4);
+  const upcomingEvents = events.filter((e) => new Date(e.ends_at).getTime() >= now);
+  const upcoming = upcomingEvents.slice(0, 4);
+
+  // The full set of stats the user can pick from; StatsGrid shows the two the
+  // user chose (defaults to My Tasks + Boards).
+  const statOptions: StatOption[] = [
+    { key: "my_tasks", label: "My Tasks", value: myTasks.count, hint: "Tasks assigned to you", icon: "task_alt", color: "primary" },
+    { key: "boards", label: "Boards", value: activeTeam.boards?.length ?? 0, hint: "Boards in this team", icon: "dashboard", color: "tertiary" },
+    { key: "upcoming_events", label: "Upcoming", value: upcomingEvents.length, hint: "Events coming up", icon: "event", color: "secondary" },
+    { key: "announcements", label: "Announcements", value: announcements.length, hint: "Posted in this workspace", icon: "campaign", color: "primary" },
+    { key: "unread", label: "Unread", value: notifications.filter((n) => !n.is_read).length, hint: "Unread notifications", icon: "notifications", color: "error" },
+  ];
 
   return (
     <>
@@ -76,39 +94,7 @@ export default async function DashboardPage({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Main column */}
         <div className="lg:col-span-8 xl:col-span-9 flex flex-col gap-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <Card hoverable className="p-6 flex flex-col justify-between group">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-2 text-on-surface-variant">
-                  <Icon name="check_circle" className="text-primary text-xl" />
-                  <h3 className="font-label-md text-label-md font-semibold">My Tasks</h3>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                  <Icon name="task_alt" filled />
-                </div>
-              </div>
-              <div>
-                <p className="font-display text-display text-on-surface">{myTasks.count}</p>
-                <p className="font-body-md text-body-md text-on-surface-variant mt-1">Tasks assigned to you</p>
-              </div>
-            </Card>
-
-            <Card hoverable className="p-6 flex flex-col justify-between group">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-2 text-on-surface-variant">
-                  <Icon name="star" className="text-tertiary-container text-xl" />
-                  <h3 className="font-label-md text-label-md font-semibold">Favorites</h3>
-                </div>
-                <div className="w-10 h-10 rounded-lg bg-tertiary-fixed flex items-center justify-center text-tertiary-container group-hover:bg-tertiary-container group-hover:text-white transition-colors">
-                  <Icon name="star_border" />
-                </div>
-              </div>
-              <div>
-                <p className="font-display text-display text-on-surface">{favorites.length}</p>
-                <p className="font-body-md text-body-md text-on-surface-variant mt-1">Favorite boards</p>
-              </div>
-            </Card>
-          </div>
+          <StatsGrid options={statOptions} />
 
           {/* Announcements */}
           <Card className="overflow-hidden">
