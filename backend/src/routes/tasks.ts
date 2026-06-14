@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { PrismaClient } from '@prisma/client';
 import { checkPermission } from '../middleware/checkPermission.js';
 import { ACTIONS } from '../core/permissions/constants.js';
+import { recordTaskActivity } from '../core/activity/taskActivity.js';
 
 const router = Router();
 
@@ -144,6 +145,10 @@ router.post(
         data: { checklist_id: checklistId, name },
       });
 
+      await recordTaskActivity(prisma, (req.params.taskId as string)!, req.user!.id!, 'checklist_item_added', {
+        item: item.name,
+      });
+
       res.status(201).json(item);
     } catch (err) {
       next(err);
@@ -264,7 +269,13 @@ router.post(
         where:  { user_id_task_id: { user_id, task_id: (req.params.taskId as string) } },
         update: { role },
         create: { user_id, task_id: (req.params.taskId as string), role },
+        include: { user: { select: { display_name: true } } },
       });
+
+      await recordTaskActivity(prisma, (req.params.taskId as string)!, req.user!.id!, 'task_assigned', {
+        user: member.user.display_name,
+      });
+
       res.status(201).json(member);
     } catch (err) {
       next(err);
@@ -279,9 +290,21 @@ router.delete(
   async (req, res, next) => {
     try {
       const prisma = req.app.get('prisma') as PrismaClient;
-      await prisma.taskMember.deleteMany({
+      const removed = await prisma.taskMember.deleteMany({
         where: { task_id: (req.params.taskId as string), user_id: (req.params.userId as string) },
       });
+
+      // Only record the change when a member was actually removed.
+      if (removed.count > 0) {
+        const removedUser = await prisma.user.findUnique({
+          where:  { id: (req.params.userId as string) },
+          select: { display_name: true },
+        });
+        await recordTaskActivity(prisma, (req.params.taskId as string)!, req.user!.id!, 'task_unassigned', {
+          user: removedUser?.display_name ?? 'a member',
+        });
+      }
+
       res.status(204).send();
     } catch (err) {
       next(err);

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { PrismaClient } from '@prisma/client';
 import { checkPermission, checkAllPermissions } from '../middleware/checkPermission.js';
 import { ACTIONS } from '../core/permissions/constants.js';
+import { recordTaskActivity } from '../core/activity/taskActivity.js';
 
 const router = Router({ mergeParams: true }); // parent mounts at /teams/:teamId/boards
 
@@ -318,13 +319,9 @@ router.patch(
       // Only a list-to-list move is an activity event; reordering within a
       // list is not.
       if (movedLists) {
-        await prisma.taskHistory.create({
-          data: {
-            task_id:  (req.params.taskId as string)!,
-            user_id:  req.user!.id!,
-            type:     'task_moved',
-            activity: { from: current.list.name, to: targetList.name },
-          },
+        await recordTaskActivity(prisma, (req.params.taskId as string)!, req.user!.id!, 'task_moved', {
+          from: current.list.name,
+          to:   targetList.name,
         });
       }
 
@@ -344,7 +341,14 @@ router.patch(
       const prisma = req.app.get('prisma') as PrismaClient;
       const { name, description, status, start_date, end_date } = req.body ?? {};
 
-      const task = await prisma.task.updateMany({
+      // Read the current values so we can record what actually changed.
+      const before = await prisma.task.findUnique({
+        where:  { id: (req.params.taskId as string) },
+        select: { name: true, description: true, status: true, start_date: true, end_date: true },
+      });
+      if (!before) return res.status(404).json({ error: 'Task not found' });
+
+      await prisma.task.update({
         where: { id: (req.params.taskId as string) },
         data:  {
           ...(name        !== undefined && { name }),
@@ -355,7 +359,27 @@ router.patch(
         },
       });
 
-      if (task.count === 0) return res.status(404).json({ error: 'Task not found' });
+      // Activity: status changes are tracked separately from other field edits.
+      const userId = req.user!.id!;
+      const taskId = (req.params.taskId as string)!;
+
+      if (status !== undefined && status !== before.status) {
+        await recordTaskActivity(prisma, taskId, userId, 'status_change', { from: before.status, to: status });
+      }
+
+      const changedTime = (a: Date | null, b: string | null | undefined) =>
+        b !== undefined && (a?.getTime() ?? null) !== (b ? new Date(b).getTime() : null);
+
+      const editedFields: string[] = [];
+      if (name        !== undefined && name        !== before.name)        editedFields.push('name');
+      if (description !== undefined && description !== before.description) editedFields.push('description');
+      if (changedTime(before.start_date, start_date)) editedFields.push('start date');
+      if (changedTime(before.end_date,   end_date))   editedFields.push('due date');
+
+      if (editedFields.length) {
+        await recordTaskActivity(prisma, taskId, userId, 'task_updated', { fields: editedFields });
+      }
+
       res.json({ updated: true });
     } catch (err) {
       next(err);

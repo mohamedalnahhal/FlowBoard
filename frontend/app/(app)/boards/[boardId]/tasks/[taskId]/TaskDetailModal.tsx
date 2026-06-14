@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
@@ -30,7 +30,7 @@ type Comment = {
 type HistoryEntry = {
   id: string;
   type: string;
-  activity: { from?: string; to?: string } | Record<string, unknown>;
+  activity: { from?: string; to?: string; user?: string; item?: string; fields?: string[] };
   user: Person;
 };
 type TaskDetail = {
@@ -61,44 +61,58 @@ function attachmentVisual(type: string) {
   return { icon: "description", className: "bg-surface-container-high text-on-surface-variant" };
 }
 
+function joinFields(fields: string[]): string {
+  if (fields.length <= 1) return fields[0] ?? "";
+  return `${fields.slice(0, -1).join(", ")} and ${fields[fields.length - 1]}`;
+}
+
+// Maps a history entry to its icon + the descriptive phrase (everything after
+// the user's name).
+function activityDisplay(entry: HistoryEntry): { icon: string; detail: ReactNode } {
+  const { from, to, user, item, fields } = entry.activity;
+  switch (entry.type) {
+    case "task_moved":
+      return {
+        icon: "drag_pan",
+        detail: (
+          <>
+            moved this task from <span className="font-medium text-on-surface-variant">{String(from)}</span> to{" "}
+            <span className="font-medium underline">{String(to)}</span>
+          </>
+        ),
+      };
+    case "status_change":
+      return {
+        icon: "sync",
+        detail: (
+          <>
+            changed status from <span className="font-medium text-on-surface-variant">{String(from)}</span> to{" "}
+            <span className="font-medium underline">{String(to)}</span>
+          </>
+        ),
+      };
+    case "task_assigned":
+      return { icon: "person_add", detail: <>assigned <span className="font-medium">{user ?? "a member"}</span></> };
+    case "task_unassigned":
+      return { icon: "person_remove", detail: <>unassigned <span className="font-medium">{user ?? "a member"}</span></> };
+    case "checklist_item_added":
+      return { icon: "checklist", detail: <>added checklist item <span className="font-medium">&ldquo;{item}&rdquo;</span></> };
+    case "task_updated":
+      return { icon: "edit", detail: <>edited the {fields?.length ? joinFields(fields) : "task"}</> };
+    default:
+      return { icon: "bolt", detail: entry.type.replaceAll("_", " ") };
+  }
+}
+
 function ActivityEntry({ entry }: { entry: HistoryEntry }) {
-  if (entry.type === "task_moved" && "from" in entry.activity && "to" in entry.activity) {
-    return (
-      <div className="flex gap-3">
-        <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
-          <Icon name="drag_pan" className="text-[16px] text-on-surface-variant" />
-        </div>
-        <p className="font-body-md text-body-md text-on-surface">
-          <span className="font-semibold">{entry.user.display_name}</span> moved this task from{" "}
-          <span className="font-medium text-on-surface-variant">{String(entry.activity.from)}</span> to{" "}
-          <span className="font-medium underline">{String(entry.activity.to)}</span>
-        </p>
-      </div>
-    );
-  }
-
-  if (entry.type === "status_change" && "from" in entry.activity && "to" in entry.activity) {
-    return (
-      <div className="flex gap-3">
-        <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
-          <Icon name="sync" className="text-[16px] text-on-surface-variant" />
-        </div>
-        <p className="font-body-md text-body-md text-on-surface">
-          <span className="font-semibold">{entry.user.display_name}</span> changed status from{" "}
-          <span className="font-medium text-on-surface-variant">{String(entry.activity.from)}</span> to{" "}
-          <span className="font-medium underline">{String(entry.activity.to)}</span>
-        </p>
-      </div>
-    );
-  }
-
+  const { icon, detail } = activityDisplay(entry);
   return (
     <div className="flex gap-3">
       <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
-        <Icon name="bolt" className="text-[16px] text-on-surface-variant" />
+        <Icon name={icon} className="text-[16px] text-on-surface-variant" />
       </div>
       <p className="font-body-md text-body-md text-on-surface">
-        <span className="font-semibold">{entry.user.display_name}</span> {entry.type.replaceAll("_", " ")}
+        <span className="font-semibold">{entry.user.display_name}</span> {detail}
       </p>
     </div>
   );

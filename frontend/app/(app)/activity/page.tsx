@@ -6,7 +6,7 @@ import Link from "next/link";
 type Person = { id: string; display_name: string; username: string };
 type ActivityItem = {
   id: string;
-  activity: string | { from?: string; to?: string } | null;
+  activity: string | { from?: string; to?: string; user?: string; item?: string; fields?: string[] } | null;
   type: string;
   created_at: string | null;
   user: Person;
@@ -33,6 +33,7 @@ const TYPE_ICON: Record<string, { icon: string; color: string }> = {
   TASK_UNASSIGNED:  { icon: "person_remove",   color: "text-error" },
   COMMENT_ADDED:    { icon: "chat_bubble",     color: "text-[#137333]" },
   CHECKLIST_TOGGLED:{ icon: "check_box",       color: "text-tertiary" },
+  CHECKLIST_ITEM_ADDED: { icon: "checklist",   color: "text-tertiary" },
   STATUS_CHANGED:   { icon: "published_with_changes", color: "text-secondary" },
   STATUS_CHANGE:    { icon: "published_with_changes", color: "text-secondary" },
   LABEL_ADDED:      { icon: "label",           color: "text-tertiary" },
@@ -45,14 +46,31 @@ function getTypeStyle(type: string) {
 
 // `activity` is a JSON column: either a ready-made string or a structured
 // detail like { from, to } for status changes. Normalize to display text.
+// Joins a list of field names into prose: ["a"] → "a", ["a","b"] → "a and b",
+// ["a","b","c"] → "a, b and c".
+function joinFields(fields: string[]): string {
+  if (fields.length <= 1) return fields[0] ?? "";
+  return `${fields.slice(0, -1).join(", ")} and ${fields[fields.length - 1]}`;
+}
+
 function describeActivity(item: ActivityItem): string {
   const a = item.activity;
   if (typeof a === "string") return a;
   if (a && typeof a === "object") {
-    const { from, to } = a;
-    if (item.type?.toUpperCase() === "TASK_MOVED") {
-      if (from && to) return `moved this task from ${from} to ${to}`;
-      if (to) return `moved this task to ${to}`;
+    const { from, to, user, item: itemName, fields } = a;
+    switch (item.type?.toUpperCase()) {
+      case "TASK_MOVED":
+        if (from && to) return `moved this task from ${from} to ${to}`;
+        if (to) return `moved this task to ${to}`;
+        break;
+      case "TASK_ASSIGNED":
+        return user ? `assigned ${user}` : "assigned a member";
+      case "TASK_UNASSIGNED":
+        return user ? `unassigned ${user}` : "removed a member";
+      case "CHECKLIST_ITEM_ADDED":
+        return itemName ? `added checklist item "${itemName}"` : "added a checklist item";
+      case "TASK_UPDATED":
+        return fields?.length ? `edited the ${joinFields(fields)}` : "updated the task";
     }
     if (from && to) return `changed status from ${from} to ${to}`;
     if (to) return `set status to ${to}`;
