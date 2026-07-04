@@ -12,6 +12,8 @@ import usersRouter from './routes/users.js';
 import dashboardRouter from './routes/dashboard.js';
 import permissionsRouter, { userPermissionsRouter } from './routes/permissions.js';
 import groupsRouter from './routes/groups.js';
+import calendarEventsRouter from './routes/calendarEvents.js';
+import announcementsRouter from './routes/announcements.js';
 import boardsRouter from './routes/boards.js';
 import boardDetailRouter from './routes/boardDetail.js';
 import tasksRouter from './routes/tasks.js';
@@ -47,7 +49,10 @@ app.use('/search', searchRouter);
 app.use('/teams/:teamId/permissions', permissionsRouter);
 app.use('/teams/:teamId/users/:userId/permissions', userPermissionsRouter);
 app.use('/teams/:teamId/groups', groupsRouter);
+app.use('/teams/:teamId/calendar-events', calendarEventsRouter);
 app.use('/teams/:teamId/boards', boardsRouter);
+
+app.use('/workspaces/:workspaceId/announcements', announcementsRouter);
 
 const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   console.error(err);

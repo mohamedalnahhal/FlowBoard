@@ -1,19 +1,62 @@
-import { Icon } from "@/components/ui/Icon";
-import Link from "next/link";
+import { notFound } from "next/navigation";
+import { api, getCurrentUser } from "@/lib/api";
+import { AnnouncementsClient } from "./AnnouncementsClient";
 
-export default function AnnouncementsPage() {
+type Workspace = { id: string; name: string };
+type Team = {
+  id: string;
+  name: string;
+  workspace: Workspace | null;
+  my_role: number;
+};
+
+type Author = { id: string; display_name: string; username: string };
+
+type Announcement = {
+  id: string;
+  title: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+  author: Author;
+};
+
+export default async function AnnouncementsPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ workspaceId: string; teamId: string }>;
+  searchParams: Promise<{ offset?: string }>;
+}) {
+  const { workspaceId, teamId } = await params;
+  const { offset: rawOffset } = await searchParams;
+  const offset = Math.max(0, parseInt(rawOffset ?? "0", 10) || 0);
+
+  const [user, workspaces, teams, response] = await Promise.all([
+    getCurrentUser(),
+    api.get<Workspace[]>("/workspaces"),
+    api.get<Team[]>("/teams/mine"),
+    api.get<{ items: Announcement[]; total: number }>(`/workspaces/${workspaceId}/announcements?limit=20&offset=${offset}`).catch(() => ({ items: [], total: 0 })),
+  ]);
+
+  const workspace = workspaces.find((w) => w.id === workspaceId);
+  const activeTeam = teams.find((t) => t.id === teamId && t.workspace?.id === workspaceId);
+
+  if (!workspace || !activeTeam) notFound();
+
+  const canPost = user !== null && user.role <= 2;
+
   return (
-    <div className="flex flex-col items-center justify-center gap-6 py-24 text-center">
-      <div className="w-20 h-20 rounded-full bg-surface-container-high flex items-center justify-center">
-        <Icon name="campaign" className="text-[40px] text-on-surface-variant" />
-      </div>
-      <div>
-        <h1 className="font-headline-lg text-headline-lg text-on-surface mb-2">Announcements</h1>
-        <p className="font-body-lg text-body-lg text-on-surface-variant">This page is not implemented yet.</p>
-      </div>
-      <Link href="/" className="px-4 py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:opacity-90 transition-opacity">
-        Back to Home
-      </Link>
-    </div>
+    <AnnouncementsClient
+      workspaceId={workspaceId}
+      teamId={teamId}
+      teamName={activeTeam.name}
+      announcements={response.items}
+      offset={offset}
+      total={response.total}
+      currentUserId={user?.id}
+      canPost={canPost}
+      currentUserRole={user?.role ?? 4}
+    />
   );
 }

@@ -45,10 +45,11 @@ model User {
   task_history      TaskHistory[]
   task_comments     TaskComment[]
   comment_reactions CommentReaction[]
-  created_tasks  Task[]         @relation("TaskCreatedBy")
-  announcements  Announcement[]
-  favorites      Favorite[]
-  notifications  Notification[]
+  created_tasks         Task[]          @relation("TaskCreatedBy")
+  announcements         Announcement[]
+  created_calendar_events CalendarEvent[] @relation("CalendarEventCreatedBy")
+  favorites             Favorite[]
+  notifications         Notification[]
 
   @@map("users")
 }
@@ -97,16 +98,20 @@ model Announcement {
 }
 
 model CalendarEvent {
-  id         String   @id @default(uuid()) @db.Uuid
-  team_id    String   @db.Uuid
-  title      String
-  starts_at  DateTime
-  ends_at    DateTime
-  color      String   @default("#4648d4")
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id          String   @id @default(uuid()) @db.Uuid
+  team_id     String   @db.Uuid
+  title       String
+  description String   @default("")
+  starts_at   DateTime
+  ends_at     DateTime
+  all_day     Boolean  @default(false)
+  color       String   @default("#4648d4")
+  created_by  String?  @db.Uuid
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
-  team Team @relation(fields: [team_id], references: [id])
+  team   Team  @relation(fields: [team_id], references: [id])
+  author User? @relation("CalendarEventCreatedBy", fields: [created_by], references: [id])
 
   @@map("calendar_events")
 }
