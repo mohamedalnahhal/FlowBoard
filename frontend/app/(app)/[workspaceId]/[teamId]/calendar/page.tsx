@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import { api, getCurrentUser } from "@/lib/api";
 import { CalendarClient } from "./CalendarClient";
+import type { CalendarView, CalendarEvent, TaskDeadline } from "./types";
+
+const VALID_VIEWS: CalendarView[] = ["month", "week", "day", "agenda"];
 
 type Workspace = { id: string; name: string };
 type Team = {
@@ -8,24 +11,6 @@ type Team = {
   name: string;
   workspace: Workspace | null;
   my_role: number;
-};
-
-type CalendarEvent = {
-  id: string;
-  title: string;
-  description: string;
-  starts_at: string;
-  ends_at: string;
-  all_day: boolean;
-  color: string | null;
-};
-
-type TaskDeadline = {
-  id: string;
-  name: string;
-  end_date: string;
-  status: string;
-  board: { id: string; name: string };
 };
 
 function getMonthGridBounds(year: number, month: number) {
@@ -47,10 +32,10 @@ export default async function CalendarPage({
   searchParams,
 }: {
   params: Promise<{ workspaceId: string; teamId: string }>;
-  searchParams: Promise<{ year?: string; month?: string }>;
+  searchParams: Promise<{ view?: string; year?: string; month?: string; day?: string }>;
 }) {
   const { workspaceId, teamId } = await params;
-  const { year: rawYear, month: rawMonth } = await searchParams;
+  const { view: rawView, year: rawYear, month: rawMonth, day: rawDay } = await searchParams;
 
   const [user, workspaces, teams] = await Promise.all([
     getCurrentUser(),
@@ -64,8 +49,10 @@ export default async function CalendarPage({
   if (!workspace || !activeTeam) notFound();
 
   const now = new Date();
+  const view = (VALID_VIEWS.includes(rawView as CalendarView) ? rawView : "month") as CalendarView;
   const year = parseInt(rawYear ?? String(now.getFullYear()), 10) || now.getFullYear();
   const month = Math.min(12, Math.max(1, parseInt(rawMonth ?? String(now.getMonth() + 1), 10) || now.getMonth() + 1));
+  const day = Math.min(31, Math.max(1, parseInt(rawDay ?? String(now.getDate()), 10) || now.getDate()));
 
   const { start, end } = getMonthGridBounds(year, month);
   const from = toISOSecond(start);
@@ -90,6 +77,8 @@ export default async function CalendarPage({
       canManage={canManage}
       initialYear={year}
       initialMonth={month}
+      initialDay={day}
+      initialView={view}
     />
   );
 }

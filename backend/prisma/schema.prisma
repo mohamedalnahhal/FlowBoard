@@ -98,22 +98,39 @@ model Announcement {
 }
 
 model CalendarEvent {
-  id          String   @id @default(uuid()) @db.Uuid
-  team_id     String   @db.Uuid
-  title       String
-  description String   @default("")
-  starts_at   DateTime
-  ends_at     DateTime
-  all_day     Boolean  @default(false)
-  color       String   @default("#4648d4")
-  created_by  String?  @db.Uuid
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id              String   @id @default(uuid()) @db.Uuid
+  team_id         String   @db.Uuid
+  title           String
+  description     String   @default("")
+  starts_at       DateTime
+  ends_at         DateTime
+  all_day         Boolean  @default(false)
+  color           String   @default("#4648d4")
+  recurrence_rule Json?
+  created_by      String?  @db.Uuid
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 
-  team   Team  @relation(fields: [team_id], references: [id])
-  author User? @relation("CalendarEventCreatedBy", fields: [created_by], references: [id])
+  team       Team                    @relation(fields: [team_id], references: [id])
+  author     User?                   @relation("CalendarEventCreatedBy", fields: [created_by], references: [id])
+  exceptions CalendarEventException[]
 
   @@map("calendar_events")
+}
+
+model CalendarEventException {
+  id                String   @id @default(uuid()) @db.Uuid
+  event_id          String   @db.Uuid
+  exception_date    DateTime @db.Date
+  deleted           Boolean  @default(false)
+  override_event_id String?  @db.Uuid
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  event CalendarEvent @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  @@unique([event_id, exception_date])
+  @@map("calendar_event_exceptions")
 }
 
 model Favorite {

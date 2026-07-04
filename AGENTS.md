@@ -1,0 +1,1 @@
+/home/mohammed/ai-doctrine.md
