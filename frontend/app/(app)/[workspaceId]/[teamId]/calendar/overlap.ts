@@ -9,32 +9,42 @@ export type PositionedEvent = {
   width: number;
 };
 
-function minutesSinceMidnight(d: Date): number {
-  return d.getHours() * 60 + d.getMinutes();
-}
+const MINUTES_PER_DAY = 24 * 60;
 
 /**
  * Lay out events in a single-day column so that overlapping events
  * share horizontal space. Returns relative values (top/height in px-like
  * minutes, left/width as fractions 0–1).
+ *
+ * Event start/end minutes are measured relative to the column's `day` and
+ * clamped to [0, 1440], so an event spanning midnight renders correctly in
+ * each day column (e.g. 22:00→02:00 shows as 22:00→24:00 on the first day
+ * and 00:00→02:00 on the next).
  */
 export function layoutDayEvents(
   events: CalendarEvent[],
-  options: { dayStartMin?: number; dayEndMin?: number; slotHeight?: number } = {},
+  day: Date,
+  options: { slotHeight?: number } = {},
 ): PositionedEvent[] {
-  const { dayStartMin = 0, dayEndMin = 24 * 60, slotHeight = 1 } = options;
+  const { slotHeight = 1 } = options;
 
   const positioned: PositionedEvent[] = [];
   if (events.length === 0) return positioned;
 
+  const dayMidnight = new Date(day);
+  dayMidnight.setHours(0, 0, 0, 0);
+  const dayStartMs = dayMidnight.getTime();
+
+  const clamp = (v: number) => Math.max(0, Math.min(MINUTES_PER_DAY, v));
+  const startMin = (e: CalendarEvent) => clamp((toDate(e.starts_at).getTime() - dayStartMs) / 60000);
+  const endMin = (e: CalendarEvent) => clamp((toDate(e.ends_at).getTime() - dayStartMs) / 60000);
+
   // Sort by start time, then by duration (longer first).
   const sorted = [...events].sort((a, b) => {
-    const aStart = minutesSinceMidnight(toDate(a.starts_at));
-    const bStart = minutesSinceMidnight(toDate(b.starts_at));
+    const aStart = startMin(a);
+    const bStart = startMin(b);
     if (aStart !== bStart) return aStart - bStart;
-    const bEnd = minutesSinceMidnight(toDate(b.ends_at));
-    const aEnd = minutesSinceMidnight(toDate(a.ends_at));
-    return bEnd - aEnd;
+    return endMin(b) - endMin(a);
   });
 
   // Build conflict clusters: groups of events that visually overlap.
@@ -43,8 +53,8 @@ export function layoutDayEvents(
   let clusterEnd = -1;
 
   for (const event of sorted) {
-    const start = minutesSinceMidnight(toDate(event.starts_at));
-    const eventEnd = Math.min(dayEndMin, Math.max(dayStartMin, minutesSinceMidnight(toDate(event.ends_at))));
+    const start = startMin(event);
+    const eventEnd = endMin(event);
     if (currentCluster.length === 0 || start < clusterEnd) {
       currentCluster.push(event);
       clusterEnd = Math.max(clusterEnd, eventEnd);
@@ -64,13 +74,12 @@ export function layoutDayEvents(
     const colIndex = new Map<string, number>();
 
     for (const event of cluster) {
-      const start = minutesSinceMidnight(toDate(event.starts_at));
+      const start = startMin(event);
       let placed = false;
       for (let i = 0; i < columns.length; i++) {
         const col = columns[i];
         const last = col[col.length - 1];
-        const lastEnd = minutesSinceMidnight(toDate(last.ends_at));
-        if (start >= lastEnd) {
+        if (start >= endMin(last)) {
           col.push(event);
           colIndex.set(event.id, i);
           placed = true;
@@ -85,10 +94,10 @@ export function layoutDayEvents(
 
     const columnCount = columns.length;
     for (const event of cluster) {
-      const start = minutesSinceMidnight(toDate(event.starts_at));
-      const end = minutesSinceMidnight(toDate(event.ends_at));
-      const top = Math.max(0, start - dayStartMin) * slotHeight;
-      const height = Math.max(20, (Math.min(dayEndMin, end) - Math.max(dayStartMin, start)) * slotHeight);
+      const start = startMin(event);
+      const end = endMin(event);
+      const top = start * slotHeight;
+      const height = Math.max(20, (end - start) * slotHeight);
       const idx = colIndex.get(event.id) ?? 0;
       positioned.push({
         event,

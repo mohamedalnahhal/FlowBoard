@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format, startOfWeek, endOfWeek } from "date-fns";
 import { Icon } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
@@ -21,6 +21,8 @@ import {
   navigateDay,
 } from "./utils";
 import type { CalendarEvent, TaskDeadline, CalendarView } from "./types";
+
+const VALID_VIEWS: CalendarView[] = ["month", "week", "day", "agenda"];
 
 export function CalendarClient({
   workspaceId,
@@ -46,11 +48,18 @@ export function CalendarClient({
   initialView: CalendarView;
 }) {
   const router = useRouter();
-  const [year, setYear] = useState(initialYear);
-  const [month, setMonth] = useState(initialMonth);
-  const [day, setDay] = useState(initialDay);
-  const [view, setView] = useState<CalendarView>(initialView);
+  const searchParams = useSearchParams();
   const [moveError, setMoveError] = useState<string | null>(null);
+
+  // Derive the current position from the URL rather than local state, so that
+  // browser back/forward (which re-runs the server component and refetches
+  // events/tasks) keeps the rendered grid in sync with those props. The
+  // initial* props are the SSR fallback for the first render with no query.
+  const rawView = searchParams.get("view");
+  const view: CalendarView = VALID_VIEWS.includes(rawView as CalendarView) ? (rawView as CalendarView) : initialView;
+  const year = parseInt(searchParams.get("year") ?? "", 10) || initialYear;
+  const month = parseInt(searchParams.get("month") ?? "", 10) || initialMonth;
+  const day = parseInt(searchParams.get("day") ?? "", 10) || initialDay;
 
   const [createOpen, setCreateOpen] = useState(false);
   const [createDate, setCreateDate] = useState<Date | null>(null);
@@ -60,10 +69,6 @@ export function CalendarClient({
   const [editOpen, setEditOpen] = useState(false);
 
   function navigate(nextYear: number, nextMonth: number, nextDay: number, nextView: CalendarView = view) {
-    setYear(nextYear);
-    setMonth(nextMonth);
-    setDay(nextDay);
-    setView(nextView);
     router.push(`/${workspaceId}/${teamId}/calendar?view=${nextView}&year=${nextYear}&month=${nextMonth}&day=${nextDay}`);
   }
 

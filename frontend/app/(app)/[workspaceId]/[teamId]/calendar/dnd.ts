@@ -6,7 +6,7 @@ export const DND_TYPE_TASK = "application/x-taskboard-calendar-task";
 
 export type DragPayload =
   | { type: "event"; eventId: string; durationMinutes: number; sourceAllDay: boolean; sourceHour: number; sourceMinute: number }
-  | { type: "task"; taskId: string; boardId: string };
+  | { type: "task"; taskId: string; boardId: string; sourceHour: number; sourceMinute: number };
 
 export function eventDragPayload(event: CalendarEvent): DragPayload {
   const start = parseISO(event.starts_at);
@@ -23,7 +23,14 @@ export function eventDragPayload(event: CalendarEvent): DragPayload {
 }
 
 export function taskDragPayload(task: TaskDeadline): DragPayload {
-  return { type: "task", taskId: task.id, boardId: task.board.id };
+  const due = parseISO(task.end_date);
+  return {
+    type: "task",
+    taskId: task.id,
+    boardId: task.board.id,
+    sourceHour: due.getHours(),
+    sourceMinute: due.getMinutes(),
+  };
 }
 
 export function readDragPayload(dataTransfer: DataTransfer): DragPayload | null {
@@ -64,6 +71,11 @@ export function formatEventDrop(
   return { startsAt: formatISO(start), endsAt: formatISO(end) };
 }
 
-export function formatTaskDrop(targetDate: Date): string {
-  return formatISO(startOfDay(targetDate));
+export function formatTaskDrop(
+  payload: Extract<DragPayload, { type: "task" }>,
+  targetDate: Date,
+): string {
+  // Preserve the task's original time-of-day; only the date changes.
+  const due = setMinutes(setHours(startOfDay(targetDate), payload.sourceHour), payload.sourceMinute);
+  return formatISO(due);
 }

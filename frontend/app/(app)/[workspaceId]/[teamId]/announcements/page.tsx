@@ -28,14 +28,10 @@ type Announcement = {
 
 export default async function AnnouncementsPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ workspaceId: string; teamId: string }>;
-  searchParams: Promise<{ offset?: string }>;
 }) {
   const { workspaceId, teamId } = await params;
-  const { offset: rawOffset } = await searchParams;
-  const offset = Math.max(0, parseInt(rawOffset ?? "0", 10) || 0);
 
   const [user, workspaces, teams] = await Promise.all([
     getCurrentUser(),
@@ -51,7 +47,7 @@ export default async function AnnouncementsPage({
   let response: { items: Announcement[]; total: number };
   try {
     response = await api.get<{ items: Announcement[]; total: number }>(
-      `/workspaces/${workspaceId}/announcements?limit=20&offset=${offset}`,
+      `/workspaces/${workspaceId}/announcements?limit=20&offset=0`,
     );
   } catch (err) {
     // Treat forbidden/not-found as a 404 so we don't leak workspace existence.
@@ -71,7 +67,6 @@ export default async function AnnouncementsPage({
       teamId={teamId}
       teamName={activeTeam.name}
       announcements={response.items}
-      offset={offset}
       total={response.total}
       currentUserId={user?.id}
       canPost={canPost}

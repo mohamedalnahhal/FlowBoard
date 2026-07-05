@@ -2,7 +2,6 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { format } from "date-fns";
 import { Icon } from "@/components/ui/Icon";
 import { Modal } from "@/components/ui/Modal";
@@ -10,7 +9,12 @@ import { Button } from "@/components/ui/Button";
 import { TextField, Textarea } from "@/components/ui/Field";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
-import { createAnnouncementAction, updateAnnouncementAction, deleteAnnouncementAction } from "@/lib/announcement-actions";
+import {
+  createAnnouncementAction,
+  updateAnnouncementAction,
+  deleteAnnouncementAction,
+  fetchAnnouncementsPageAction,
+} from "@/lib/announcement-actions";
 
 type Announcement = {
   id: string;
@@ -20,8 +24,6 @@ type Announcement = {
   updated_at: string;
   author: { id: string; display_name: string; username: string };
 };
-
-const PAGE_SIZE = 20;
 
 // Backend role constants (see backend/src/core/permissions/constants.ts).
 // System admin (0), workspace owner (1), and workspace admin (2) may manage
@@ -41,7 +43,6 @@ export function AnnouncementsClient({
   teamId,
   teamName,
   announcements,
-  offset,
   total,
   currentUserId,
   canPost,
@@ -51,7 +52,6 @@ export function AnnouncementsClient({
   teamId: string;
   teamName: string;
   announcements: Announcement[];
-  offset: number;
   total: number;
   currentUserId?: string;
   canPost: boolean;
@@ -63,8 +63,33 @@ export function AnnouncementsClient({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const hasMore = offset + announcements.length < total;
-  const nextOffset = offset + PAGE_SIZE;
+  // `announcements` is the SSR-rendered first page; additional pages are
+  // fetched on demand and appended here rather than navigating (which would
+  // replace the first page). Reset via refreshFeed() after any mutation.
+  const [extra, setExtra] = useState<Announcement[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
+
+  const items = [...announcements, ...extra];
+  const hasMore = items.length < total;
+
+  function refreshFeed() {
+    setExtra([]);
+    setLoadMoreError(null);
+    router.refresh();
+  }
+
+  async function loadMore() {
+    setLoadingMore(true);
+    setLoadMoreError(null);
+    const res = await fetchAnnouncementsPageAction(workspaceId, items.length);
+    setLoadingMore(false);
+    if (res.error) {
+      setLoadMoreError(res.error);
+      return;
+    }
+    setExtra((prev) => [...prev, ...res.items]);
+  }
 
   function canEdit(a: Announcement) {
     return currentUserRole <= WORKSPACE_ADMIN_ROLE || a.author.id === currentUserId;
@@ -89,7 +114,7 @@ export function AnnouncementsClient({
       </div>
 
       {/* Feed */}
-      {announcements.length === 0 ? (
+      {items.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 py-24 text-on-surface-variant">
           <div className="w-20 h-20 rounded-full bg-surface-container-high flex items-center justify-center">
             <Icon name="campaign" className="text-[40px]" />
@@ -98,7 +123,7 @@ export function AnnouncementsClient({
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {announcements.map((a) => (
+          {items.map((a) => (
             <Card key={a.id} className="p-5 flex flex-col gap-3">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -139,7 +164,7 @@ export function AnnouncementsClient({
                             }
                             setDeleteConfirmId(null);
                             setDeleteError(null);
-                            router.refresh();
+                            refreshFeed();
                           }}
                         >
                           Confirm
@@ -180,14 +205,19 @@ export function AnnouncementsClient({
         </div>
       )}
 
-      {hasMore && (
-        <div className="flex justify-center">
-          <Link
-            href={`/${workspaceId}/${teamId}/announcements?offset=${nextOffset}`}
-            className="inline-flex items-center justify-center font-semibold rounded-md transition-colors duration-150 px-4 py-2 text-label-md gap-2 bg-surface-container-lowest text-on-surface border border-outline-variant hover:bg-surface-container-low"
-          >
-            Load more
-          </Link>
+      {(hasMore || loadMoreError) && (
+        <div className="flex flex-col items-center gap-2">
+          {loadMoreError && (
+            <p className="flex items-center gap-2 text-error font-body-md text-[13px]">
+              <Icon name="error" className="text-[16px] shrink-0" />
+              {loadMoreError}
+            </p>
+          )}
+          {hasMore && (
+            <Button variant="secondary" type="button" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? "Loading…" : "Load more"}
+            </Button>
+          )}
         </div>
       )}
 
@@ -199,7 +229,7 @@ export function AnnouncementsClient({
           onClose={() => setCreateOpen(false)}
           onSuccess={() => {
             setCreateOpen(false);
-            router.refresh();
+            refreshFeed();
           }}
         />
       )}
@@ -213,7 +243,7 @@ export function AnnouncementsClient({
           onClose={() => setEditAnnouncement(null)}
           onSuccess={() => {
             setEditAnnouncement(null);
-            router.refresh();
+            refreshFeed();
           }}
         />
       )}

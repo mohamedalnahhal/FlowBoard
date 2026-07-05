@@ -5,6 +5,34 @@ import { api, ApiError } from "./api";
 
 type ActionState = { error?: string } | undefined;
 
+const ANNOUNCEMENTS_PAGE_SIZE = 20;
+
+type Announcement = {
+  id: string;
+  title: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+  author: { id: string; display_name: string; username: string };
+};
+
+export type AnnouncementsPage = { items: Announcement[]; total: number; error?: string };
+
+export async function fetchAnnouncementsPageAction(
+  workspaceId: string,
+  offset: number,
+): Promise<AnnouncementsPage> {
+  const safeOffset = Math.max(0, Math.floor(offset) || 0);
+  try {
+    const res = await api.get<{ items: Announcement[]; total: number }>(
+      `/workspaces/${workspaceId}/announcements?limit=${ANNOUNCEMENTS_PAGE_SIZE}&offset=${safeOffset}`,
+    );
+    return { items: res.items, total: res.total };
+  } catch (err) {
+    return { items: [], total: 0, error: err instanceof ApiError ? err.message : "Failed to load announcements." };
+  }
+}
+
 function revalidateAnnouncements(workspaceId: string, teamId: string) {
   revalidatePath(`/${workspaceId}/${teamId}/announcements`);
   revalidatePath(`/${workspaceId}/${teamId}/dashboard`);

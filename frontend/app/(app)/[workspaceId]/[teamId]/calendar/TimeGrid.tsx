@@ -54,7 +54,7 @@ export function TimeGrid({
       const { startsAt, endsAt } = formatEventDrop(payload, day, hour);
       onEventMove?.(payload.eventId, startsAt, endsAt);
     } else {
-      onTaskMove?.(payload.taskId, payload.boardId, formatTaskDrop(day));
+      onTaskMove?.(payload.taskId, payload.boardId, formatTaskDrop(payload, day));
     }
   }
 
@@ -105,7 +105,7 @@ export function TimeGrid({
                 <CalendarEventItem
                   key={event.id}
                   event={event}
-                  draggable={canManage}
+                  draggable={canManage && !event.parent_event_id}
                   onDragStart={(e) => {
                     setDraggingId(event.id);
                     e.dataTransfer.setData("application/x-taskboard-calendar-event", JSON.stringify(eventDragPayload(event)));
@@ -194,8 +194,8 @@ function DayColumn({
   setDraggingId: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
   const positioned = useMemo(
-    () => layoutDayEvents(events, { slotHeight: SLOT_HEIGHT / MINUTES_PER_SLOT }),
-    [events],
+    () => layoutDayEvents(events, day, { slotHeight: SLOT_HEIGHT / MINUTES_PER_SLOT }),
+    [events, day],
   );
 
   const dayKey = day.toISOString();
@@ -218,7 +218,7 @@ function DayColumn({
       const { startsAt, endsAt } = formatEventDrop(payload, day, hour);
       onEventMove?.(payload.eventId, startsAt, endsAt);
     } else {
-      onTaskMove?.(payload.taskId, payload.boardId, formatTaskDrop(day));
+      onTaskMove?.(payload.taskId, payload.boardId, formatTaskDrop(payload, day));
     }
   }
 
@@ -262,7 +262,7 @@ function DayColumn({
         >
           <CalendarEventItem
             event={event}
-            draggable={canManage}
+            draggable={canManage && !event.parent_event_id}
             onDragStart={(e) => {
               setDraggingId(event.id);
               e.dataTransfer.setData("application/x-taskboard-calendar-event", JSON.stringify(eventDragPayload(event)));

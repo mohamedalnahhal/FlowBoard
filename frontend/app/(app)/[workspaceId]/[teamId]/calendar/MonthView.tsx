@@ -55,7 +55,7 @@ export function MonthView({
       const { startsAt, endsAt } = formatEventDrop(payload, date);
       onEventMove?.(payload.eventId, startsAt, endsAt);
     } else {
-      onTaskMove?.(payload.taskId, payload.boardId, formatTaskDrop(date));
+      onTaskMove?.(payload.taskId, payload.boardId, formatTaskDrop(payload, date));
     }
   }
 
@@ -120,7 +120,7 @@ export function MonthView({
                     <CalendarEventItem
                       key={`evt-${item.data.id}`}
                       event={item.data}
-                      draggable={canManage}
+                      draggable={canManage && !item.data.parent_event_id}
                       onDragStart={(e) => {
                         setDraggingId(item.data.id);
                         e.dataTransfer.setData("application/x-taskboard-calendar-event", JSON.stringify(eventDragPayload(item.data)));
@@ -223,7 +223,7 @@ function DayPopover({
       const { startsAt, endsAt } = formatEventDrop(payload, date);
       onEventMove?.(payload.eventId, startsAt, endsAt);
     } else {
-      onTaskMove?.(payload.taskId, payload.boardId, formatTaskDrop(date));
+      onTaskMove?.(payload.taskId, payload.boardId, formatTaskDrop(payload, date));
     }
   }
 
@@ -252,7 +252,7 @@ function DayPopover({
             <CalendarEventItem
               key={item.data.id}
               event={item.data}
-              draggable={canManage}
+              draggable={canManage && !item.data.parent_event_id}
               onDragStart={(e) => {
                 setDraggingId(item.data.id);
                 e.dataTransfer.setData("application/x-taskboard-calendar-event", JSON.stringify(eventDragPayload(item.data)));

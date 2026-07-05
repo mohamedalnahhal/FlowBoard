@@ -109,7 +109,7 @@ function AgendaDay({
       const { startsAt, endsAt } = formatEventDrop(payload, day);
       onEventMove?.(payload.eventId, startsAt, endsAt);
     } else {
-      onTaskMove?.(payload.taskId, payload.boardId, formatTaskDrop(day));
+      onTaskMove?.(payload.taskId, payload.boardId, formatTaskDrop(payload, day));
     }
   }
 
@@ -146,7 +146,7 @@ function AgendaDay({
               </div>
               <CalendarEventItem
                 event={item.data}
-                draggable={canManage}
+                draggable={canManage && !item.data.parent_event_id}
                 onDragStart={(e) => {
                   setDraggingId(item.data.id);
                   e.dataTransfer.setData("application/x-taskboard-calendar-event", JSON.stringify(eventDragPayload(item.data)));

@@ -27,6 +27,13 @@ export function EventDetailModal({
   const [deleteState, setDeleteState] = useState<DeleteState>(undefined);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
+  // A generated occurrence of a recurring series has a composite id
+  // (`parentId:date`); editing/deleting a single occurrence isn't supported
+  // yet, so we surface it read-only rather than send the composite id to the
+  // API (which would 404).
+  const isOccurrence = !!event.parent_event_id;
+  const canModify = canManage && !isOccurrence;
+
   async function handleDelete() {
     const result = await deleteCalendarEventAction(teamId, event.id);
     if (result?.error) {
@@ -43,7 +50,7 @@ export function EventDetailModal({
       title={event.title}
       width="sm"
       footer={
-        canManage ? (
+        canModify ? (
           <>
             <Button variant="ghost" type="button" onClick={onClose}>
               Close
@@ -87,6 +94,12 @@ export function EventDetailModal({
         </div>
         {event.description && (
           <p className="font-body-md text-body-md text-on-surface whitespace-pre-wrap">{event.description}</p>
+        )}
+        {isOccurrence && (
+          <div className="flex items-center gap-2 p-3 bg-surface-container-low rounded-lg text-on-surface-variant font-body-md text-[13px]">
+            <Icon name="repeat" className="text-[16px] shrink-0" />
+            Part of a recurring series. Editing individual occurrences isn&apos;t available yet.
+          </div>
         )}
         {deleteState?.error && (
           <div className="flex items-center gap-2 p-3 bg-error-container/20 rounded-lg text-error font-body-md text-[13px]">

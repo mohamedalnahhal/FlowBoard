@@ -23,6 +23,18 @@ function toDateInput(d: Date) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+// Convert a form value (user-local wall clock from a date / datetime-local
+// input) into an absolute ISO instant, so the backend stores the same instant
+// regardless of its own timezone. This matches the drag-and-drop path, which
+// already sends offset-qualified ISO. Returns "" for empty/invalid input so
+// the server action's required-field validation still fires.
+function toAbsoluteISO(value: string, allDay: boolean, isEnd: boolean): string {
+  if (!value) return "";
+  const local = allDay ? `${value.slice(0, 10)}T${isEnd ? "23:59" : "00:00"}` : value;
+  const d = new Date(local);
+  return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+}
+
 export function EventFormModal({
   mode,
   teamId,
@@ -40,18 +52,22 @@ export function EventFormModal({
   const isAllDayDefault = event?.all_day ?? false;
   const [allDay, setAllDay] = useState(isAllDayDefault);
   const [color, setColor] = useState(event?.color ?? PALETTE[0]);
-  const [state, formAction, pending] = useActionState(
+  const boundAction =
     mode === "create"
       ? createCalendarEventAction.bind(null, teamId)
-      : updateCalendarEventAction.bind(null, teamId, event!.id),
-    undefined,
-  );
+      : updateCalendarEventAction.bind(null, teamId, event!.id);
+  const [state, formAction, pending] = useActionState(boundAction, undefined);
   const formRef = useRef<HTMLFormElement>(null);
   const wasPendingRef = useRef(false);
 
   const startDefault = useMemo(() => {
     if (event) return allDay ? toDateInput(new Date(event.starts_at)) : toDatetimeLocal(new Date(event.starts_at));
-    if (initialDate) return allDay ? toDateInput(initialDate) : toDatetimeLocal(new Date(initialDate.setHours(9, 0, 0, 0)));
+    if (initialDate) {
+      if (allDay) return toDateInput(initialDate);
+      const start = new Date(initialDate);
+      start.setHours(9, 0, 0, 0);
+      return toDatetimeLocal(start);
+    }
     return "";
   }, [event, initialDate, allDay]);
 
@@ -64,6 +80,20 @@ export function EventFormModal({
     }
     return "";
   }, [event, initialDate, allDay]);
+
+  // Controlled so the raw input value never submits directly; the hidden
+  // fields below carry the absolute-ISO conversion. When the all-day toggle
+  // flips, the input format switches (date ↔ datetime-local), so reset the
+  // values to the recomputed defaults using React's adjust-state-during-render
+  // pattern rather than an effect.
+  const [startVal, setStartVal] = useState(startDefault);
+  const [endVal, setEndVal] = useState(endDefault);
+  const [prevAllDay, setPrevAllDay] = useState(allDay);
+  if (prevAllDay !== allDay) {
+    setPrevAllDay(allDay);
+    setStartVal(startDefault);
+    setEndVal(endDefault);
+  }
 
   useEffect(() => {
     if (pending) {
@@ -110,18 +140,23 @@ export function EventFormModal({
         </label>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {allDay ? (
-            <>
-              <TextField label="Start date" name="starts_at" type="date" required defaultValue={startDefault} />
-              <TextField label="End date" name="ends_at" type="date" required defaultValue={endDefault} />
-            </>
-          ) : (
-            <>
-              <TextField label="Start" name="starts_at" type="datetime-local" required defaultValue={startDefault} />
-              <TextField label="End" name="ends_at" type="datetime-local" required defaultValue={endDefault} />
-            </>
-          )}
+          <TextField
+            label={allDay ? "Start date" : "Start"}
+            type={allDay ? "date" : "datetime-local"}
+            required
+            value={startVal}
+            onChange={(e) => setStartVal(e.target.value)}
+          />
+          <TextField
+            label={allDay ? "End date" : "End"}
+            type={allDay ? "date" : "datetime-local"}
+            required
+            value={endVal}
+            onChange={(e) => setEndVal(e.target.value)}
+          />
         </div>
+        <input type="hidden" name="starts_at" value={toAbsoluteISO(startVal, allDay, false)} />
+        <input type="hidden" name="ends_at" value={toAbsoluteISO(endVal, allDay, true)} />
 
         <div className="flex flex-col gap-2">
           <span className="font-label-md text-label-md text-on-surface-variant">Color</span>

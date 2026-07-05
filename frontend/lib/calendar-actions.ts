@@ -6,11 +6,10 @@ import type { RecurrenceRule } from "@/app/(app)/[workspaceId]/[teamId]/calendar
 
 type ActionState = { error?: string } | undefined;
 
-function normalizeDateInput(value: string, isAllDay: boolean, isEnd: boolean): string {
-  if (!isAllDay) return value;
-  const date = value.length <= 10 ? value : value.slice(0, 10);
-  return `${date}T${isEnd ? "23:59" : "00:00"}`;
-}
+// The calendar page is nested under the (app) route group + [workspaceId]/
+// [teamId] segments; this pattern revalidates every matching calendar page
+// without purging the entire app's client cache.
+const CALENDAR_PATH_PATTERN = "/(app)/[workspaceId]/[teamId]/calendar";
 
 export type CalendarEventInput = {
   title: string;
@@ -42,8 +41,8 @@ export async function createCalendarEventAction(
   const body: CalendarEventInput = {
     title,
     description,
-    starts_at: normalizeDateInput(starts_at, all_day, false),
-    ends_at: normalizeDateInput(ends_at, all_day, true),
+    starts_at,
+    ends_at,
     all_day,
   };
   if (color) body.color = color;
@@ -61,7 +60,7 @@ export async function createCalendarEventAction(
     return { error: err instanceof ApiError ? err.message : "Failed to create event." };
   }
 
-  revalidatePath("/", "layout");
+  revalidatePath(CALENDAR_PATH_PATTERN, "page");
   return undefined;
 }
 
@@ -86,8 +85,8 @@ export async function updateCalendarEventAction(
   const body: CalendarEventInput = {
     title,
     description,
-    starts_at: normalizeDateInput(starts_at, all_day, false),
-    ends_at: normalizeDateInput(ends_at, all_day, true),
+    starts_at,
+    ends_at,
     all_day,
   };
   if (color) body.color = color;
@@ -108,7 +107,7 @@ export async function updateCalendarEventAction(
     return { error: err instanceof ApiError ? err.message : "Failed to update event." };
   }
 
-  revalidatePath("/", "layout");
+  revalidatePath(CALENDAR_PATH_PATTERN, "page");
   return undefined;
 }
 
@@ -119,7 +118,7 @@ export async function deleteCalendarEventAction(teamId: string, eventId: string)
     return { error: err instanceof ApiError ? err.message : "Failed to delete event." };
   }
 
-  revalidatePath("/", "layout");
+  revalidatePath(CALENDAR_PATH_PATTERN, "page");
   return undefined;
 }
 
@@ -135,7 +134,7 @@ export async function moveCalendarEventAction(
     return { error: err instanceof ApiError ? err.message : "Failed to move event." };
   }
 
-  revalidatePath("/", "layout");
+  revalidatePath(CALENDAR_PATH_PATTERN, "page");
   return undefined;
 }
 
@@ -163,6 +162,6 @@ export async function editCalendarEventExceptionAction(
     return { error: err instanceof ApiError ? err.message : "Failed to update occurrence." };
   }
 
-  revalidatePath("/", "layout");
+  revalidatePath(CALENDAR_PATH_PATTERN, "page");
   return undefined;
 }

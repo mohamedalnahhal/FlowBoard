@@ -52,9 +52,15 @@ export default async function CalendarPage({
   const view = (VALID_VIEWS.includes(rawView as CalendarView) ? rawView : "month") as CalendarView;
   const year = parseInt(rawYear ?? String(now.getFullYear()), 10) || now.getFullYear();
   const month = Math.min(12, Math.max(1, parseInt(rawMonth ?? String(now.getMonth() + 1), 10) || now.getMonth() + 1));
-  const day = Math.min(31, Math.max(1, parseInt(rawDay ?? String(now.getDate()), 10) || now.getDate()));
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const day = Math.min(daysInMonth, Math.max(1, parseInt(rawDay ?? String(now.getDate()), 10) || now.getDate()));
 
+  // Widen the fetch window by a day on each side: the grid bounds are computed
+  // in the server's timezone, but cells are rendered in the viewer's, so an
+  // event on the first/last visible day could otherwise be missed.
   const { start, end } = getMonthGridBounds(year, month);
+  start.setDate(start.getDate() - 1);
+  end.setDate(end.getDate() + 1);
   const from = toISOSecond(start);
   const to = toISOSecond(end);
 
@@ -65,7 +71,7 @@ export default async function CalendarPage({
 
   const canManage =
     user !== null &&
-    (user.role === 0 || user.role <= 2 || activeTeam.my_role === 1);
+    (user.role <= 2 || activeTeam.my_role === 1);
 
   return (
     <CalendarClient

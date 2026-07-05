@@ -11,29 +11,11 @@ import {
   addMonths,
   addWeeks,
   eachDayOfInterval,
-  eachHourOfInterval,
   startOfDay,
   endOfDay,
   isToday as dateFnsIsToday,
 } from "date-fns";
-
-export type CalendarEvent = {
-  id: string;
-  title: string;
-  description: string;
-  starts_at: string;
-  ends_at: string;
-  all_day: boolean;
-  color: string | null;
-};
-
-export type TaskDeadline = {
-  id: string;
-  name: string;
-  end_date: string;
-  status: string;
-  board: { id: string; name: string };
-};
+import type { CalendarEvent, TaskDeadline } from "./types";
 
 export const PALETTE = ["#4648d4", "#7c3aed", "#db2777", "#ea580c", "#16a34a", "#0891b2"];
 export const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -95,12 +77,6 @@ export function getWeekDays(year: number, month: number, day: number): Date[] {
   const start = startOfWeek(anchor, { weekStartsOn: 0 });
   const end = endOfWeek(anchor, { weekStartsOn: 0 });
   return eachDayOfInterval({ start, end });
-}
-
-export function getDayHours(): Date[] {
-  const start = startOfDay(new Date());
-  const end = endOfDay(new Date());
-  return eachHourOfInterval({ start, end });
 }
 
 export function navigateMonth(year: number, month: number, delta: number): { year: number; month: number } {
