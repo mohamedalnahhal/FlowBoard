@@ -5,8 +5,14 @@ import { api, ApiError } from "./api";
 
 type ActionState = { error?: string } | undefined;
 
+function revalidateAnnouncements(workspaceId: string, teamId: string) {
+  revalidatePath(`/${workspaceId}/${teamId}/announcements`);
+  revalidatePath(`/${workspaceId}/${teamId}/dashboard`);
+}
+
 export async function createAnnouncementAction(
   workspaceId: string,
+  teamId: string,
   _prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
@@ -22,12 +28,13 @@ export async function createAnnouncementAction(
     return { error: err instanceof ApiError ? err.message : "Failed to create announcement." };
   }
 
-  revalidatePath("/", "layout");
+  revalidateAnnouncements(workspaceId, teamId);
   return undefined;
 }
 
 export async function updateAnnouncementAction(
   workspaceId: string,
+  teamId: string,
   announcementId: string,
   _prevState: ActionState,
   formData: FormData,
@@ -44,17 +51,21 @@ export async function updateAnnouncementAction(
     return { error: err instanceof ApiError ? err.message : "Failed to update announcement." };
   }
 
-  revalidatePath("/", "layout");
+  revalidateAnnouncements(workspaceId, teamId);
   return undefined;
 }
 
-export async function deleteAnnouncementAction(workspaceId: string, announcementId: string): Promise<ActionState> {
+export async function deleteAnnouncementAction(
+  workspaceId: string,
+  teamId: string,
+  announcementId: string,
+): Promise<ActionState> {
   try {
     await api.delete(`/workspaces/${workspaceId}/announcements/${announcementId}`);
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : "Failed to delete announcement." };
   }
 
-  revalidatePath("/", "layout");
+  revalidateAnnouncements(workspaceId, teamId);
   return undefined;
 }

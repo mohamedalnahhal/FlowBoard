@@ -1,6 +1,11 @@
 import { notFound } from "next/navigation";
-import { api, getCurrentUser } from "@/lib/api";
+import { api, ApiError, getCurrentUser } from "@/lib/api";
 import { AnnouncementsClient } from "./AnnouncementsClient";
+
+// Backend role constants (see backend/src/core/permissions/constants.ts).
+// System admin (0), workspace owner (1), and workspace admin (2) may post
+// announcements when they are also workspace members.
+const WORKSPACE_ADMIN_ROLE = 2;
 
 type Workspace = { id: string; name: string };
 type Team = {
@@ -32,11 +37,10 @@ export default async function AnnouncementsPage({
   const { offset: rawOffset } = await searchParams;
   const offset = Math.max(0, parseInt(rawOffset ?? "0", 10) || 0);
 
-  const [user, workspaces, teams, response] = await Promise.all([
+  const [user, workspaces, teams] = await Promise.all([
     getCurrentUser(),
     api.get<Workspace[]>("/workspaces"),
     api.get<Team[]>("/teams/mine"),
-    api.get<{ items: Announcement[]; total: number }>(`/workspaces/${workspaceId}/announcements?limit=20&offset=${offset}`).catch(() => ({ items: [], total: 0 })),
   ]);
 
   const workspace = workspaces.find((w) => w.id === workspaceId);
@@ -44,7 +48,22 @@ export default async function AnnouncementsPage({
 
   if (!workspace || !activeTeam) notFound();
 
-  const canPost = user !== null && user.role <= 2;
+  let response: { items: Announcement[]; total: number };
+  try {
+    response = await api.get<{ items: Announcement[]; total: number }>(
+      `/workspaces/${workspaceId}/announcements?limit=20&offset=${offset}`,
+    );
+  } catch (err) {
+    // Treat forbidden/not-found as a 404 so we don't leak workspace existence.
+    if (err instanceof ApiError && (err.status === 403 || err.status === 404)) {
+      notFound();
+    }
+    throw err;
+  }
+
+  // activeTeam is from /teams/mine, so its presence already guarantees the user
+  // is a workspace member. The backend requires workspace-admin-or-better to post.
+  const canPost = user !== null && user.role <= WORKSPACE_ADMIN_ROLE;
 
   return (
     <AnnouncementsClient

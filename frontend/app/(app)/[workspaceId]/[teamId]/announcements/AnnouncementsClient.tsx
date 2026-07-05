@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { format } from "date-fns";
 import { Icon } from "@/components/ui/Icon";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -22,8 +23,13 @@ type Announcement = {
 
 const PAGE_SIZE = 20;
 
+// Backend role constants (see backend/src/core/permissions/constants.ts).
+// System admin (0), workspace owner (1), and workspace admin (2) may manage
+// announcements when they are also workspace members.
+const WORKSPACE_ADMIN_ROLE = 2;
+
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return format(new Date(iso), "MMM d, yyyy");
 }
 
 function isEdited(a: Announcement) {
@@ -55,12 +61,13 @@ export function AnnouncementsClient({
   const [createOpen, setCreateOpen] = useState(false);
   const [editAnnouncement, setEditAnnouncement] = useState<Announcement | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const hasMore = offset + announcements.length < total;
   const nextOffset = offset + PAGE_SIZE;
 
   function canEdit(a: Announcement) {
-    return currentUserRole <= 2 || a.author.id === currentUserId;
+    return currentUserRole <= WORKSPACE_ADMIN_ROLE || a.author.id === currentUserId;
   }
 
   return (
@@ -108,7 +115,15 @@ export function AnnouncementsClient({
                   <div className="flex items-center gap-2">
                     {deleteConfirmId === a.id ? (
                       <>
-                        <Button variant="ghost" size="sm" type="button" onClick={() => setDeleteConfirmId(null)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          type="button"
+                          onClick={() => {
+                            setDeleteConfirmId(null);
+                            setDeleteError(null);
+                          }}
+                        >
                           Cancel
                         </Button>
                         <Button
@@ -116,9 +131,14 @@ export function AnnouncementsClient({
                           size="sm"
                           type="button"
                           onClick={async () => {
-                            const result = await deleteAnnouncementAction(workspaceId, a.id);
-                            if (result?.error) return;
+                            setDeleteError(null);
+                            const result = await deleteAnnouncementAction(workspaceId, teamId, a.id);
+                            if (result?.error) {
+                              setDeleteError(result.error);
+                              return;
+                            }
                             setDeleteConfirmId(null);
+                            setDeleteError(null);
                             router.refresh();
                           }}
                         >
@@ -144,6 +164,9 @@ export function AnnouncementsClient({
                           <Icon name="delete" className="text-[18px]" />
                         </button>
                       </>
+                    )}
+                    {deleteConfirmId === a.id && deleteError && (
+                      <p className="text-error font-body-md text-[13px]">{deleteError}</p>
                     )}
                   </div>
                 )}
@@ -172,6 +195,7 @@ export function AnnouncementsClient({
         <AnnouncementFormModal
           mode="create"
           workspaceId={workspaceId}
+          teamId={teamId}
           onClose={() => setCreateOpen(false)}
           onSuccess={() => {
             setCreateOpen(false);
@@ -184,6 +208,7 @@ export function AnnouncementsClient({
         <AnnouncementFormModal
           mode="edit"
           workspaceId={workspaceId}
+          teamId={teamId}
           announcement={editAnnouncement}
           onClose={() => setEditAnnouncement(null)}
           onSuccess={() => {
@@ -199,20 +224,22 @@ export function AnnouncementsClient({
 function AnnouncementFormModal({
   mode,
   workspaceId,
+  teamId,
   announcement,
   onClose,
   onSuccess,
 }: {
   mode: "create" | "edit";
   workspaceId: string;
+  teamId: string;
   announcement?: Announcement;
   onClose: () => void;
   onSuccess: () => void;
 }) {
   const [state, formAction, pending] = useActionState(
     mode === "create"
-      ? createAnnouncementAction.bind(null, workspaceId)
-      : updateAnnouncementAction.bind(null, workspaceId, announcement!.id),
+      ? createAnnouncementAction.bind(null, workspaceId, teamId)
+      : updateAnnouncementAction.bind(null, workspaceId, teamId, announcement!.id),
     undefined,
   );
   const wasPendingRef = useRef(false);
