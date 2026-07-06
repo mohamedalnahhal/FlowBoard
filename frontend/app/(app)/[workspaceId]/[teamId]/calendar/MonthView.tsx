@@ -28,7 +28,7 @@ export function MonthView({
   tasks: TaskDeadline[];
   canManage: boolean;
   onCreate: (date: Date) => void;
-  onEventClick: (event: CalendarEvent) => void;
+  onEventClick: (event: CalendarEvent, anchor?: DOMRect) => void;
   onTaskClick: (task: TaskDeadline) => void;
   onEventMove?: (eventId: string, startsAt: string, endsAt: string) => void;
   onTaskMove?: (taskId: string, boardId: string, dueDate: string) => void;
@@ -130,7 +130,7 @@ export function MonthView({
                       className={draggingId === item.data.id ? "opacity-50" : ""}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onEventClick(item.data);
+                        onEventClick(item.data, e.currentTarget.getBoundingClientRect());
                       }}
                       compact
                     />
@@ -204,7 +204,7 @@ function DayPopover({
   events: CalendarEvent[];
   tasks: TaskDeadline[];
   onClose: () => void;
-  onEventClick: (event: CalendarEvent) => void;
+  onEventClick: (event: CalendarEvent, anchor?: DOMRect) => void;
   onTaskClick: (task: TaskDeadline) => void;
   canManage: boolean;
   onEventMove?: (eventId: string, startsAt: string, endsAt: string) => void;
@@ -260,8 +260,8 @@ function DayPopover({
               }}
               onDragEnd={() => setDraggingId(null)}
               className={draggingId === item.data.id ? "opacity-50" : ""}
-              onClick={() => {
-                onEventClick(item.data);
+              onClick={(e) => {
+                onEventClick(item.data, e.currentTarget.getBoundingClientRect());
                 onClose();
               }}
             />
