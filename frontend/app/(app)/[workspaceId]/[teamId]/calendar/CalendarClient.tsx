@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format, startOfWeek, endOfWeek } from "date-fns";
 import { Icon } from "@/components/ui/Icon";
@@ -12,7 +12,7 @@ import { WeekView } from "./WeekView";
 import { DayView } from "./DayView";
 import { AgendaView } from "./AgendaView";
 import { EventFormModal } from "./EventFormModal";
-import { EventDetailModal } from "./EventDetailModal";
+import { EventPopover } from "./EventPopover";
 import { moveCalendarEventAction } from "@/lib/calendar-actions";
 import { updateTaskDueDateAction } from "@/lib/task-actions";
 import {
@@ -67,6 +67,7 @@ export function CalendarClient({
   const [createRange, setCreateRange] = useState<{ start: Date; end: Date } | null>(null);
 
   const [detailOpen, setDetailOpen] = useState(false);
+  const [detailAnchor, setDetailAnchor] = useState<DOMRect | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -84,6 +85,57 @@ export function CalendarClient({
   function handleSelectDate(date: Date) {
     navigate(date.getFullYear(), date.getMonth() + 1, date.getDate(), view);
   }
+
+  function setView(nextView: CalendarView) {
+    navigate(year, month, day, nextView);
+  }
+
+  // Google-Calendar-style keyboard shortcuts. Ignored while typing in a field
+  // or while a modal/popover is open, and when a modifier key is held.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))) return;
+      if (createOpen || editOpen || detailOpen) return;
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goPrevious();
+        return;
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        goNext();
+        return;
+      }
+      switch (e.key.toLowerCase()) {
+        case "t":
+          e.preventDefault();
+          goToday();
+          break;
+        case "d":
+          e.preventDefault();
+          setView("day");
+          break;
+        case "w":
+          e.preventDefault();
+          setView("week");
+          break;
+        case "m":
+          e.preventDefault();
+          setView("month");
+          break;
+        case "a":
+          e.preventDefault();
+          setView("agenda");
+          break;
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [createOpen, editOpen, detailOpen, view, year, month, day]);
 
   function goPrevious() {
     if (view === "month") {
@@ -153,18 +205,21 @@ export function CalendarClient({
     setCreateRange(null);
   }
 
-  function openDetail(event: CalendarEvent) {
+  function openDetail(event: CalendarEvent, anchor?: DOMRect) {
     setSelectedEvent(event);
+    setDetailAnchor(anchor ?? null);
     setDetailOpen(true);
   }
 
   function closeDetail() {
     setDetailOpen(false);
     setSelectedEvent(null);
+    setDetailAnchor(null);
   }
 
   function startEdit() {
     setDetailOpen(false);
+    setDetailAnchor(null);
     setEditOpen(true);
   }
 
@@ -324,15 +379,17 @@ export function CalendarClient({
       )}
 
       {detailOpen && selectedEvent && (
-        <EventDetailModal
+        <EventPopover
           teamId={teamId}
           event={selectedEvent}
           canManage={canManage}
+          anchor={detailAnchor}
           onClose={closeDetail}
           onEdit={startEdit}
           onDeleted={() => {
             setDetailOpen(false);
             setSelectedEvent(null);
+            setDetailAnchor(null);
             router.refresh();
           }}
         />

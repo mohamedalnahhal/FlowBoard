@@ -24,7 +24,7 @@ export function AgendaView({
   day: number;
   events: CalendarEvent[];
   tasks: TaskDeadline[];
-  onEventClick: (event: CalendarEvent) => void;
+  onEventClick: (event: CalendarEvent, anchor?: DOMRect) => void;
   onTaskClick: (task: TaskDeadline) => void;
   onEventMove?: (eventId: string, startsAt: string, endsAt: string) => void;
   onTaskMove?: (taskId: string, boardId: string, dueDate: string) => void;
@@ -74,7 +74,7 @@ function AgendaDay({
   day: Date;
   events: CalendarEvent[];
   tasks: TaskDeadline[];
-  onEventClick: (event: CalendarEvent) => void;
+  onEventClick: (event: CalendarEvent, anchor?: DOMRect) => void;
   onTaskClick: (task: TaskDeadline) => void;
   onEventMove?: (eventId: string, startsAt: string, endsAt: string) => void;
   onTaskMove?: (taskId: string, boardId: string, dueDate: string) => void;
@@ -154,7 +154,7 @@ function AgendaDay({
                 }}
                 onDragEnd={() => setDraggingId(null)}
                 className={`flex-1 ${draggingId === item.data.id ? "opacity-50" : ""}`}
-                onClick={() => onEventClick(item.data)}
+                onClick={(e) => onEventClick(item.data, e.currentTarget.getBoundingClientRect())}
               />
             </div>
           ) : (

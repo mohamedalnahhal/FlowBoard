@@ -48,7 +48,7 @@ export function TimeGrid({
   days: Date[];
   events: CalendarEvent[];
   tasks: TaskDeadline[];
-  onEventClick: (event: CalendarEvent) => void;
+  onEventClick: (event: CalendarEvent, anchor?: DOMRect) => void;
   onTaskClick: (task: TaskDeadline) => void;
   onEventMove?: (eventId: string, startsAt: string, endsAt: string) => void;
   onTaskMove?: (taskId: string, boardId: string, dueDate: string) => void;
@@ -153,7 +153,7 @@ export function TimeGrid({
                   className={draggingId === event.id ? "opacity-50" : ""}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onEventClick(event);
+                    onEventClick(event, e.currentTarget.getBoundingClientRect());
                   }}
                   compact
                 />
@@ -226,7 +226,7 @@ function DayColumn({
   now: Date;
   events: CalendarEvent[];
   tasks: TaskDeadline[];
-  onEventClick: (event: CalendarEvent) => void;
+  onEventClick: (event: CalendarEvent, anchor?: DOMRect) => void;
   onTaskClick: (task: TaskDeadline) => void;
   onEventMove?: (eventId: string, startsAt: string, endsAt: string) => void;
   onTaskMove?: (taskId: string, boardId: string, dueDate: string) => void;
@@ -415,7 +415,7 @@ function DayColumn({
             className={`h-full w-full text-[10px] leading-tight ${draggingId === event.id ? "opacity-50" : ""}`}
             onClick={(e) => {
               e.stopPropagation();
-              onEventClick(event);
+              onEventClick(event, e.currentTarget.getBoundingClientRect());
             }}
           />
         </div>
