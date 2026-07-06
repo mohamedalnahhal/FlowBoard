@@ -40,12 +40,14 @@ export function EventFormModal({
   teamId,
   event,
   initialDate,
+  initialRange,
   onClose,
 }: {
   mode: "create" | "edit";
   teamId: string;
   event?: CalendarEvent;
   initialDate?: Date;
+  initialRange?: { start: Date; end: Date };
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -62,6 +64,7 @@ export function EventFormModal({
 
   const startDefault = useMemo(() => {
     if (event) return allDay ? toDateInput(new Date(event.starts_at)) : toDatetimeLocal(new Date(event.starts_at));
+    if (initialRange) return allDay ? toDateInput(initialRange.start) : toDatetimeLocal(initialRange.start);
     if (initialDate) {
       if (allDay) return toDateInput(initialDate);
       const start = new Date(initialDate);
@@ -69,17 +72,18 @@ export function EventFormModal({
       return toDatetimeLocal(start);
     }
     return "";
-  }, [event, initialDate, allDay]);
+  }, [event, initialDate, initialRange, allDay]);
 
   const endDefault = useMemo(() => {
     if (event) return allDay ? toDateInput(new Date(event.ends_at)) : toDatetimeLocal(new Date(event.ends_at));
+    if (initialRange) return allDay ? toDateInput(initialRange.end) : toDatetimeLocal(initialRange.end);
     if (initialDate) {
       const end = new Date(initialDate);
       end.setHours(allDay ? 23 : 10, allDay ? 59 : 0, 0, 0);
       return allDay ? toDateInput(end) : toDatetimeLocal(end);
     }
     return "";
-  }, [event, initialDate, allDay]);
+  }, [event, initialDate, initialRange, allDay]);
 
   // Controlled so the raw input value never submits directly; the hidden
   // fields below carry the absolute-ISO conversion. When the all-day toggle

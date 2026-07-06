@@ -14,6 +14,7 @@ export function WeekView({
   onTaskClick,
   onEventMove,
   onTaskMove,
+  onRangeCreate,
   canManage,
 }: {
   year: number;
@@ -25,6 +26,7 @@ export function WeekView({
   onTaskClick: (task: TaskDeadline) => void;
   onEventMove?: (eventId: string, startsAt: string, endsAt: string) => void;
   onTaskMove?: (taskId: string, boardId: string, dueDate: string) => void;
+  onRangeCreate?: (start: Date, end: Date) => void;
   canManage?: boolean;
 }) {
   const days = getWeekDays(year, month, day);
@@ -39,6 +41,7 @@ export function WeekView({
         onTaskClick={onTaskClick}
         onEventMove={onEventMove}
         onTaskMove={onTaskMove}
+        onRangeCreate={onRangeCreate}
         canManage={canManage}
       />
     </div>

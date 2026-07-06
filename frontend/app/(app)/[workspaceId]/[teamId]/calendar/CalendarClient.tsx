@@ -63,6 +63,7 @@ export function CalendarClient({
 
   const [createOpen, setCreateOpen] = useState(false);
   const [createDate, setCreateDate] = useState<Date | null>(null);
+  const [createRange, setCreateRange] = useState<{ start: Date; end: Date } | null>(null);
 
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -125,8 +126,24 @@ export function CalendarClient({
 
   function openCreate(date: Date) {
     if (!canManage) return;
+    setCreateRange(null);
     setCreateDate(date);
     setCreateOpen(true);
+  }
+
+  // Opened by click-dragging a time range on the week/day grid: pre-fills the
+  // event with the exact dragged start/end instead of the default 9–10am.
+  function openRangeCreate(start: Date, end: Date) {
+    if (!canManage) return;
+    setCreateDate(null);
+    setCreateRange({ start, end });
+    setCreateOpen(true);
+  }
+
+  function closeCreate() {
+    setCreateOpen(false);
+    setCreateDate(null);
+    setCreateRange(null);
   }
 
   function openDetail(event: CalendarEvent) {
@@ -243,6 +260,7 @@ export function CalendarClient({
           onTaskClick={(task) => router.push(`/boards/${task.board.id}`)}
           onEventMove={canManage ? handleEventMove : undefined}
           onTaskMove={canManage ? handleTaskMove : undefined}
+          onRangeCreate={canManage ? openRangeCreate : undefined}
           canManage={canManage}
         />
       )}
@@ -257,6 +275,7 @@ export function CalendarClient({
           onTaskClick={(task) => router.push(`/boards/${task.board.id}`)}
           onEventMove={canManage ? handleEventMove : undefined}
           onTaskMove={canManage ? handleTaskMove : undefined}
+          onRangeCreate={canManage ? openRangeCreate : undefined}
           canManage={canManage}
         />
       )}
@@ -275,12 +294,13 @@ export function CalendarClient({
         />
       )}
 
-      {createOpen && createDate && (
+      {createOpen && (createDate || createRange) && (
         <EventFormModal
           mode="create"
           teamId={teamId}
-          initialDate={createDate}
-          onClose={() => setCreateOpen(false)}
+          initialDate={createDate ?? undefined}
+          initialRange={createRange ?? undefined}
+          onClose={closeCreate}
         />
       )}
 

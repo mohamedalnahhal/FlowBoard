@@ -13,6 +13,7 @@ export function DayView({
   onTaskClick,
   onEventMove,
   onTaskMove,
+  onRangeCreate,
   canManage,
 }: {
   year: number;
@@ -24,6 +25,7 @@ export function DayView({
   onTaskClick: (task: TaskDeadline) => void;
   onEventMove?: (eventId: string, startsAt: string, endsAt: string) => void;
   onTaskMove?: (taskId: string, boardId: string, dueDate: string) => void;
+  onRangeCreate?: (start: Date, end: Date) => void;
   canManage?: boolean;
 }) {
   const date = new Date(year, month - 1, day);
@@ -38,6 +40,7 @@ export function DayView({
         onTaskClick={onTaskClick}
         onEventMove={onEventMove}
         onTaskMove={onTaskMove}
+        onRangeCreate={onRangeCreate}
         canManage={canManage}
       />
     </div>
