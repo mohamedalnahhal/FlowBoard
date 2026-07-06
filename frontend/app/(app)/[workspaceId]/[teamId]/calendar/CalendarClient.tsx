@@ -6,6 +6,7 @@ import { format, startOfWeek, endOfWeek } from "date-fns";
 import { Icon } from "@/components/ui/Icon";
 import { Button } from "@/components/ui/Button";
 import { ViewSwitcher } from "./ViewSwitcher";
+import { CalendarSidebar } from "./CalendarSidebar";
 import { MonthView } from "./MonthView";
 import { WeekView } from "./WeekView";
 import { DayView } from "./DayView";
@@ -76,6 +77,12 @@ export function CalendarClient({
   function goToday() {
     const d = new Date();
     navigate(d.getFullYear(), d.getMonth() + 1, d.getDate(), view);
+  }
+
+  // Picking a day in the mini-month jumps the main grid to that date, keeping
+  // the current view.
+  function handleSelectDate(date: Date) {
+    navigate(date.getFullYear(), date.getMonth() + 1, date.getDate(), view);
   }
 
   function goPrevious() {
@@ -234,7 +241,17 @@ export function CalendarClient({
         </div>
       )}
 
-      {/* View content */}
+      {/* Sidebar (mini-month) + view content */}
+      <div className="flex gap-6 items-start">
+        <aside className="hidden lg:block w-64 shrink-0">
+          <CalendarSidebar
+            anchorDate={anchorDate}
+            events={events}
+            onSelectDate={handleSelectDate}
+            onCreate={canManage ? () => openCreate(anchorDate) : undefined}
+          />
+        </aside>
+        <div className="flex-1 min-w-0">
       {view === "month" && (
         <MonthView
           year={year}
@@ -293,6 +310,8 @@ export function CalendarClient({
           canManage={canManage}
         />
       )}
+        </div>
+      </div>
 
       {createOpen && (createDate || createRange) && (
         <EventFormModal
