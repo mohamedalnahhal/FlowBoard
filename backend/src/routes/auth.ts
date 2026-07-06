@@ -5,6 +5,33 @@ import { SESSION_COOKIE, SESSION_COOKIE_OPTIONS } from '../lib/session.js';
 
 const router = Router();
 
+// ── Login rate limiting ────────────────────────────────────────────────────────
+// In-memory fixed-window limiter keyed by IP + username. Enough to blunt
+// credential brute-forcing on a single-process deployment without adding a
+// dependency; swap for a shared store if the backend is ever scaled out.
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 10;
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+
+function isLoginRateLimited(key: string): boolean {
+  const now = Date.now();
+  const entry = loginAttempts.get(key);
+  if (!entry || entry.resetAt <= now) {
+    loginAttempts.set(key, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > LOGIN_MAX_ATTEMPTS;
+}
+
+// Periodically drop expired windows so the map can't grow unbounded.
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of loginAttempts) {
+    if (entry.resetAt <= now) loginAttempts.delete(key);
+  }
+}, LOGIN_WINDOW_MS).unref();
+
 // ── POST /auth/login ──────────────────────────────────────────────────────────
 router.post('/login', async (req, res, next) => {
   try {
@@ -13,6 +40,11 @@ router.post('/login', async (req, res, next) => {
 
     if (!username || !password) {
       return res.status(400).json({ error: 'username and password are required' });
+    }
+
+    const rateKey = `${req.ip}|${String(username).toLowerCase()}`;
+    if (isLoginRateLimited(rateKey)) {
+      return res.status(429).json({ error: 'Too many login attempts. Try again in a few minutes.' });
     }
 
     const user = await prisma.user.findFirst({ where: { username } });
@@ -25,6 +57,7 @@ router.post('/login', async (req, res, next) => {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
+    loginAttempts.delete(rateKey);
     res.cookie(SESSION_COOKIE, user.id, SESSION_COOKIE_OPTIONS);
     res.json({
       id:           user.id,

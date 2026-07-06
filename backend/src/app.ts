@@ -37,6 +37,12 @@ app.use((req, _res, next) => {
   next();
 });
 
+// Unauthenticated liveness probe for the docker-compose healthcheck and
+// uptime monitoring. Returns a boolean only — never configuration values.
+app.get('/health', (_req, res) => {
+  res.json({ ok: true });
+});
+
 app.use('/auth', authRouter);
 app.use('/workspaces', workspacesRouter);
 app.use('/teams', teamsRouter);

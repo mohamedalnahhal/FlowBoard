@@ -33,6 +33,14 @@ services:
     environment:
       DATABASE_URL: "postgresql://taskboard:taskboard@db:5432/taskboard?schema=public"
       PORT: "3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:3000/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      # npm install + prisma migrate on boot can take minutes; don't count
+      # failures during that window toward the retry limit.
+      start_period: 240s
 
   frontend:
     image: node:22-alpine
@@ -44,8 +52,14 @@ services:
       - "6001:3000"
     volumes:
       - ./frontend:/app
+      # Keep the container's Next build cache off the host bind mount: mixing
+      # host (glibc) and container (musl) builds in one .next corrupts it.
+      - /app/.next
     depends_on:
-      - backend
+      backend:
+        # Wait for the backend healthcheck so Next's first SSR fetches don't
+        # hit a booting backend and get stuck in connect-timeout states.
+        condition: service_healthy
     environment:
       BACKEND_URL: "http://taskboard_backend:3000"
       HOSTNAME: "0.0.0.0"

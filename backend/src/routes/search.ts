@@ -3,14 +3,14 @@ import type { PrismaClient } from '@prisma/client';
 
 const router = Router();
 
-// GET /search?q=<term>  Returns boards and tasks matching the query.
+// GET /search?q=<term>  Returns boards, tasks, and teams matching the query.
 // Only returns items the user can reach via team membership.
 router.get('/', async (req, res, next) => {
   try {
     if (!req.user?.id) return res.status(401).json({ error: 'Unauthenticated' });
     const prisma = req.app.get('prisma') as PrismaClient;
     const q = (req.query.q as string | undefined)?.trim();
-    if (!q || q.length < 2) return res.json({ boards: [], tasks: [] });
+    if (!q || q.length < 2) return res.json({ boards: [], tasks: [], teams: [] });
 
     // Get team IDs the user belongs to
     const memberships = await prisma.userTeam.findMany({
@@ -18,11 +18,11 @@ router.get('/', async (req, res, next) => {
       select: { team_id: true },
     });
     const teamIds = memberships.map((m) => m.team_id);
-    if (!teamIds.length) return res.json({ boards: [], tasks: [] });
+    if (!teamIds.length) return res.json({ boards: [], tasks: [], teams: [] });
 
     const search = { contains: q, mode: 'insensitive' as const };
 
-    const [boards, tasks] = await Promise.all([
+    const [boards, tasks, teams] = await Promise.all([
       prisma.board.findMany({
         where:   { team_id: { in: teamIds }, name: search },
         select:  { id: true, name: true, status: true, team: { select: { id: true, name: true } } },
@@ -36,9 +36,14 @@ router.get('/', async (req, res, next) => {
         },
         take: 10,
       }),
+      prisma.team.findMany({
+        where:   { id: { in: teamIds }, name: search },
+        select:  { id: true, name: true, workspace: { select: { id: true, name: true } } },
+        take: 10,
+      }),
     ]);
 
-    res.json({ boards, tasks });
+    res.json({ boards, tasks, teams });
   } catch (err) {
     next(err);
   }

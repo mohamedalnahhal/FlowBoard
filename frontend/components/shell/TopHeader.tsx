@@ -8,13 +8,15 @@ import { markNotificationReadAction, markAllNotificationsReadAction } from "@/li
 import { setActiveTeamAction, setDefaultTeamAction } from "@/lib/active-team";
 import { setActiveWorkspaceAction } from "@/lib/active-workspace";
 import { parseScopedPath } from "@/lib/dashboard-path";
+import { useShell } from "./ShellContext";
 
 type Team = { id: string; name: string; workspace: { id: string } | null };
 type Notification = { id: string; message: string; link: string | null; is_read: boolean; created_at: string };
 
 type SearchBoard = { id: string; name: string; status: string };
 type SearchTask = { id: string; name: string; list: { board: { id: string } } };
-type SearchResults = { boards: SearchBoard[]; tasks: SearchTask[] };
+type SearchTeam = { id: string; name: string };
+type SearchResults = { boards: SearchBoard[]; tasks: SearchTask[]; teams: SearchTeam[] };
 
 type TopHeaderProps = {
   teams?: Team[];
@@ -43,6 +45,7 @@ function formatRelative(iso: string) {
 export function TopHeader({ teams = [], notifications: initialNotifications = [], activeTeamId, defaultTeamId, currentWorkspaceId }: TopHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { setMobileNavOpen } = useShell();
   const [teamOpen, setTeamOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -91,6 +94,7 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
         setSearchResults({
           boards: (data.boards ?? []).slice(0, 5),
           tasks: (data.tasks ?? []).slice(0, 5),
+          teams: (data.teams ?? []).slice(0, 5),
         });
         setSearchOpen(true);
       }
@@ -161,7 +165,12 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
 
   return (
     <header className="bg-surface-bright flex justify-between items-center gap-4 w-full h-16 px-8 sticky top-0 z-40 border-b border-outline-variant/30">
-      <button type="button" className="md:hidden text-on-surface p-2 hover:bg-surface-container-high rounded-full">
+      <button
+        type="button"
+        onClick={() => setMobileNavOpen(true)}
+        aria-label="Open navigation"
+        className="md:hidden text-on-surface p-2 hover:bg-surface-container-high rounded-full"
+      >
         <Icon name="menu" />
       </button>
 
@@ -183,7 +192,7 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
           {/* Search results dropdown */}
           {searchOpen && searchResults && (
             <div className="absolute left-0 top-full mt-2 w-full bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg z-50 overflow-hidden">
-              {searchResults.boards.length === 0 && searchResults.tasks.length === 0 ? (
+              {searchResults.boards.length === 0 && searchResults.tasks.length === 0 && searchResults.teams.length === 0 ? (
                 <p className="px-4 py-3 font-body-md text-body-md text-on-surface-variant">
                   No results for &apos;{query}&apos;
                 </p>
@@ -207,8 +216,26 @@ export function TopHeader({ teams = [], notifications: initialNotifications = []
                       ))}
                     </div>
                   )}
-                  {searchResults.tasks.length > 0 && (
+                  {searchResults.teams.length > 0 && (
                     <div className={searchResults.boards.length > 0 ? "border-t border-outline-variant/50" : ""}>
+                      <p className="px-4 py-2 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-[10px] border-b border-outline-variant/50">
+                        Teams
+                      </p>
+                      {searchResults.teams.map((team) => (
+                        <Link
+                          key={team.id}
+                          href={`/teams/${team.id}`}
+                          onClick={handleResultClick}
+                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-container-low transition-colors"
+                        >
+                          <Icon name="groups" className="text-[16px] text-on-surface-variant shrink-0" />
+                          <span className="font-label-md text-label-md text-on-surface truncate">{team.name}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                  {searchResults.tasks.length > 0 && (
+                    <div className={searchResults.boards.length > 0 || searchResults.teams.length > 0 ? "border-t border-outline-variant/50" : ""}>
                       <p className="px-4 py-2 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider text-[10px] border-b border-outline-variant/50">
                         Tasks
                       </p>

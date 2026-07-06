@@ -3,6 +3,7 @@ import { api, ApiError } from "@/lib/api";
 type SearchResults = {
   boards: { id: string; name: string; status: string }[];
   tasks: { id: string; name: string; status: string; list: { board: { id: string } } }[];
+  teams: { id: string; name: string }[];
 };
 
 // Same-origin proxy for the backend /search endpoint so the browser can

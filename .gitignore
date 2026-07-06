@@ -1,0 +1,4 @@
+node_modules/
+
+# Stale host-side Next build backups (see frontend/.gitignore for /.next)
+frontend/.next.bak-docker/

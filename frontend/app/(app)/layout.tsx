@@ -4,6 +4,7 @@ import { getActiveTeamId, getDefaultTeamId } from "@/lib/active-team";
 import { getDefaultWorkspaceId, resolveActiveWorkspace, resolveDashboardTarget } from "@/lib/active-workspace";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { TopHeader } from "@/components/shell/TopHeader";
+import { ShellProvider } from "@/components/shell/ShellContext";
 
 type Board = { id: string; name: string; status: string };
 type Workspace = { id: string; name: string };
@@ -37,6 +38,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     : "/teams";
 
   return (
+    <ShellProvider>
     <div className="flex min-h-screen">
       <Sidebar
         workspaces={workspaces}
@@ -61,5 +63,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </main>
       </div>
     </div>
+    </ShellProvider>
   );
 }

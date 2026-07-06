@@ -8,6 +8,7 @@ import { Avatar } from "../ui/Avatar";
 import { createWorkspaceAction } from "@/lib/workspace-actions";
 import { setActiveWorkspaceAction, setDefaultWorkspaceAction } from "@/lib/active-workspace";
 import { parseScopedPath } from "@/lib/dashboard-path";
+import { useShell } from "./ShellContext";
 
 type Board = { id: string; name: string; status: string };
 type Team = { id: string; name: string; boards?: Board[] };
@@ -60,6 +61,7 @@ type SidebarProps = {
 export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboardHref, activeTeamId, defaultWorkspaceId, scope }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { mobileNavOpen, setMobileNavOpen } = useShell();
   const [wsOpen, setWsOpen] = useState(false);
   const [createWsOpen, setCreateWsOpen] = useState(false);
   const [expandedBoards, setExpandedBoards] = useState(false);
@@ -73,6 +75,12 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboard
   const [createWsState, createWsFormAction, createWsPending] = useActionState(createWorkspaceAction, undefined);
   const createWsFormRef = useRef<HTMLFormElement>(null);
   const wasCreatingWsRef = useRef(false);
+
+  // Close the mobile drawer whenever navigation happens.
+  useEffect(() => {
+    setMobileNavOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   // Sync collapsed state to CSS variable and localStorage
   useEffect(() => {
@@ -123,8 +131,18 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboard
   }
 
   return (
+    <>
+      {/* Mobile drawer backdrop — sits above the sticky header (z-40), below the nav */}
+      {mobileNavOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation"
+          onClick={() => setMobileNavOpen(false)}
+          className="fixed inset-0 z-[45] bg-black/40 md:hidden"
+        />
+      )}
     <nav
-      className={`hidden md:flex flex-col bg-surface-container-lowest border-r border-outline-variant fixed left-0 top-0 h-full z-50 transition-[width] duration-200 overflow-hidden ${collapsed ? "w-16" : "w-sidebar-width"}`}
+      className={`flex flex-col bg-surface-container-lowest border-r border-outline-variant fixed left-0 top-0 h-full z-50 transition-[width,transform] duration-200 overflow-hidden ${collapsed ? "w-16" : "w-sidebar-width"} ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
     >
       <div className="flex flex-col h-full py-6 overflow-hidden">
         {/* Logo + collapse toggle */}
@@ -417,5 +435,6 @@ export function Sidebar({ workspaces, currentWorkspaceId, teams, user, dashboard
         </div>
       </div>
     </nav>
+    </>
   );
 }
