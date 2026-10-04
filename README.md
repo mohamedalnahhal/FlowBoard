@@ -1,4 +1,4 @@
-# TaskBoard
+# FlowBoard
 
 A team task-management app: workspaces → teams → boards → lists → tasks, with a fine-grained, group-based permission system.
 
